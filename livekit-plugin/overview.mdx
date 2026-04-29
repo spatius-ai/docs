@@ -1,0 +1,196 @@
+---
+title: "LiveKit Plugin for Spatius"
+sidebarTitle: "Overview"
+description: "Use LiveKit as the transport layer for Spatius avatars"
+---
+
+import { LiveKitPluginDiagram } from '/snippets/spatius-diagrams.jsx'
+
+<Note>
+**Web Only:** LiveKit integration of Spatius is currently web only.
+</Note>
+
+<Card title="LiveKit Agents demo with Spatius" icon="github" href="https://github.com/spatialwalk/avatarkit-voice-agent-demo/tree/main/livekit-agents" horizontal>
+  Explore a reference implementation that shows how to build a LiveKit Agents voice avatar with Spatius across common stack choices.
+</Card>
+
+## How LiveKit + Spatius Work Together
+
+<Frame>
+  <LiveKitPluginDiagram />
+</Frame>
+
+The architecture:
+- **LiveKit room** handles transportation.
+- **Agent worker** runs your own voice agent configured with the Spatius LiveKit Plugin.
+- **Motion Server** takes agent audio, generates lip-sync avatar motion, and streams the motion data in-sync with audio back into the room.
+- **AvatarKit SDK** joins room and renders avatar motion + playback audio.
+
+## Frontend Installation
+
+<Tabs>
+<Tab title="pnpm">
+
+```bash
+pnpm add @spatialwalk/avatarkit-rtc @spatialwalk/avatarkit
+```
+
+</Tab>
+<Tab title="npm">
+
+```bash
+npm install @spatialwalk/avatarkit-rtc @spatialwalk/avatarkit
+```
+
+</Tab>
+<Tab title="yarn">
+
+```bash
+yarn add @spatialwalk/avatarkit-rtc @spatialwalk/avatarkit
+```
+
+</Tab>
+<Tab title="bun">
+
+```bash
+bun add @spatialwalk/avatarkit-rtc @spatialwalk/avatarkit
+```
+
+</Tab>
+</Tabs>
+
+Spatius is not a video streaming service. Even when you use LiveKit as the transport layer and LiveKit Agents as the voice agent framework, no video frames are transported through LiveKit.
+
+Instead, Spatius sends lightweight motion data to the room. The client-side SDK renders that motion data into the avatar in the user's browser, which is why your frontend needs `@spatialwalk/avatarkit` and `@spatialwalk/avatarkit-rtc`.
+
+## Frontend setup
+
+<Steps>
+
+<Step title="Toolchain setup">
+We use WebAssembly to render avatar, setup your build toolchain to load wasm module correctly.
+See [Toolchain Setup](/sdk-reference/web-sdk/toolchain).
+</Step>
+
+<Step title="Want React components?">
+Yes → Use [AvatarKit UI](/sdk-reference/web-sdk/avatarkit-ui)
+</Step>
+
+<Step title="Or else, use our JavaScript API to build your own UI.">
+Use JavaScript APIs when you want to own the UI and connection flow.
+
+<Accordion title="JavaScript API step-by-step guide">
+
+<Steps>
+<Step title="Initialize SDK">
+
+```typescript
+import { AvatarSDK, DrivingServiceMode } from '@spatialwalk/avatarkit'
+
+await AvatarSDK.initialize('your-app-id', {
+  drivingServiceMode: DrivingServiceMode.host,
+})
+```
+
+</Step>
+<Step title="Load Avatar & Create View">
+
+```typescript
+const avatar = await AvatarManager.shared.load('avatar-id')
+const container = document.getElementById('avatar-container')!
+const avatarView = new AvatarView(avatar, container)
+```
+
+</Step>
+<Step title="Create Player with LiveKit Provider">
+
+```typescript
+import { AvatarPlayer, LiveKitProvider } from '@spatialwalk/avatarkit-rtc'
+
+const provider = new LiveKitProvider()
+const player = new AvatarPlayer(provider, avatarView, {
+  logLevel: 'warning',
+})
+```
+
+</Step>
+<Step title="Connect to LiveKit Server">
+
+```typescript
+await player.connect({
+  url: 'wss://your-livekit-server.com',
+  token: 'your-livekit-token',
+  roomName: 'room-name',
+})
+```
+
+</Step>
+<Step title="Start Voice Interaction">
+
+```typescript
+// Start microphone publishing
+await player.startPublishing()
+
+// Stop microphone
+await player.stopPublishing()
+
+// Disconnect when done
+await player.disconnect()
+```
+
+</Step>
+</Steps>
+
+</Accordion>
+
+Full SDK API reference [here](/sdk-reference/web-sdk/reference).
+
+</Step>
+</Steps>
+
+## LiveKit Agents Plugin Installation
+
+<Tabs>
+<Tab title="pip">
+
+```bash
+pip install livekit-plugins-spatialreal
+```
+
+</Tab>
+<Tab title="uv">
+
+```bash
+uv add livekit-plugins-spatialreal
+```
+
+</Tab>
+</Tabs>
+
+## Server setup
+
+If you already use [LiveKit Agents](https://docs.livekit.io/agents/), add `livekit-plugins-spatialreal` to your agent worker. The plugin attaches to your `AgentSession` and sends TTS audio to Spatius; Motion Server publishes the resulting audio and motion data to the same LiveKit room.
+
+Configure the required environment variables:
+
+- Spatius: `SPATIALREAL_API_KEY`, `SPATIALREAL_APP_ID`, `SPATIALREAL_AVATAR_ID`
+- LiveKit: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`
+
+Then create an `AvatarSession` and start it with your agent session and room:
+
+```python
+from livekit.agents import AgentSession, JobContext
+from livekit.plugins import spatialreal
+
+async def entrypoint(ctx: JobContext):
+    await ctx.connect()
+
+    # Your existing agent session
+    session = AgentSession(vad=vad, stt=stt, llm=llm, tts=tts)
+    avatar = spatialreal.AvatarSession()
+    await avatar.start(session, room=ctx.room)
+
+    await session.start(agent=YourAgent(), room=ctx.room)
+```
+
+See the [LiveKit Server guide](/livekit-plugin/server) for the full plugin flow, interruption behavior, and API links.

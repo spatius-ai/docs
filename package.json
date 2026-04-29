@@ -1,0 +1,15 @@
+{
+  "name": "spatius-docs",
+  "private": true,
+  "scripts": {
+    "check": "pnpm run check:spell && pnpm run check:grammar && pnpm run check:links",
+    "check:spell": "cspell --config ./cspell.config.yaml --no-progress --show-suggestions \"**/*.{md,mdx}\" \"!docs/**\"",
+    "check:grammar": "vale sync && vale --glob='*.{md,mdx}' --glob='!docs/**' .",
+    "check:links": "mint broken-links"
+  },
+  "devDependencies": {
+    "@vvago/vale": "^3.12.0",
+    "cspell": "^10.0.0",
+    "mint": "^4.2.531"
+  }
+}

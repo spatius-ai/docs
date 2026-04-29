@@ -1,0 +1,68 @@
+---
+title: "Serverside Setup With LiveKit"
+sidebarTitle: "Server"
+description: "Use LiveKit Agents with Spatius"
+---
+
+This guide covers the LiveKit Agents plugin path for sending avatar speech audio to Spatius and receiving Spatius-published audio and motion data in a LiveKit room.
+
+---
+
+## Using the LiveKit Agents Framework
+
+If you already use [LiveKit Agents](https://docs.livekit.io/agents/) to build your voice agent, the simplest option is [livekit-plugins-spatialreal](https://github.com/spatialwalk/livekit-plugins-spatialreal). The plugin hooks into your agent pipeline and sends TTS audio to Spatius; Motion Server publishes the lip-synced audio and motion stream into your LiveKit room.
+
+For a working end-to-end reference, see [AvatarKit Voice Agent Demo](https://github.com/spatialwalk/avatarkit-voice-agent-demo/tree/main/livekit-cascade-voice-agent).
+
+### How it works
+
+1. Your agent runs as usual (VAD, STT, LLM, TTS or Realtime), your current AgentSession setup.
+2. The plugin intercepts TTS audio from the agent and sends it to Spatius.
+3. Motion Server generates the avatar audio and motion stream and publishes it to the same LiveKit room.
+4. Your client joins the room and uses the Spatius RTC client to render the avatar.
+
+Interruption and conversation state are handled inside the plugin.
+
+### livekit-plugins-spatialreal
+
+**Install**
+
+```bash
+pip install livekit-plugins-spatialreal
+```
+
+**Configure**
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `SPATIALREAL_API_KEY` | Yes | Your Spatius API key |
+| `SPATIALREAL_APP_ID` | Yes | Your Spatius app ID |
+| `SPATIALREAL_AVATAR_ID` | Yes | Avatar to use |
+| `SPATIALREAL_CONSOLE_ENDPOINT` | No | Override console endpoint |
+| `SPATIALREAL_INGRESS_ENDPOINT` | No | Override ingress endpoint |
+| `LIVEKIT_URL` | Yes | Your LiveKit server URL |
+| `LIVEKIT_API_KEY` | Yes | LiveKit API key |
+| `LIVEKIT_API_SECRET` | Yes | LiveKit API secret |
+
+**Use in your agent**
+
+Create an `AvatarSession` and start it with your agent session and room. The plugin attaches to the pipeline and sends avatar speech audio to Spatius; Motion Server publishes the avatar stream to the room.
+
+```python
+from livekit.agents import Agent, AgentSession, JobContext, cli, WorkerOptions
+from livekit.plugins import spatialreal
+
+async def entrypoint(ctx: JobContext):
+    await ctx.connect()
+
+    session = AgentSession(vad=vad, stt=stt, llm=llm, tts=tts)
+    avatar = spatialreal.AvatarSession()
+    await avatar.start(session, room=ctx.room)
+
+    await session.start(agent=YourAgent(), room=ctx.room)
+
+if __name__ == "__main__":
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
+```
+
+Full API and options: **[livekit-plugins-spatialreal](https://github.com/spatialwalk/livekit-plugins-spatialreal)** (PyPI: [livekit-plugins-spatialreal](https://pypi.org/project/livekit-plugins-spatialreal/)).

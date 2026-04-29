@@ -1,0 +1,167 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Spatius",
+  "colors": {
+    "primary": "#9399E3",
+    "light": "#9A9AC0",
+    "dark": "#9A9AC0"
+  },
+  "favicon": {
+    "light": "/images/spatius-logo-mark-black.svg",
+    "dark": "/images/spatius-logo-mark-white.svg"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "rocket",
+            "pages": [
+              "getting-started/introduction",
+              "getting-started/quickstart",
+              "getting-started/how-to-integrate"
+            ]
+          },
+          {
+            "group": "Concepts",
+            "icon": "lightbulb",
+            "pages": [
+              "concepts/how-it-works",
+              "concepts/avatars",
+              "concepts/sessions-lifecycle",
+              "concepts/audio-io",
+              "concepts/state-events"
+            ]
+          },
+          {
+            "group": "LiveKit Plugin",
+            "icon": "tower-broadcast",
+            "pages": [
+              "livekit-plugin/overview",
+              "livekit-plugin/client",
+              "livekit-plugin/server"
+            ]
+          },
+          {
+            "group": "Basic Mode",
+            "icon": "plug",
+            "pages": [
+              "basic-mode/overview",
+              "basic-mode/web",
+              "basic-mode/ios-android"
+            ]
+          },
+          {
+            "group": "Custom Mode",
+            "icon": "sliders",
+            "pages": [
+              "custom-mode/overview",
+              "custom-mode/livekit-transport",
+              "custom-mode/own-transport"
+            ]
+          },
+          {
+            "group": "Resources",
+            "icon": "book",
+            "pages": [
+              {
+                "group": "Error Codes",
+                "pages": [
+                  "resources/server-error",
+                  "resources/client-error"
+                ]
+              },
+              "resources/faq",
+              "resources/demo-projects",
+              "resources/changelog"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "SDK Reference",
+        "groups": [
+          {
+            "group": "Client SDK",
+            "icon": "mobile",
+            "pages": [
+              {
+                "group": "Web SDK", 
+                "pages": [
+                  "sdk-reference/web-sdk/toolchain",
+                  "sdk-reference/web-sdk/avatarkit-ui",
+                  "sdk-reference/web-sdk/reference"                 
+              ]},
+              "sdk-reference/ios-sdk/api-reference",
+              "sdk-reference/android-sdk/api-reference"
+              
+            ]
+          },
+          {
+            "group": "Server SDK",
+            "icon": "server",
+            "pages": [
+              "sdk-reference/python-sdk/python-sdk",
+              "sdk-reference/go-sdk/go-sdk",
+              "sdk-reference/js-sdk/js-sdk"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Server API",
+            "icon": "code",
+            "pages": [
+              "api-reference/api-reference",
+              "api-reference/auth",
+              "api-reference/regions"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/images/SRDOC_logo_black.png",
+    "dark": "/images/SRDOC_logo_white.png"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Community",
+        "icon": "discord",
+        "href": "https://discord.gg/nqz9PvvH"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Studio",
+      "href": "https://app.spatius.ai"
+    }
+  },
+  "redirects": [
+    { "source": "/concepts/lifecycle", "destination": "/concepts/sessions-lifecycle" },
+    { "source": "/concepts/audio",     "destination": "/concepts/audio-io" },
+    { "source": "/concepts/events",    "destination": "/concepts/state-events" }
+  ],
+  "customCSS": "/custom.css",
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "grok",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  }
+}

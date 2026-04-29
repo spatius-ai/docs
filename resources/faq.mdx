@@ -1,0 +1,106 @@
+---
+title: "FAQ"
+description: "Frequently asked questions"
+---
+
+### Common Issues
+
+<AccordionGroup>
+
+<Accordion title="Supported Audio Format">
+
+Spatius supports mono 16-bit PCM audio at multiple sample rates:
+`8000`, `16000`, `22050`, `24000`, `32000`, `44100`, and `48000` Hz.
+
+See [Audio I/O](/concepts/audio-io) for configuration details.
+
+</Accordion>
+
+<Accordion title="Avatar Playback Fallback Strategy">
+
+If the avatar animation drive data is abnormal after passing in audio, the fallback playback strategy will be triggered:
+
+- Audio plays normally
+- Animation plays idle breathing state / Animation stops
+
+</Accordion>
+
+<Accordion title="Session token expired or invalid">
+
+Session tokens have a limited lifetime. If you receive `sessionTokenExpired` or `sessionTokenInvalid`, request a new token from your server and set it via `AvatarSDK.sessionToken` before reconnecting.
+
+</Accordion>
+
+<Accordion title="Avatar assets fail to download">
+
+Check your network connectivity and ensure the avatar ID is correct. If the issue persists, clear the local cache with `AvatarManager.clearAll()` and retry. On mobile, verify that your app has network permissions.
+
+</Accordion>
+
+</AccordionGroup>
+
+### Platform-Specific
+
+<AccordionGroup>
+
+<Accordion title="Web: WASM module fails to load">
+
+AvatarKit Web uses WebAssembly for rendering. Your build tool must be configured to handle `.wasm` files:
+
+- **Vite**: Use the AvatarKit Vite plugin.
+- **Next.js**: Use the AvatarKit Next.js wrapper component.
+
+See the [Web SDK guide](/basic-mode/web) for setup instructions.
+
+</Accordion>
+
+<Accordion title="Web: WebGL not supported">
+
+AvatarKit requires WebGL 2.0. Ensure the browser supports it and hardware acceleration is enabled. Most modern browsers support WebGL 2.0 by default.
+
+</Accordion>
+
+<Accordion title="iOS: Metal rendering requirements">
+
+AvatarKit iOS uses Metal for GPU rendering. Metal is available on all devices running iOS 16+. The simulator does not support Metal — test on a physical device.
+
+</Accordion>
+
+<Accordion title="Android: Vulkan rendering requirements">
+
+AvatarKit Android uses Vulkan for GPU rendering. Ensure the target device supports Vulkan 1.1+ (API 24+). Most devices from 2018 onwards support Vulkan.
+
+</Accordion>
+
+<Accordion title="RTC: LiveKit version compatibility">
+
+RTC Mode requires `livekit-client` at exactly version `2.16.1`. Other versions may cause connection or audio routing issues.
+
+</Accordion>
+
+</AccordionGroup>
+
+
+## Performance Issues
+
+<AccordionGroup>
+
+<Accordion title="Avatar Rendering Resolution Support">
+
+Our avatar models don't use the concept of resolution.
+
+We can reconstruct 4K resolution 3D avatar models, but this depends on the model's point count.
+
+Fewer points result in less detail restoration, but all models can be rendered to the corresponding resolution on the client side.
+
+Metrics such as PSNR and LPIPS are typically used to measure the quality of detail restoration.
+
+</Accordion>
+
+<Accordion title="Can the SDK dynamically switch between different models based on device performance?">
+
+Not currently supported. Developers need to implement their own strategy for switching between different models based on device performance.
+
+</Accordion>
+
+</AccordionGroup>

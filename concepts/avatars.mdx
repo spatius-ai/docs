@@ -1,0 +1,75 @@
+---
+title: "Avatars"
+description: "How Avatar IDs, AvatarManager, AvatarView, and AvatarController fit together."
+---
+
+An **Avatar** is the digital human AvatarKit renders on screen. It is a bundle of avatar assets identified by an **Avatar ID** — not the conversation, not audio, and not motion data.
+
+The client-side path is:
+
+```text
+Avatar ID -> AvatarManager.load() -> Avatar -> AvatarView -> AvatarController
+```
+
+## Avatar ID
+
+An **Avatar ID** is the stable identifier your app uses to load a character. For stock characters, copy it from a [Public Avatar](#public-avatars) in Spatius Studio.
+
+<Frame>
+  <img src="/images/avatars.png" alt="avatars" />
+</Frame>
+
+<Steps>
+  <Step title="Browse Public Avatars">
+    Go to [Spatius Studio](https://app.spatius.ai/avatars/library).
+  </Step>
+  <Step title="Copy the Avatar ID">
+    Hover over an avatar card and click the **copy icon**.
+  </Step>
+  <Step title="Load the Avatar">
+    Pass the Avatar ID to `AvatarManager.load(...)`.
+  </Step>
+</Steps>
+
+Custom Avatars are coming soon. They will use the same Avatar ID loading path.
+
+## AvatarManager
+
+`AvatarManager` loads avatar assets by Avatar ID and returns the `Avatar` object AvatarKit can render.
+
+It also owns the shared client-side load state:
+
+- In-flight loads are reused for the same Avatar ID.
+- Successful loads are cached.
+- Cancel and release operations affect shared `AvatarManager` state, so coordinate them with any view still using the same Avatar.
+
+→ Reference: [Web `AvatarManager`](/sdk-reference/web-sdk/reference#avatarmanager) · [iOS `AvatarManager`](/sdk-reference/ios-sdk/api-reference#avatarmanager) · [Android `AvatarManager`](/sdk-reference/android-sdk/api-reference#avatarmanager)
+
+## AvatarView and AvatarController
+
+Loading an Avatar does not display it. You mount the loaded `Avatar` in an `AvatarView`.
+
+`AvatarView` creates the render surface and owns the `AvatarController` for that surface. From there:
+
+- `AvatarView` displays the loaded Avatar.
+- `AvatarController` controls playback, connection, state, and interruption.
+- When motion data arrives, AvatarKit applies it to the mounted Avatar.
+
+For the full session order, see [Sessions & Lifecycle](/concepts/sessions-lifecycle).
+
+→ Reference: [Web `Avatar`](/sdk-reference/web-sdk/reference#avatarmanager) · [iOS `Avatar`](/sdk-reference/ios-sdk/api-reference#avatar) · [Android `Avatar`](/sdk-reference/android-sdk/api-reference#avatar)
+
+## What can go wrong
+
+| Symptom | Likely cause |
+|---------|--------------|
+| Avatar never appears | Bad Avatar ID, failed asset download, or missing `AvatarView` mount. |
+| Loading never completes | Network failure or an in-flight load that never resolves. |
+| Avatar disappears after cleanup | Shared cached assets were released while another view still needed them. |
+| Audio plays but the avatar does not move | The Avatar loaded, but the session connection or motion data path is not online. |
+
+## Go next
+
+- **[Sessions & Lifecycle](/concepts/sessions-lifecycle)** to mount the Avatar and bring the session online.
+- **[Audio and Motion Data](/concepts/audio-io)** to understand avatar speech audio and motion data.
+- **[State & Events](/concepts/state-events)** to diagnose loading or rendering failures.

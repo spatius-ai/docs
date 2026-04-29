@@ -1,0 +1,508 @@
+---
+title: "AvatarKit Web SDK Reference"
+sidebarTitle: "Reference"
+description: "Complete documentation for AvatarKit Web SDK"
+---
+
+## Quick Reference
+
+| Class | Purpose | Key Methods |
+|-------|---------|-------------|
+| `AvatarSDK` | SDK initialization | `initialize()`, `setSessionToken()` |
+| `AvatarManager` | Avatar loading | `load()` |
+| `AvatarView` | 3D rendering | `onFirstRendering`, `dispose()` |
+| `AvatarController` | Communication | `start()`, `send()`, `pause()`, `interrupt()` |
+
+<Warning>
+**Important:** App ID and Session Token are paired and must be used together. Each App ID corresponds to a specific list of avatars that can be driven. You must obtain both App ID and Session Token from the [Spatius Studio](https://app.spatius.ai).
+</Warning>
+
+```typescript
+export class AvatarSDK
+```
+---
+
+## AvatarSDK
+
+Main entry point for SDK initialization and global configuration.
+
+```typescript
+import { AvatarSDK, Environment } from '@spatialwalk/avatarkit'
+```
+
+### Static Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `isInitialized` | `boolean` | Whether SDK is initialized |
+| `appId` | `string \| null` | Current App ID |
+| `configuration` | `Configuration` | Current SDK configuration |
+| `sessionToken` | `string \| null` | Current session token |
+| `userId` | `string \| null` | Current user ID |
+| `version` | `string` | SDK version |
+
+### Static Methods
+
+#### initialize(appId, configuration)
+
+Initialize the SDK. Must be called before any other operations.
+
+```typescript
+await AvatarSDK.initialize('your-app-id', {
+  environment: Environment.cn,  // or Environment.intl
+  drivingServiceMode: DrivingServiceMode.sdk,  // Optional, default: sdk
+  logLevel: LogLevel.warning,  // Optional, default: off
+  audioFormat: {  // Optional
+    channelCount: 1,
+    sampleRate: 16000,
+  },
+})
+```
+
+#### setSessionToken(token)
+
+Set session token for authentication. **Only required for SDK Mode** (server-driven animation).
+
+```typescript
+AvatarSDK.setSessionToken('your-session-token')
+```
+
+**Important:**
+- **Only needed for SDK Mode** - not required for Host Mode or RTC Mode
+- Token must be obtained from your backend server
+- Token has max 24 hours validity
+- Token must be paired with App ID
+
+#### setUserId(userId)
+
+Set user ID for logging and analytics.
+
+```typescript
+AvatarSDK.setUserId('user-123')
+```
+
+#### cleanup()
+
+Release all SDK resources. Call when SDK is no longer needed.
+
+```typescript
+AvatarSDK.cleanup()
+```
+
+---
+
+## AvatarManager
+
+Handles avatar loading and caching.
+
+```typescript
+import { AvatarManager } from '@spatialwalk/avatarkit'
+```
+
+### Static Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `shared` | `AvatarManager` | Singleton instance |
+
+### Instance Methods
+
+#### load(id, onProgress?)
+
+Load an avatar by ID.
+
+```typescript
+const avatar = await AvatarManager.shared.load('avatar-id', (progress) => {
+  switch (progress.type) {
+    case 'downloading':
+      console.log(`Loading: ${progress.progress}%`)
+      break
+    case 'completed':
+      console.log('Load complete')
+      break
+    case 'failed':
+      console.error('Load failed:', progress.error)
+      break
+  }
+})
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Avatar ID |
+| `onProgress` | `(progress: LoadProgressInfo) => void` | Progress callback |
+
+**Returns:** `Promise<Avatar | null>`
+
+#### clearAll()
+
+Clear all cached avatar resources.
+
+```typescript
+AvatarManager.shared.clearAll()
+```
+
+---
+
+## AvatarView
+
+3D rendering view that displays the avatar.
+
+```typescript
+import { AvatarView } from '@spatialwalk/avatarkit'
+```
+
+### Constructor
+
+```typescript
+const avatarView = new AvatarView(avatar, container)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `avatar` | `Avatar` | Loaded avatar object |
+| `container` | `HTMLElement` | Container element (canvas auto-fills container) |
+
+<Warning>
+**⚠️ Important:** The container element MUST have non-zero width and height. The canvas will automatically fill the container size.
+</Warning>
+
+### Instance Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `controller` | `AvatarController` | Communication controller |
+| `onFirstRendering` | `() => void` | Callback when first frame renders |
+| `transform` | `{ x, y, scale }` | Avatar position and scale |
+
+### Instance Methods
+
+#### dispose()
+
+Clean up view resources. Call when view is no longer needed.
+
+```typescript
+avatarView.dispose()
+```
+
+---
+
+## AvatarController
+
+Handles real-time communication with the avatar service.
+
+```typescript
+// Accessed via AvatarView
+const controller = avatarView.controller
+```
+
+### Instance Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `connectionState` | `ConnectionState` | Current connection state |
+| `conversationState` | `ConversationState` | Current conversation state |
+
+### Event Callbacks
+
+```typescript
+// Connection state changes
+controller.onConnectionState = (state: ConnectionState) => {
+  // 'disconnected' | 'connecting' | 'connected' | 'failed'
+}
+
+// Conversation state changes
+controller.onConversationState = (state: ConversationState) => {
+  // 'idle' | 'playing' | 'pausing'
+}
+
+// Error handling
+controller.onError = (error: AvatarError) => {
+  console.error('Error:', error.code, error.message)
+}
+```
+
+### Instance Methods
+
+#### initializeAudioContext()
+
+Initialize audio context. **MUST be called in user gesture context.**
+
+```typescript
+button.addEventListener('click', async () => {
+  await controller.initializeAudioContext()
+})
+```
+
+#### start()
+
+Connect to the avatar service. SDK mode only.
+
+```typescript
+await controller.start()
+```
+
+#### send(audioData, end)
+
+Send audio data to server. SDK mode only.
+
+```typescript
+// Send audio data (continue)
+controller.send(audioData, false)
+
+// Send final audio data (end conversation)
+controller.send(audioData, true)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `audioData` | `ArrayBuffer` | PCM16 mono audio data |
+| `end` | `boolean` | Whether this is the final chunk |
+
+**Returns:** `string` - Conversation ID
+
+#### close()
+
+Close service connection. SDK mode only.
+
+```typescript
+controller.close()
+```
+
+### Host Mode Methods
+
+For Host Mode (`DrivingServiceMode.host`) only:
+
+#### yieldAudioData(audioData, end)
+
+Provide audio data in Host Mode.
+
+```typescript
+const conversationId = controller.yieldAudioData(audioData, false)
+```
+
+#### yieldFramesData(frames, conversationId)
+
+Provide animation frames in Host Mode.
+
+```typescript
+controller.yieldFramesData(animationDataArray, conversationId)
+```
+
+### Common Methods (Both Modes)
+
+#### pause()
+
+Pause current playback.
+
+```typescript
+controller.pause()
+```
+
+#### resume()
+
+Resume paused playback.
+
+```typescript
+await controller.resume()
+```
+
+#### interrupt()
+
+Interrupt current playback and clear data.
+
+```typescript
+controller.interrupt()
+```
+
+#### clear()
+
+Clear all data and resources.
+
+```typescript
+controller.clear()
+```
+
+#### getCurrentConversationId()
+
+Get the current active conversation ID.
+
+```typescript
+const conversationId = controller.getCurrentConversationId()
+// Returns: string | null
+```
+
+#### setVolume(volume) / getVolume()
+
+Control playback volume (avatar audio only, not system volume).
+
+```typescript
+controller.setVolume(0.5)  // 50% volume (0.0 to 1.0)
+const currentVolume = controller.getVolume()
+```
+
+---
+
+## Types and Enums
+
+### Configuration
+
+```typescript
+interface Configuration {
+  environment: Environment
+  drivingServiceMode?: DrivingServiceMode  // Default: 'sdk'
+  logLevel?: LogLevel                       // Default: 'off'
+  audioFormat?: AudioFormat                 // Default: { channelCount: 1, sampleRate: 16000 }
+}
+```
+
+### Environment
+
+```typescript
+enum Environment {
+  cn = 'cn',      // China region
+  intl = 'intl'   // International region
+}
+```
+
+### DrivingServiceMode
+
+```typescript
+enum DrivingServiceMode {
+  sdk = 'sdk',    // SDK handles WebSocket communication
+  host = 'host'   // Host provides audio and animation data
+}
+```
+
+### LogLevel
+
+```typescript
+enum LogLevel {
+  off = 'off',
+  error = 'error',
+  warning = 'warning',
+  all = 'all'
+}
+```
+
+### ConnectionState
+
+```typescript
+enum ConnectionState {
+  disconnected = 'disconnected',
+  connecting = 'connecting',
+  connected = 'connected',
+  failed = 'failed'
+}
+```
+
+### ConversationState
+
+```typescript
+enum ConversationState {
+  idle = 'idle',        // Breathing animation
+  playing = 'playing',  // Active conversation
+  pausing = 'pausing'   // Paused during playback
+}
+```
+
+### LoadProgressInfo
+
+```typescript
+type LoadProgressInfo = {
+  type: 'downloading' | 'completed' | 'failed'
+  progress?: number  // 0-100
+  error?: Error
+}
+```
+
+### AudioFormat
+
+```typescript
+interface AudioFormat {
+  channelCount: 1  // Fixed to mono
+  sampleRate: number  // 8000 | 16000 | 22050 | 24000 | 32000 | 44100 | 48000
+}
+```
+
+---
+
+## Error Codes
+
+| Code | Name | Description | Solution |
+|------|------|-------------|----------|
+| 1001 | `sdkNotVerified` | SDK not verified | Check SDK initialization |
+| 1002 | `avatarIdWrong` | Invalid avatar ID | Verify avatar ID |
+| 1003 | `avatarAssetsMissing` | Missing avatar assets | Check avatar resources |
+| 1004 | `avatarCameraSettingsWrong` | Invalid camera settings | Check camera config |
+| 1005 | `serviceError` | Server error | Check server status |
+| 1008 | `sendDataWrong` | Invalid audio data | Verify PCM16 format |
+| 1009 | `requestTimeout` | Request timeout | Check network |
+
+---
+
+## Complete Usage Example
+
+```typescript
+import {
+  AvatarSDK,
+  AvatarManager,
+  AvatarView,
+  Environment,
+  ConnectionState,
+  ConversationState,
+} from '@spatialwalk/avatarkit'
+
+class AvatarApp {
+  private avatarView: AvatarView | null = null
+
+  async init(appId: string, sessionToken: string, avatarId: string, container: HTMLElement) {
+    // Initialize SDK
+    await AvatarSDK.initialize(appId, { environment: Environment.cn })
+    AvatarSDK.setSessionToken(sessionToken)
+
+    // Load avatar
+    const avatar = await AvatarManager.shared.load(avatarId)
+    if (!avatar) throw new Error('Failed to load avatar')
+
+    // Create view
+    this.avatarView = new AvatarView(avatar, container)
+    this.avatarView.onFirstRendering = () => {
+      console.log('First frame rendered')
+    }
+
+    // Set up handlers
+    this.avatarView.controller.onConnectionState = (state) => {
+      console.log('Connection:', state)
+    }
+    this.avatarView.controller.onConversationState = (state) => {
+      console.log('Conversation:', state)
+    }
+    this.avatarView.controller.onError = (error) => {
+      console.error('Error:', error)
+    }
+  }
+
+  // Must be called in user gesture context
+  async start() {
+    await this.avatarView?.controller.initializeAudioContext()
+    await this.avatarView?.controller.start()
+  }
+
+  send(audioData: ArrayBuffer, isEnd: boolean) {
+    this.avatarView?.controller.send(audioData, isEnd)
+  }
+
+  interrupt() {
+    this.avatarView?.controller.interrupt()
+  }
+
+  dispose() {
+    this.avatarView?.controller.close()
+    this.avatarView?.dispose()
+    this.avatarView = null
+  }
+}
+```

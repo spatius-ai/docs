@@ -1,0 +1,55 @@
+---
+title: "Basic Mode"
+sidebarTitle: "iOS & Android"
+description: "Server-driven avatar animation via WebSocket for iOS and Android applications"
+---
+
+Use the official demo repositories as the primary integration guides.
+
+<CardGroup cols={2}>
+  <Card title="iOS Demo" icon="apple" href="https://github.com/spatialwalk/avatar-kit-ios-demo">
+    Swift / SwiftUI reference implementation.
+  </Card>
+  <Card title="Android Demo" icon="android" href="https://github.com/spatialwalk/avatar-kit-android-demo">
+    Kotlin / Compose reference implementation.
+  </Card>
+</CardGroup>
+
+## SDK Package Setup
+
+<Tabs>
+<Tab title="iOS">
+
+<Steps>
+<Step title="Download Framework">
+Download the latest [AvatarKit.xcframework](https://github.com/spatialwalk/avatar-kit-ios-release/releases/download/v1.0.0-beta.24/AvatarKit_202603250340.zip).
+</Step>
+<Step title="Add to Project">
+Unzip and drag `AvatarKit.xcframework` into your Xcode project. In your target's **General** tab, ensure it appears under **Frameworks, Libraries, and Embedded Content** with **Embed & Sign**.
+</Step>
+</Steps>
+
+</Tab>
+<Tab title="Android">
+
+Add the dependency to your `build.gradle.kts`:
+
+```kotlin title="build.gradle.kts"
+dependencies {
+    implementation("ai.spatialwalk:avatarkit:1.0.0-beta46")
+}
+```
+
+</Tab>
+</Tabs>
+
+Need full API details? Use the SDK references below.
+
+<CardGroup cols={2}>
+  <Card title="iOS SDK Reference" icon="book" href="/sdk-reference/ios-sdk/api-reference">
+    Complete iOS API documentation.
+  </Card>
+  <Card title="Android SDK Reference" icon="book" href="/sdk-reference/android-sdk/api-reference">
+    Complete Android API documentation.
+  </Card>
+</CardGroup>

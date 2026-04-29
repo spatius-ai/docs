@@ -1,0 +1,90 @@
+---
+title: "Client Error Codes"
+description: "iOS, Android, and Web SDK error codes with recovery guidance"
+---
+
+All client SDKs surface errors through the `AvatarController.onError` callback as `AvatarError`.
+
+<Tabs>
+<Tab title="Web">
+```typescript
+controller.onError = (error: AvatarError) => {
+  console.error('Error:', error.code, error.message)
+}
+```
+</Tab>
+<Tab title="iOS">
+```swift
+controller.onError = { error in
+    print("Error: \(error)")
+}
+```
+</Tab>
+<Tab title="Android">
+```kotlin
+controller?.onError = { error ->
+    Log.e("Avatar", "Error: ${error.message}")
+}
+```
+</Tab>
+</Tabs>
+
+## Web — ErrorCode
+
+| Code | Description | Recovery |
+|------|-------------|----------|
+| `appIDUnrecognized` | App ID not recognized. | Verify your app ID in the dashboard. |
+| `sessionTokenInvalid` | Session token is invalid or appId mismatch. | Verify token generation on your server. |
+| `sessionTokenExpired` | Session token has expired. | Request a new token from your server. |
+| `insufficientBalance` | Account balance is insufficient. | Top up your account in the dashboard. |
+| `sessionTimeout` | Session timed out. | Reconnect by calling `start()` again. |
+| `concurrentLimitExceeded` | Concurrent connection limit exceeded. | Close other active sessions before starting a new one. |
+| `avatarIDUnrecognized` | Avatar ID not found. | Check the avatar ID exists and is published. |
+| `failedToFetchAvatarMetadata` | Failed to fetch avatar metadata. | Check network connectivity and retry. |
+| `failedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
+| `serverError` | Server-side error. | Check the error message for details. |
+
+## iOS — AvatarError
+
+| Error | Description | Recovery |
+|-------|-------------|----------|
+| `appIDUnrecognized` | App ID not recognized. | Verify your app ID in the dashboard. |
+| `sessionTokenInvalid` | Session token is invalid or appId mismatch. | Verify token generation on your server. |
+| `sessionTokenExpired` | Session token has expired. | Request a new token from your server. |
+| `insufficientBalance` | Account balance is insufficient. | Top up your account in the dashboard. |
+| `sessionTimeout` | Session timed out. | Reconnect by calling `start()` again. |
+| `concurrentLimitExceeded` | Concurrent connection limit exceeded. | Close other active sessions before starting a new one. |
+| `avatarIDUnrecognized` | Avatar ID not found. | Check the avatar ID exists and is published. |
+| `avatarAssetMissing` | Avatar asset is missing locally. | Re-download with `AvatarManager.load()`. |
+| `failedToFetchAvatarMetadata` | Failed to fetch avatar metadata. | Check network connectivity and retry. |
+| `failedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
+| `serverError(code, message)` | Server-side error. | Check the error message for details. |
+
+## Android — AvatarError
+
+| Error | Description | Recovery |
+|-------|-------------|----------|
+| `AppIDUnrecognized` | App ID not recognized. | Verify your app ID in the dashboard. |
+| `SessionTokenInvalid` | Session token is invalid or appId mismatch. | Verify token generation on your server. |
+| `SessionTokenExpired` | Session token has expired. | Request a new token from your server. |
+| `InsufficientBalance` | Account balance is insufficient. | Top up your account in the dashboard. |
+| `SessionTimeout` | Session timed out. | Reconnect by calling `start()` again. |
+| `ConcurrentLimitExceeded` | Concurrent connection limit exceeded. | Close other active sessions before starting a new one. |
+| `AvatarIDUnrecognized` | Avatar ID not found. | Check the avatar ID exists and is published. |
+| `AvatarAssetMissing` | Avatar asset is missing locally. | Re-download with `AvatarManager.load()`. |
+| `FailedToFetchAvatarMetadata` | Failed to fetch avatar metadata. | Check network connectivity and retry. |
+| `FailedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
+| `ServerError(message, code)` | Server-side error. | Check the error message for details. |
+
+## Recommended Handling Flow
+
+1. Log the error code and current lifecycle phase.
+2. Retry transient network/download failures with backoff.
+3. Refresh session token for auth-related errors.
+4. Surface configuration errors to developers/operators.
+
+For platform-specific API details, see:
+
+- [Web SDK API reference](/sdk-reference/web-sdk/reference)
+- [iOS SDK API reference](/sdk-reference/ios-sdk/api-reference)
+- [Android SDK API reference](/sdk-reference/android-sdk/api-reference)

@@ -1,0 +1,110 @@
+version: "0.2"
+language: en
+allowCompoundWords: false
+useGitignore: true
+
+ignorePaths:
+  - ".git"
+  - ".github"
+  - ".vale"
+  - "node_modules"
+  - "package-lock.json"
+  - "pnpm-lock.yaml"
+  - "docs.json"
+  - "docs/**"
+  - "custom.css"
+  - "snippets/**"
+  - "images/**"
+
+ignoreRegExpList:
+  - "/```[\\s\\S]*?```/g"
+  - "/`[^`]+`/g"
+  - "/https?:\\/\\/[^\\s)\\]>]+/g"
+  - "/@[\\w.-]+\\/[\\w.-]+/g"
+
+words:
+  - ai
+  - aistudio
+  - api
+  - appId
+  - avatarkit
+  - avatarsdk
+  - avatarsdkgo
+  - backoff
+  - bitrate
+  - backend
+  - boolean
+  - composable
+  - config
+  - conversationId
+  - Coroutine
+  - CTAs
+  - dataclass
+  - Dev
+  - docs
+  - driveningress
+  - egress
+  - Emscripten
+  - env
+  - enum
+  - expireAt
+  - finetune
+  - frontend
+  - frontmatter
+  - Gemini
+  - Golang
+  - Gradle
+  - ingress
+  - Initializers
+  - inlined
+  - inlining
+  - interruptible
+  - Jetpack
+  - json
+  - K12
+  - Kotlin
+  - llms
+  - LiveKit
+  - LPIPS
+  - localhost
+  - mdx
+  - Mermaid
+  - Mintlify
+  - misconfiguration
+  - mocap
+  - modelVersion
+  - navbar
+  - northeast
+  - onProgress
+  - onwards
+  - params
+  - pcm
+  - protobuf
+  - PSNR
+  - PyPI
+  - quickstart
+  - rebranded
+  - retries
+  - rtc
+  - sdk
+  - sessionToken
+  - Serverside
+  - shadcn
+  - spatius
+  - spatialreal
+  - spatialwalk
+  - toolchain
+  - tts
+  - ui
+  - UIKit
+  - unmount
+  - url
+  - UIView
+  - vite
+  - Vue
+  - wasm
+  - Webpack
+  - wss
+  - xcframework
+  - xcodeproj
+  - Xcode

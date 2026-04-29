@@ -1,0 +1,506 @@
+---
+title: "API Reference"
+sidebarTitle: "Android"
+description: "Browse the complete API reference"
+---
+
+## Installation
+
+```kotlin title="build.gradle.kts"
+dependencies {
+    implementation("ai.spatialwalk:avatarkit:1.0.0-beta46")
+}
+```
+
+### AvatarSDK
+
+The core management class of the SDK, responsible for initialization and global configuration.
+
+```kotlin
+object AvatarSDK
+```
+
+##### Properties
+
+<Accordion title="sessionToken">
+The session token used to authenticate avatars with the AvatarKit Server.
+
+```kotlin
+var sessionToken: String
+```
+</Accordion>
+
+<Accordion title="userId">
+The user identifier.
+
+```kotlin
+var userId: String
+```
+</Accordion>
+
+<Accordion title="version">
+Returns the version of AvatarKit.
+
+```kotlin
+val version: String
+```
+</Accordion>
+
+##### Methods
+
+<Accordion title="initialize(context, appId, configuration)">
+Initialize AvatarKit.
+
+```kotlin
+fun initialize(
+    context: Context,
+    appId: String,
+    configuration: Configuration
+)
+```
+
+**Parameters:**
+- `context`: Application context
+- `appId`: Your application identifier
+- `configuration`: The configuration for AvatarKit
+</Accordion>
+
+<Accordion title="supportsCurrentDevice()">
+Returns a Boolean value that indicates whether AvatarKit supports the current device.
+
+```kotlin
+fun supportsCurrentDevice(): Boolean
+```
+</Accordion>
+
+<Accordion title="benchmark()">
+Measures the device's computational performance for avatar rendering.
+
+```kotlin
+fun benchmark(): Int
+```
+
+**Returns:** A performance score indicating the device's capability.
+</Accordion>
+
+### AvatarManager
+
+Avatar resource manager, responsible for downloading, caching, and loading avatar data.
+
+```kotlin
+object AvatarManager
+```
+
+##### Methods
+
+<Accordion title="initialize(context)">
+Initialize AvatarManager. Must be called before use.
+
+```kotlin
+fun initialize(context: Context)
+```
+
+**Parameters:**
+- `context`: Application context
+</Accordion>
+
+<Accordion title="load(id, onProgress)">
+Loads an avatar by ID.
+
+```kotlin
+suspend fun load(
+    id: String,
+    onProgress: ((LoadProgress) -> Unit)? = null
+): Avatar
+```
+
+**Parameters:**
+- `id`: The avatar identifier
+- `onProgress`: Optional progress callback
+
+**Returns:** The loaded `Avatar` instance.
+</Accordion>
+
+<Accordion title="clear(id)">
+Clears cached data for a specific avatar.
+
+```kotlin
+suspend fun clear(id: String)
+```
+
+**Parameters:**
+- `id`: The avatar identifier to clear
+</Accordion>
+
+<Accordion title="clearAll()">
+Clears all cached avatar data.
+
+```kotlin
+suspend fun clearAll()
+```
+</Accordion>
+
+<Accordion title="getCacheSize(id)">
+Gets the cache size for a specific avatar.
+
+```kotlin
+suspend fun getCacheSize(id: String): Long
+```
+
+**Parameters:**
+- `id`: The avatar identifier
+
+**Returns:** The cache size in bytes.
+</Accordion>
+
+<Accordion title="getAllCacheSize()">
+Gets the total cache size for all avatars.
+
+```kotlin
+suspend fun getAllCacheSize(): Long
+```
+
+**Returns:** The total cache size in bytes.
+</Accordion>
+
+<Accordion title="getCacheStats()">
+Get cache statistics.
+
+```kotlin
+suspend fun getCacheStats(): CacheStats
+```
+
+**Returns:** A `CacheStats` object containing total entries, total size, and max size.
+</Accordion>
+
+### AvatarController
+
+Real-time communication controller that handles WebSocket connections and audio/video data.
+
+```kotlin
+class AvatarController
+```
+
+##### Properties
+
+<Accordion title="onConnectionState">
+Callback for connection state changes.
+
+```kotlin
+var onConnectionState: ((ConnectionState) -> Unit)?
+```
+</Accordion>
+
+<Accordion title="onConversationState">
+Callback for conversation state changes.
+
+```kotlin
+var onConversationState: ((ConversationState) -> Unit)?
+```
+</Accordion>
+
+<Accordion title="onError">
+Callback for error events.
+
+```kotlin
+var onError: ((AvatarError) -> Unit)?
+```
+</Accordion>
+
+<Accordion title="volume">
+The volume of playback (0.0 to 1.0).
+
+```kotlin
+var volume: Float
+```
+</Accordion>
+
+##### Methods
+
+<Accordion title="start()">
+Starts the avatar driving service connection.
+
+```kotlin
+fun start()
+```
+</Accordion>
+
+<Accordion title="close()">
+Close connection.
+
+```kotlin
+fun close()
+```
+</Accordion>
+
+<Accordion title="pauseRendering()">
+Pause the avatar view to pause rendering.
+
+```kotlin
+fun pauseRendering()
+```
+</Accordion>
+
+<Accordion title="resumeRendering()">
+Resume the avatar view to resume rendering.
+
+```kotlin
+fun resumeRendering()
+```
+</Accordion>
+
+<Accordion title="interrupt()">
+Stops playback and terminates the current conversation.
+
+```kotlin
+fun interrupt()
+```
+</Accordion>
+
+<Accordion title="send(audioData, end)">
+Sends audio to the avatar driving service.
+
+```kotlin
+suspend fun send(audioData: ByteArray, end: Boolean = false): String
+```
+
+**Parameters:**
+- `audioData`: The audio data to send
+- `end`: Whether this is the end of the audio stream
+
+**Returns:** A conversation ID string.
+</Accordion>
+
+<Accordion title="yield(audioData, end, audioFormat)">
+Yields audio from the host.
+
+```kotlin
+suspend fun yield(
+    audioData: ByteArray,
+    end: Boolean = false,
+    audioFormat: AudioFormat? = null
+): String
+```
+
+**Parameters:**
+- `audioData`: The audio data
+- `end`: Whether this is the end of the audio stream
+- `audioFormat`: The audio format (optional)
+
+**Returns:** A conversation ID string.
+</Accordion>
+
+<Accordion title="yield(animations, reqId)">
+Yields animations from the host.
+
+```kotlin
+fun yield(animations: List<ByteArray>, reqId: String)
+```
+
+**Parameters:**
+- `animations`: List of animation data
+- `reqId`: The request ID returned from yield audio
+</Accordion>
+
+### AvatarView
+
+3D rendering view that automatically creates and manages AvatarController.
+
+```kotlin
+class AvatarView : FrameLayout
+```
+
+##### Initializers
+
+<Accordion title="constructor(context)">
+Creates a new avatar view.
+
+```kotlin
+constructor(context: Context)
+```
+</Accordion>
+
+##### Properties
+
+<Accordion title="avatarController">
+The controller for the avatar.
+
+```kotlin
+val avatarController: AvatarController?
+```
+</Accordion>
+
+##### Methods
+
+<Accordion title="init(avatar, scope)">
+Initialize view with avatar.
+
+```kotlin
+fun init(avatar: Avatar, scope: CoroutineScope)
+```
+
+**Parameters:**
+- `avatar`: The avatar to display
+- `scope`: Coroutine scope, usually obtained via `activity.lifecycleScope`
+</Accordion>
+
+<Accordion title="cleanup()">
+Clean up all resources. Should be called when no longer in use.
+
+```kotlin
+fun cleanup()
+```
+</Accordion>
+
+---
+
+### Avatar
+
+Avatar data class containing core avatar information.
+
+```kotlin
+class Avatar
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | `String` | The avatar identifier. |
+| `pointCount` | `Int` | The avatar point count. |
+
+### Configuration
+
+SDK configuration class.
+
+```kotlin
+data class Configuration
+```
+
+##### Initializers
+
+<Accordion title="Configuration(environment, audioFormat, drivingServiceMode, logLevel)">
+Creates a new configuration with the specified parameters.
+
+```kotlin
+data class Configuration(
+    val environment: Environment,
+    val audioFormat: AudioFormat = AudioFormat(16000),
+    val drivingServiceMode: DrivingServiceMode = DrivingServiceMode.SDK,
+    val logLevel: LogLevel = LogLevel.INFO
+)
+```
+
+**Parameters:**
+- `environment`: The environment to use
+- `audioFormat`: The audio format configuration
+- `drivingServiceMode`: The driving service mode
+- `logLevel`: The log level
+</Accordion>
+
+### Environment
+
+Environment enum.
+
+```kotlin
+enum class Environment
+```
+
+| Case | Description |
+|------|-------------|
+| `intl` | International environment. |
+| `cn` | China environment. |
+| `test` | Test environment. |
+
+### AudioFormat
+
+Audio format configuration for AvatarKit.
+
+```kotlin
+class AudioFormat
+```
+
+##### Initializers
+
+<Accordion title="AudioFormat(sampleRate:)">
+Creates a new audio format with the specified sample rate.
+
+```kotlin
+class AudioFormat(val sampleRate: Int)
+```
+
+**Parameters:**
+- `sampleRate`: The audio sample rate in Hz. Supported sample rates are: 8000, 16000, 22050, 24000, 32000, 44100, 48000.
+</Accordion>
+
+### DrivingServiceMode
+
+Driving service modes for AvatarKit.
+
+```kotlin
+enum class DrivingServiceMode
+```
+
+| Case | Description |
+|------|-------------|
+| `SDK` | The SDK handles driving service internally. |
+| `HOST` | The host application handles driving service. |
+
+### LogLevel
+
+Log levels for AvatarKit.
+
+```kotlin
+enum class LogLevel
+```
+
+| Case | Description |
+|------|-------------|
+| `ALL` | Log all messages. |
+| `VERBOSE` | Log verbose messages. |
+| `DEBUG` | Log debug messages. |
+| `INFO` | Log info messages. |
+| `WARNING` | Log warning messages. |
+| `ERROR` | Log error messages. |
+| `OFF` | Disable logging. |
+
+### ConnectionState
+
+Connection state sealed class.
+
+```kotlin
+sealed class ConnectionState
+```
+
+| Case | Description |
+|------|-------------|
+| `Connecting` | The connection is being established. |
+| `Connected` | The connection is active. |
+| `Disconnected` | The connection has been closed. |
+| `Failed(Exception)` | The connection failed with an exception. |
+
+### ConversationState
+
+Avatar conversation state enum.
+
+```kotlin
+enum class ConversationState
+```
+
+| Case | Description |
+|------|-------------|
+| `Idle` | Idle state, showing breathing animation. |
+| `Active` | Active, waiting for playable content. |
+| `Playing` | The avatar is playing audio/animation. |
+
+### LoadProgress
+
+Load progress sealed class.
+
+```kotlin
+sealed class LoadProgress
+```
+
+| Case | Description |
+|------|-------------|
+| `Downloading(Float)` | Downloading with progress (0-1). |
+| `Completed` | Loading completed. |
+| `Failed(Throwable)` | Loading failed with error. |

@@ -1,0 +1,36 @@
+---
+title: "How to Integrate"
+description: "Pick the right integration mode based on your stack"
+---
+
+<Info>
+Spatius is an **avatar-only** service — it takes audio in and outputs real-time avatar motion. Voice conversation, speech synthesis, and agent logic are handled by your application or third-party services.
+</Info>
+
+## Pick your mode
+
+<AccordionGroup>
+  <Accordion title="Are you using LiveKit Agents?">
+    Use **[LiveKit Plugin for Spatius](/livekit-plugin/overview)** -- Add to your existing voice agent, it handles session, audio, and interrupts automatically.
+  </Accordion>
+  <Accordion title="Are you an iOS / Android app developer, or just want to test as quickly as possible?">
+    Use **[Basic Mode](/basic-mode/overview)** -- Recommended starting point. Client SDK handles everything, no server code needed.
+  </Accordion>
+  <Accordion title="Are you an advanced / enterprise developer who needs custom control?">
+    Use **[Custom Mode](/custom-mode/overview)** -- Build your own agent and plug into Spatius. You can reuse LiveKit as the transport layer, or go further and customize the transport end-to-end.
+  </Accordion>
+</AccordionGroup>
+
+## Compare
+
+| Mode | Latency | Dev Effort | Platform |
+| --- | --- | --- | --- |
+| **[LiveKit Plugin](/livekit-plugin/overview)** | 🟢 Ultra-Low | 🟢 Low | Web |
+| **[Basic Mode](/basic-mode/overview)** | 🟡 Moderate | 🟢 Low | Web / iOS / Android |
+| **[Custom Mode](/custom-mode/overview)** | 🟢 Ultra-Low | 🟡 Medium / High (depends) | Web / iOS / Android |
+
+## Start from runnable examples
+
+<Card title="AvatarKit Voice Agent Demo" icon="code" href="https://github.com/spatialwalk/avatarkit-voice-agent-demo" horizontal>
+  Clone, fill in `.env`, and run.
+</Card>

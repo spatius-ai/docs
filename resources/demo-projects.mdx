@@ -1,0 +1,87 @@
+---
+title: "Demo Projects"
+description: "Complete working examples for every platform"
+---
+
+Get started quickly with our demo projects. Each repository contains a fully functional application you can run immediately.
+
+<CardGroup cols={2}>
+  <Card title="Voice Agent + Avatar Demo" icon="microphone" href="https://github.com/spatialwalk/avatarkit-voice-agent-demo">
+    Fully functioning voice agent + avatar example projects that run after filling API keys in `.env`.
+  </Card>
+  <Card title="Web Demo" icon="globe" href="https://github.com/spatialwalk/avatar-kit-web-demo">
+    Vanilla JS, Vue, and React examples with Vite and Next.js configurations.
+  </Card>
+  <Card title="iOS Demo" icon="apple" href="https://github.com/spatialwalk/avatar-kit-ios-demo">
+    Swift / SwiftUI example with SDK Mode integration.
+  </Card>
+  <Card title="Android Demo" icon="android" href="https://github.com/spatialwalk/avatar-kit-android-demo">
+    Kotlin / Compose example with SDK Mode integration.
+  </Card>
+</CardGroup>
+
+## Voice Agent + Avatar
+
+**Repository:** [github.com/spatialwalk/avatarkit-voice-agent-demo](https://github.com/spatialwalk/avatarkit-voice-agent-demo)
+
+A fully functioning voice agent + avatar demo collection for real-time interaction.
+
+- End-to-end voice agent + avatar pipeline
+- Multiple runnable example projects
+- Works out of the box after filling required API keys in `.env`
+
+```bash
+git clone https://github.com/spatialwalk/avatarkit-voice-agent-demo.git
+cd avatarkit-voice-agent-demo
+```
+
+## Web
+
+**Repository:** [github.com/spatialwalk/avatar-kit-web-demo](https://github.com/spatialwalk/avatar-kit-web-demo)
+
+Includes multiple framework examples:
+
+| Example | Framework | Build Tool |
+|---------|-----------|------------|
+| Vanilla | Plain TypeScript | Vite |
+| Vue | Vue 3 + Composition API | Vite |
+| React | React 18+ | Vite / Next.js |
+
+```bash
+git clone https://github.com/spatialwalk/avatar-kit-web-demo.git
+cd avatar-kit-web-demo
+pnpm install
+pnpm dev
+```
+
+## iOS
+
+**Repository:** [github.com/spatialwalk/avatar-kit-ios-demo](https://github.com/spatialwalk/avatar-kit-ios-demo)
+
+- Swift 6.2 / SwiftUI
+- iOS 16+
+- Metal rendering
+
+```bash
+git clone https://github.com/spatialwalk/avatar-kit-ios-demo.git
+```
+
+Open the `.xcodeproj` in Xcode, set your App ID and Session Token, then run on a physical device.
+
+<Warning>
+Metal rendering is not supported in the iOS Simulator. Use a physical device for testing.
+</Warning>
+
+## Android
+
+**Repository:** [github.com/spatialwalk/avatar-kit-android-demo](https://github.com/spatialwalk/avatar-kit-android-demo)
+
+- Kotlin / Jetpack Compose
+- API 24+
+- Vulkan rendering
+
+```bash
+git clone https://github.com/spatialwalk/avatar-kit-android-demo.git
+```
+
+Open in Android Studio, set your App ID and Session Token, then run on a physical device or emulator with Vulkan support.

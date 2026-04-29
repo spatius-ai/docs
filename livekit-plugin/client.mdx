@@ -1,0 +1,206 @@
+---
+title: "Use AvatarKit with LiveKit"
+sidebarTitle: "Client"
+description: "Real-time voice communication with avatars using LiveKit"
+---
+
+<Note>
+**Web Only:** RTC Mode is currently available for Web applications only.
+</Note>
+
+<Warning>
+When using Spatius with LiveKit, do not call `new Room()` from `livekit-client` yourself. `@spatialwalk/avatarkit-rtc` creates and owns the LiveKit `Room` internally so it can wire audio, avatar motion data, and lifecycle handling correctly. If you need access to the underlying Room instance for advanced LiveKit features, see [Native Client Access](#native-client-access).
+</Warning>
+
+## AvatarPlayer API
+
+### Constructor
+
+```typescript
+new AvatarPlayer(provider: LiveKitProvider, avatarView: AvatarView, options?: AvatarPlayerOptions)
+```
+
+### AvatarPlayerOptions
+
+```typescript
+interface AvatarPlayerOptions {
+  /** Start speaking transition frames, default 5 (~200ms at 25fps) */
+  transitionStartFrameCount?: number
+
+  /** End speaking transition frames, default 40 (~1600ms at 25fps) */
+  transitionEndFrameCount?: number
+
+  /** Log level: 'info' | 'warning' | 'error' | 'none', default 'warning' */
+  logLevel?: LogLevel
+}
+```
+
+### Connection
+
+```typescript
+// Connect to LiveKit server
+await player.connect(config: LiveKitConnectionConfig)
+
+// Disconnect and clean up
+await player.disconnect()
+
+// Reconnect using last config (useful after stalls)
+await player.reconnect()
+
+// Check connection status
+player.isConnected  // boolean
+player.getConnectionState()  // ConnectionState
+```
+
+#### LiveKitConnectionConfig
+
+```typescript
+interface LiveKitConnectionConfig {
+  url: string       // LiveKit server URL (wss://...)
+  token: string     // Auth token from your backend
+  roomName: string  // Room name
+}
+```
+
+### Microphone Control
+
+```typescript
+// Start microphone (requests permission automatically)
+await player.startPublishing()
+
+// Stop microphone
+await player.stopPublishing()
+```
+
+### Custom Audio Publishing
+
+For non-microphone audio sources like audio elements or Web Audio API.
+
+```typescript
+// Publish a custom audio track
+await player.publishAudio(track: MediaStreamTrack)
+
+// Stop custom audio
+await player.unpublishAudio()
+```
+
+| Audio Source | How to Obtain Track |
+|-------------|---------------------|
+| `<audio>` element | `audioElement.captureStream().getAudioTracks()[0]` |
+| Screen share audio | `getDisplayMedia({ audio: true })` |
+| Web Audio API | `audioContext.createMediaStreamDestination().stream.getAudioTracks()[0]` |
+
+<Note>
+`unpublishAudio()` does **not** stop the track. You are responsible for calling `track.stop()` to release the resource.
+</Note>
+
+### Native Client Access
+
+Access the underlying LiveKit `Room` instance for advanced features.
+
+```typescript
+import { LiveKitRoom } from '@spatialwalk/avatarkit-rtc'
+
+// Via provider (recommended — full type safety)
+const room = provider.getNativeClient()  // LiveKitRoom | null
+
+// Via player (requires type assertion)
+const room = player.getNativeClient() as LiveKitRoom | null
+
+console.log('Remote participants:', room?.remoteParticipants.size)
+```
+
+### ConnectionState
+
+```typescript
+type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'failed'
+```
+
+## Events
+
+```typescript
+player.on(event: string, handler: Function)
+player.off(event: string, handler: Function)
+```
+
+| Event | Callback | Description |
+|-------|----------|-------------|
+| `'connected'` | `()` | Connected to RTC server |
+| `'disconnected'` | `()` | Disconnected from RTC server |
+| `'error'` | `(error: Error)` | An error occurred |
+| `'connection-state-changed'` | `(state: ConnectionState)` | Connection state changed |
+| `'stalled'` | `()` | Data stream stalled (no frames for 3s) |
+
+<Note>
+When a `stalled` event fires, the avatar automatically transitions to idle animation. Consider calling `player.reconnect()` to recover.
+</Note>
+
+**Stall recovery example:**
+
+```typescript
+player.on('stalled', async () => {
+  console.log('Stream stalled, reconnecting...')
+  try {
+    await player.reconnect()
+  } catch (error) {
+    console.error('Reconnection failed:', error)
+  }
+})
+```
+
+## Complete Example
+
+```typescript
+import { AvatarPlayer, LiveKitProvider } from '@spatialwalk/avatarkit-rtc'
+import { AvatarSDK, AvatarView, AvatarManager, DrivingServiceMode, Environment } from '@spatialwalk/avatarkit'
+
+async function init() {
+  // Initialize SDK in host mode
+  await AvatarSDK.initialize('your-app-id', {
+    environment: Environment.intl,
+    drivingServiceMode: DrivingServiceMode.host,
+  })
+  AvatarSDK.setSessionToken('your-session-token')
+
+  // Load avatar and create view
+  const avatar = await AvatarManager.shared.load('character-id')
+  const container = document.getElementById('avatar-container')!
+  const avatarView = new AvatarView(avatar, container)
+
+  // Create player
+  const provider = new LiveKitProvider()
+  const player = new AvatarPlayer(provider, avatarView, {
+    logLevel: 'info',
+    transitionStartFrameCount: 5,
+    transitionEndFrameCount: 40,
+  })
+
+  // Listen to events
+  player.on('connected', () => console.log('Connected!'))
+  player.on('disconnected', () => console.log('Disconnected!'))
+  player.on('error', (err) => console.error('Error:', err))
+  player.on('stalled', async () => {
+    console.log('Stream stalled, reconnecting...')
+    await player.reconnect()
+  })
+
+  // Connect to LiveKit server
+  await player.connect({
+    url: 'wss://your-livekit-server.com',
+    token: 'your-livekit-token',
+    roomName: 'my-room',
+  })
+
+  // Start microphone
+  await player.startPublishing()
+}
+```
+
+## Browser Compatibility
+
+| Browser | Minimum Version | Notes |
+|---------|-----------------|-------|
+| Chrome | 94+ | VP8 + RTCRtpScriptTransform |
+| Firefox | 117+ | RTCRtpScriptTransform required |
+| Safari | 15.4+ | RTCRtpScriptTransform supported |
+| Edge | 94+ | Same as Chrome |

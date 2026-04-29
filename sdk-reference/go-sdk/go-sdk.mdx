@@ -1,0 +1,80 @@
+---
+title: "Golang SDK"
+sidebarTitle: "Golang"
+description: "Using the Golang SDK"
+---
+
+## Repository
+
+The Golang SDK is available on GitHub: [spatialwalk/avatar-sdk-go](https://github.com/spatialwalk/avatar-sdk-go).
+
+```bash
+go get github.com/spatialwalk/avatar-sdk-go
+```
+
+## Quick start
+
+```go
+import (
+	avatarsdkgo "github.com/spatialwalk/avatar-sdk-go"
+)
+
+func main() {
+	session := avatarsdkgo.NewAvatarSession(
+		avatarsdkgo.WithAPIKey("your-api-key"),
+		avatarsdkgo.WithAppID("your-app-id"),
+		avatarsdkgo.WithAvatarID("your-avatar-id"),
+		avatarsdkgo.WithConsoleEndpointURL("https://console.us-west.spatialwalk.cloud/v1/console"),
+		avatarsdkgo.WithIngressEndpointURL("wss://api.us-west.spatialwalk.cloud/v2/driveningress"),
+		avatarsdkgo.WithExpireAt(time.Now().Add(5 * time.Minute)),
+		avatarsdkgo.WithTransportFrames(func(data []byte, last bool) {
+			// handle animation frame
+		}),
+		avatarsdkgo.WithOnError(func(err error) {
+			// handle error
+		}),
+		avatarsdkgo.WithOnClose(func() {
+			// handle close
+		}),
+	)
+
+	if err := session.Init(ctx); err != nil {
+		// handle init error
+	}
+
+	connectionID, err := session.Start(ctx)
+	if err != nil {
+		// handle start error
+	}
+	defer session.Close()
+
+	// Send audio
+	requestID, err := session.SendAudio(audioData, true)
+	if err != nil {
+		// handle error
+	}
+}
+```
+
+## Egress Mode
+
+For real-time applications, you can configure egress to stream avatar output directly to a real-time platform like [**LiveKit** (rooms)](https://docs.livekit.io/intro/overview/). See [LiveKit Agent server side guide](/livekit-plugin/server) for full configuration and code examples.
+
+Quick example with LiveKit:
+
+```go
+session := avatarsdkgo.NewAvatarSession(
+	// ... other options ...
+	avatarsdkgo.WithLiveKitEgress(&avatarsdkgo.LiveKitEgressConfig{
+		URL:         "wss://your-livekit-server.com",
+		APIKey:      "livekit-api-key",
+		APISecret:   "livekit-api-secret",
+		RoomName:    "your-room-name",
+		PublisherID: "avatar-publisher",
+	}),
+)
+```
+
+## Changelog
+
+https://github.com/spatialwalk/avatar-sdk-go/releases

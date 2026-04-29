@@ -1,0 +1,234 @@
+.step-container {
+  margin-bottom: 0.25rem !important;
+}
+
+.step-container + .step-container {
+  margin-top: 0.25rem !important;
+}
+
+[class*="steps"] {
+  margin-top: 1.5rem !important;
+}
+
+[class*="steps"] .step-container {
+  margin-bottom: 0.25rem !important;
+}
+
+[class*="steps"] .accordion-item {
+  margin-bottom: 0.25rem !important;
+}
+
+.spatius-diagram {
+  --spatius-diagram-ink: #171821;
+  --spatius-diagram-box: rgba(248, 249, 255, 0.94);
+  --spatius-diagram-managed: rgba(149, 153, 227, 0.1);
+  --spatius-diagram-stroke: rgba(52, 55, 76, 0.38);
+  --spatius-diagram-brand: #7478d9;
+  --spatius-diagram-muted: rgba(60, 63, 82, 0.58);
+  --spatius-diagram-blue: #7478e7;
+  --spatius-diagram-livekit: rgb(31, 213, 249);
+  --spatius-diagram-livekit-surface: rgba(31, 213, 249, 0.12);
+  --spatius-diagram-red: #5fae88;
+  --spatius-diagram-green: rgba(54, 105, 82, 0.82);
+  --spatius-diagram-owned: rgba(54, 105, 82, 0.1);
+  --spatius-diagram-node: rgba(246, 247, 253, 0.98);
+  --spatius-diagram-white: #191a24;
+  --spatius-diagram-muted-dark: rgba(64, 67, 86, 0.52);
+  --spatius-diagram-glow: rgba(116, 120, 231, 0.28);
+  --spatius-diagram-edge: rgba(255, 255, 255, 0.72);
+  width: 100%;
+  margin: 0;
+  overflow: visible;
+  border-radius: 6px;
+  color: var(--spatius-diagram-ink);
+}
+
+.spatius-diagram svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  color: var(--spatius-diagram-ink);
+}
+
+.spatius-diagram rect:not([fill="none"]) {
+  filter: drop-shadow(0 18px 26px rgba(20, 22, 36, 0.1));
+}
+
+.spatius-diagram text {
+  font-family: inherit;
+  letter-spacing: 0;
+}
+
+.spatius-diagram-zone {
+  fill: var(--spatius-diagram-managed);
+  stroke-width: 2.5;
+}
+
+.spatius-diagram-orbit {
+  fill: none;
+  stroke: var(--spatius-diagram-brand);
+  stroke-dasharray: 2 10;
+  stroke-linecap: round;
+  stroke-width: 2;
+  opacity: 0.55;
+}
+
+.spatius-audio-bar {
+  animation: spatius-audio-bar 1.08s ease-in-out infinite;
+  fill: var(--spatius-diagram-brand);
+  filter: drop-shadow(0 0 7px var(--spatius-diagram-glow));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.spatius-audio-bar:nth-child(2) {
+  animation-delay: -0.86s;
+}
+
+.spatius-audio-bar:nth-child(3) {
+  animation-delay: -0.62s;
+}
+
+.spatius-audio-bar:nth-child(4) {
+  animation-delay: -0.44s;
+}
+
+.spatius-audio-bar:nth-child(5) {
+  animation-delay: -0.18s;
+}
+
+.spatius-audio-visualizer {
+  opacity: 0.96;
+}
+
+.spatius-agent-pipeline,
+.spatius-agent-speech {
+  pointer-events: none;
+}
+
+.spatius-agent-pipeline {
+  animation: spatius-agent-pipeline 9s ease-in-out infinite;
+}
+
+.spatius-agent-speech {
+  animation: spatius-agent-speech 9s ease-in-out infinite;
+  opacity: 0;
+}
+
+.spatius-diagram-flow {
+  filter: drop-shadow(0 0 5px var(--spatius-diagram-glow));
+  stroke-dasharray: 12 12;
+  animation: spatius-diagram-flow 1.6s linear infinite;
+}
+
+@keyframes spatius-audio-bar {
+  0%,
+  100% {
+    transform: scaleY(0.42);
+  }
+
+  45% {
+    transform: scaleY(1);
+  }
+
+  70% {
+    transform: scaleY(0.64);
+  }
+}
+
+@keyframes spatius-diagram-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@keyframes spatius-agent-pipeline {
+  0%,
+  42% {
+    opacity: 1;
+  }
+
+  48%,
+  92% {
+    opacity: 0;
+  }
+
+  98%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes spatius-agent-speech {
+  0%,
+  42% {
+    opacity: 0;
+  }
+
+  48%,
+  92% {
+    opacity: 1;
+  }
+
+  98%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spatius-diagram-flow {
+    animation: none;
+    stroke-dasharray: none;
+  }
+
+  .spatius-audio-bar {
+    animation: none;
+  }
+
+  .spatius-agent-pipeline {
+    animation: none;
+    opacity: 1;
+  }
+
+  .spatius-agent-speech {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+html.dark .spatius-diagram,
+.dark .spatius-diagram,
+[data-theme="dark"] .spatius-diagram {
+  --spatius-diagram-ink: #f7f7fb;
+  --spatius-diagram-box: rgba(31, 34, 48, 0.88);
+  --spatius-diagram-managed: rgba(147, 153, 227, 0.16);
+  --spatius-diagram-stroke: rgba(234, 235, 255, 0.24);
+  --spatius-diagram-brand: #adaff4;
+  --spatius-diagram-muted: rgba(232, 233, 246, 0.6);
+  --spatius-diagram-blue: #9399e3;
+  --spatius-diagram-livekit: rgb(31, 213, 249);
+  --spatius-diagram-livekit-surface: rgba(31, 213, 249, 0.16);
+  --spatius-diagram-red: #7bd4a8;
+  --spatius-diagram-green: rgba(75, 126, 97, 0.78);
+  --spatius-diagram-owned: rgba(75, 126, 97, 0.18);
+  --spatius-diagram-node: rgba(43, 48, 67, 0.92);
+  --spatius-diagram-white: #f7f7fb;
+  --spatius-diagram-muted-dark: rgba(230, 230, 240, 0.5);
+  --spatius-diagram-glow: rgba(147, 153, 227, 0.46);
+  --spatius-diagram-edge: rgba(255, 255, 255, 0.2);
+}
+
+/* Walkthrough pages: keep long code blocks in fixed-height scroll areas. */
+.walkthrough-code pre {
+  max-height: 460px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.walkthrough-code [data-content-type="codeBlock"] {
+  max-height: 460px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}

@@ -1,0 +1,620 @@
+---
+title: "API Reference"
+sidebarTitle: "iOS"
+description: "Browse the complete API reference"
+---
+
+## Installation
+
+Download the latest [AvatarKit.xcframework](https://github.com/spatialwalk/avatar-kit-ios-release/releases/download/v1.0.0-beta.27/AvatarKit_202604060141.zip), unzip, and drag it into your Xcode project. Set **Embed & Sign** in your target's **Frameworks, Libraries, and Embedded Content**.
+
+### AvatarSDK
+
+Main initialization and configuration interface for AvatarKit.
+
+```swift
+@MainActor enum AvatarSDK
+```
+
+##### Type Properties
+
+<Accordion title="appID">
+The app identifier.
+
+```swift
+static var appID: String { get }
+```
+</Accordion>
+
+<Accordion title="configuration">
+The app configuration.
+
+```swift
+static var configuration: Configuration { get }
+```
+</Accordion>
+
+<Accordion title="sessionToken">
+The session token used to authenticate avatars with the AvatarKit Server.
+
+```swift
+static var sessionToken: String
+```
+</Accordion>
+
+<Accordion title="userID">
+The user identifier provided by the developer to identify the user in the AvatarKit Log Service.
+
+```swift
+static var userID: String
+```
+</Accordion>
+
+<Accordion title="supportsCurrentDevice">
+Returns a Boolean value that indicates whether AvatarKit supports the current device.
+
+```swift
+static var supportsCurrentDevice: Bool { get }
+```
+</Accordion>
+
+<Accordion title="version">
+Returns the version of AvatarKit.
+
+```swift
+static var version: String { get }
+```
+</Accordion>
+
+##### Type Methods
+
+<Accordion title="initialize(appID:configuration:)">
+Initialize AvatarKit.
+
+```swift
+static func initialize(appID: String, configuration: Configuration)
+```
+
+**Parameters:**
+- `appID`: The app identifier
+- `configuration`: The configuration for AvatarKit
+</Accordion>
+
+<Accordion title="benchmark()">
+Measures the device's computational performance for avatar rendering.
+
+```swift
+static func benchmark() async -> Int
+```
+
+**Returns:** A performance score indicating the device's capability.
+</Accordion>
+
+### AvatarManager
+
+Manage avatar asset loading, caching, and retrieval.
+
+```swift
+final class AvatarManager
+```
+
+##### Type Properties
+
+<Accordion title="shared">
+The shared avatar manager instance.
+
+```swift
+static let shared: AvatarManager
+```
+</Accordion>
+
+##### Instance Methods
+
+<Accordion title="load(id:onProgress:)">
+Loads an avatar by ID.
+
+```swift
+func load(id: String, onProgress: (ProgressHandler)?) async throws -> Avatar
+```
+
+**Parameters:**
+- `id`: The avatar identifier
+- `onProgress`: Optional progress callback
+
+**Returns:** The loaded `Avatar` instance.
+</Accordion>
+
+<Accordion title="cancelLoading(id:)">
+Cancels the loading of avatar by ID.
+
+```swift
+func cancelLoading(id: String) async
+```
+
+**Parameters:**
+- `id`: The avatar identifier
+</Accordion>
+
+<Accordion title="cancelAllLoading()">
+Cancels all loading of avatars.
+
+```swift
+func cancelAllLoading() async
+```
+</Accordion>
+
+<Accordion title="retrieve(id:)">
+Retrieves a cached avatar by ID.
+
+```swift
+func retrieve(id: String) -> Avatar?
+```
+
+**Parameters:**
+- `id`: The avatar identifier
+
+**Returns:** The cached `Avatar` if available, otherwise `nil`.
+</Accordion>
+
+<Accordion title="derive(assetPath:)">
+Derives an avatar from a local asset path.
+
+```swift
+func derive(assetPath: String) throws -> Avatar
+```
+
+**Parameters:**
+- `assetPath`: The path to the avatar asset
+
+**Returns:** The derived `Avatar` instance.
+</Accordion>
+
+<Accordion title="clear(id:)">
+Clears cached data for a specific avatar.
+
+```swift
+func clear(id: String) throws
+```
+
+**Parameters:**
+- `id`: The avatar identifier to clear
+</Accordion>
+
+<Accordion title="clearAll()">
+Clears all cached avatar data.
+
+```swift
+func clearAll() throws
+```
+</Accordion>
+
+<Accordion title="clearLRU(keepCount:)">
+Clears least recently used avatars, keeping the specified count.
+
+```swift
+func clearLRU(keepCount: Int) throws
+```
+
+**Parameters:**
+- `keepCount`: Number of most recently used avatars to keep
+</Accordion>
+
+<Accordion title="getCacheSize(id:)">
+Gets the cache size for a specific avatar.
+
+```swift
+func getCacheSize(id: String) throws -> Int
+```
+
+**Parameters:**
+- `id`: The avatar identifier
+
+**Returns:** The cache size in bytes.
+</Accordion>
+
+<Accordion title="getAllCacheSize()">
+Gets the total cache size for all avatars.
+
+```swift
+func getAllCacheSize() throws -> Int
+```
+
+**Returns:** The total cache size in bytes.
+</Accordion>
+
+### AvatarController
+
+The main controller for managing avatar driving service connections and interactions.
+
+```swift
+@MainActor final class AvatarController
+```
+
+##### Instance Properties
+
+<Accordion title="onFirstRendering">
+Callback when the avatar is first rendered.
+
+```swift
+var onFirstRendering: (() -> Void)?
+```
+</Accordion>
+
+<Accordion title="onConnectionState">
+Callback for connection state changes.
+
+```swift
+var onConnectionState: ((ConnectionState) -> Void)?
+```
+</Accordion>
+
+<Accordion title="onConversationState">
+Callback for conversation state changes.
+
+```swift
+var onConversationState: ((ConversationState) -> Void)?
+```
+</Accordion>
+
+<Accordion title="onError">
+Callback for error events.
+
+```swift
+var onError: ((AvatarError) -> Void)?
+```
+</Accordion>
+
+<Accordion title="start()">
+Starts the avatar driving service connection.
+
+```swift
+func start()
+```
+</Accordion>
+
+<Accordion title="close()">
+Closes the avatar driving service.
+
+```swift
+func close()
+```
+</Accordion>
+
+<Accordion title="pauseRendering()">
+Pauses avatar rendering.
+
+```swift
+func pauseRendering()
+```
+</Accordion>
+
+<Accordion title="resumeRendering()">
+Resumes avatar rendering.
+
+```swift
+func resumeRendering()
+```
+</Accordion>
+
+<Accordion title="isRendering">
+Whether the current avatar is actually rendering.
+
+```swift
+var isRendering: Bool { get }
+```
+</Accordion>
+
+<Accordion title="interrupt()">
+Stops playback and terminates the current conversation.
+
+```swift
+func interrupt()
+```
+</Accordion>
+
+<Accordion title="send(_:end:)">
+Sends audio to the avatar driving service.
+
+```swift
+func send(_ data: Data, end: Bool) -> String
+```
+
+**Parameters:**
+- `data`: The audio data to send
+- `end`: Whether this is the end of the audio stream
+
+**Returns:** A conversation ID string.
+</Accordion>
+
+<Accordion title="yield(_:end:audioFormat:)">
+Yields audio from the host.
+
+```swift
+func yield(_ data: Data, end: Bool, audioFormat: AudioFormat?) -> String
+```
+
+**Parameters:**
+- `data`: The audio data
+- `end`: Whether this is the end of the audio stream
+- `audioFormat`: The audio format (optional)
+
+**Returns:** A conversation ID string.
+</Accordion>
+
+<Accordion title="yield(_:conversationID:)">
+Yields animations from the host.
+
+```swift
+func yield(_ animations: [Data], conversationID: String)
+```
+
+**Parameters:**
+- `animations`: Array of animation data
+- `conversationID`: The conversation identifier
+</Accordion>
+
+<Accordion title="pointCount">
+The point count of the current avatar.
+
+```swift
+var pointCount: Int { get }
+```
+</Accordion>
+
+<Accordion title="volume">
+The volume of playback.
+
+```swift
+var volume: Float
+```
+</Accordion>
+
+### AvatarView
+
+A UIView subclass for rendering avatars.
+
+```swift
+@MainActor final class AvatarView: UIView
+```
+
+##### Initializers
+
+<Accordion title="init(avatar:)">
+Creates a new avatar view with the specified avatar.
+
+```swift
+init(avatar: Avatar)
+```
+
+**Parameters:**
+- `avatar`: The avatar to display
+</Accordion>
+
+##### Instance Properties
+
+<Accordion title="controller">
+The controller for the avatar.
+
+```swift
+var controller: AvatarController { get }
+```
+</Accordion>
+
+<Accordion title="contentTransform">
+Transform for avatar content position and scale within the view.
+
+```swift
+var contentTransform: Transform
+```
+</Accordion>
+
+<Accordion title="isOpaque">
+Whether the view is opaque.
+
+```swift
+var isOpaque: Bool
+```
+</Accordion>
+
+---
+
+### Avatar
+
+Represents an avatar instance.
+
+```swift
+struct Avatar
+```
+
+| Instance Property | Type | Description |
+|----------|------|-------------|
+| `id` | `String` | The avatar identifier. |
+| `isFromCache` | `Bool` | Whether the instance of avatar is from cache. |
+
+### Configuration
+
+Configuration for AvatarKit.
+
+```swift
+struct Configuration
+```
+
+##### Initializers
+
+<Accordion title="init(environment:audioFormat:drivingServiceMode:logLevel:)">
+Creates a new configuration with the specified parameters.
+
+```swift
+init(
+    environment: Environment,
+    audioFormat: AudioFormat,
+    drivingServiceMode: DrivingServiceMode,
+    logLevel: LogLevel
+)
+```
+
+**Parameters:**
+- `environment`: The environment to use
+- `audioFormat`: The audio format configuration
+- `drivingServiceMode`: The driving service mode
+- `logLevel`: The log level
+</Accordion>
+
+| Instance Property | Type | Description |
+|----------|------|-------------|
+| `environment` | `Environment` | Environment for AvatarKit. |
+| `audioFormat` | `AudioFormat` | Audio format for AvatarKit. |
+| `drivingServiceMode` | `DrivingServiceMode` | Driving service mode for AvatarKit. |
+| `logLevel` | `LogLevel` | Log level for AvatarKit. |
+
+### Environment
+
+Environments for AvatarKit.
+
+```swift
+enum Environment
+```
+
+| Case | Description |
+|------|-------------|
+| `intl` | International environment. |
+| `cn` | China environment. |
+
+### AudioFormat
+
+Audio format configuration for AvatarKit.
+
+```swift
+struct AudioFormat
+```
+
+##### Initializers
+
+<Accordion title="init(sampleRate:)">
+Creates a new audio format with the specified sample rate.
+
+```swift
+init(sampleRate: Int)
+```
+
+**Parameters:**
+- `sampleRate`: The audio sample rate in Hz
+</Accordion>
+
+| Instance Property | Type | Description |
+|----------|------|-------------|
+| `sampleRate` | `Int` | The audio sample rate in Hz. |
+| `channelCount` | `Int` | The number of audio channels. Fixed to 1 for mono. |
+
+### DrivingServiceMode
+
+Driving service modes for AvatarKit.
+
+```swift
+enum DrivingServiceMode
+```
+
+| Case | Description |
+|------|-------------|
+| `sdk` | The SDK handles driving service internally. |
+| `host` | The host application handles driving service. |
+
+### LogLevel
+
+Log levels for AvatarKit.
+
+```swift
+enum LogLevel
+```
+
+| Case | Description |
+|------|-------------|
+| `all` | Log all messages. |
+| `warning` | Log warnings and errors only. |
+| `error` | Log errors only. |
+| `off` | Disable logging. |
+
+### ConnectionState
+
+Connection states for AvatarKit.
+
+```swift
+enum ConnectionState
+```
+
+| Case | Description |
+|------|-------------|
+| `connecting` | The connection is being established. |
+| `connected` | The connection is active. |
+| `disconnected` | The connection has been closed. |
+| `failed(Error)` | The connection failed with an error. |
+
+### ConversationState
+
+Conversation states for AvatarKit.
+
+```swift
+enum ConversationState
+```
+
+| Case | Description |
+|------|-------------|
+| `idle` | No active conversation. |
+| `playing` | The avatar is playing audio/animation. |
+| `paused` | The conversation is paused. |
+
+### Transform
+
+Transform for avatar content rendering.
+
+```swift
+struct Transform
+```
+
+##### Initializers
+
+<Accordion title="init(x:y:scale:)">
+Creates a new transform with the specified translation and scale.
+
+```swift
+init(x: Float, y: Float, scale: Float)
+```
+
+**Parameters:**
+- `x`: The x-axis translation
+- `y`: The y-axis translation
+- `scale`: The scale factor
+</Accordion>
+
+| Type Property | Type | Description |
+|----------|------|-------------|
+| `identity` | `Transform` | The identity transform. |
+
+| Instance Property | Type | Description |
+|----------|------|-------------|
+| `x` | `Float` | The x-axis translation. |
+| `y` | `Float` | The y-axis translation. |
+| `scale` | `Float` | The scale factor. |
+
+### AvatarError
+
+Avatar errors for AvatarKit.
+
+```swift
+enum AvatarError: LocalizedError
+```
+
+| Case | Description |
+|------|-------------|
+| `appIDUnrecognized` | The app ID is not recognized. |
+| `avatarIDUnrecognized` | The avatar ID is not recognized. |
+| `avatarAssetMissing` | The avatar asset is missing. |
+| `failedToDownloadAvatarAssets` | Failed to download avatar assets. |
+| `failedToFetchAvatarMetadata` | Failed to fetch avatar metadata. |
+| `sessionTokenExpired` | The session token has expired. |
+| `sessionTokenInvalid` | The session token is invalid. |
+
+| Instance Property | Type | Description |
+|----------|------|-------------|
+| `errorDescription` | `String?` | A localized description of the error. |
+| `failureReason` | `String?` | The reason for the failure. |

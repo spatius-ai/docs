@@ -1,0 +1,82 @@
+---
+title: "Quickstart"
+description: "Build an avatar with Spatius + LiveKit Agents + Gemini Live in 5 minutes."
+---
+
+<Card
+  title="GitHub Repository"
+  icon="github"
+  href="https://github.com/spatialwalk/avatarkit-voice-agent-demo/tree/main/spatialreal-agent-quickstart"
+  horizontal
+>
+  Source code for this quickstart.
+</Card>
+
+For architecture information and detailed tutorial, checkout [LiveKit Plugin Guide](/livekit-plugin/overview).
+
+## Prerequisites
+
+- [Spatius](https://app.spatius.ai/apps) credentials (`SPATIALREAL_API_KEY`, `SPATIALREAL_APP_ID`, `SPATIALREAL_AVATAR_ID`)
+- [LiveKit](https://cloud.livekit.io/projects) credentials (`LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`)
+- [Google AI Studio](https://aistudio.google.com/api-keys) api key for Gemini Live (`GOOGLE_API_KEY`)
+
+<Steps>
+<Step title="Clone the repo and enter the quickstart folder">
+
+```bash
+git clone https://github.com/spatialwalk/avatarkit-voice-agent-demo.git
+cd avatarkit-voice-agent-demo/spatialreal-agent-quickstart
+```
+
+</Step>
+
+<Step title="Create env files">
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+Fill `backend/.env` and `frontend/.env`
+
+</Step>
+
+<Step title="Install dependencies">
+
+```bash
+# backend
+cd backend
+uv sync
+
+# frontend
+cd ../frontend
+pnpm install
+```
+
+</Step>
+
+<Step title="Run the stack (3 terminals)">
+
+```bash
+# Terminal 1: token server
+cd avatarkit-voice-agent-demo/spatialreal-agent-quickstart/backend
+uv run token_server.py
+```
+
+```bash
+# Terminal 2: LiveKit agent worker
+cd avatarkit-voice-agent-demo/spatialreal-agent-quickstart/backend
+uv run agent.py dev
+```
+
+```bash
+# Terminal 3: frontend
+cd avatarkit-voice-agent-demo/spatialreal-agent-quickstart/frontend
+pnpm dev
+```
+
+Open `http://localhost:3000`, click **Connect**, then **Enable Mic** to start speaking.
+
+</Step>
+</Steps>
+

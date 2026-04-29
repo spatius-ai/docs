@@ -1,0 +1,45 @@
+---
+title: "Server API Reference"
+description: "Server-side API Reference"
+---
+
+## Obtain a session token
+
+Call the server endpoint `POST /v1/console/session-tokens`.
+
+### Console API host
+
+In the examples below, replace `<console-api-host>` with the host for your region:
+
+| Region | `<console-api-host>` |
+| --- | --- |
+| `ap-northeast` | `console.ap-northeast.spatialwalk.cloud` |
+| `us-west` | `console.us-west.spatialwalk.cloud` |
+
+### Request parameters
+
+- **Body**
+  - **expireAt**: int, expiration timestamp in seconds. Range: now < expireAt < now + 24 hours
+  - **modelVersion**: string, reserved field; omit
+- **Header**
+  - **X-Api-Key**: your API key
+
+### Request example
+
+```bash
+curl --location --request POST 'https://<console-api-host>/v1/console/session-tokens' \  # replace with your console API domain
+--header 'X-Api-Key: <your-api-key>' \                                                  # replace with your API key
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "expireAt": 1754824283,
+    "modelVersion": ""
+}'                                                                                      # set expireAt to the desired expiration time
+```
+
+### Response example
+
+```json
+{
+  "sessionToken": "..."
+}
+```

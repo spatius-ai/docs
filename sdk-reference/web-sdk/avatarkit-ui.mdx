@@ -1,0 +1,322 @@
+---
+title: "AvatarKit UI"
+sidebarTitle: "AvatarKit UI"
+description: "Spatius avatar components for React."
+---
+
+AvatarKit UI is a shadcn-style React component package for embedding a Spatius avatar player into your app. It wraps AvatarKit RTC setup, LiveKit session wiring, loading and error states, and a small set of presentational primitives so you can ship an avatar surface with minimal glue code.
+
+## Usage
+
+Use `SpatiusAvatarProvider` to initialize AvatarKit and LiveKit, then compose the avatar surface with `SpatiusAvatarFrame`, `SpatiusAvatarCanvas`, `SpatiusAvatarLoading`, `SpatiusAvatarError`, and `SpatiusAvatarStatus`.
+
+```tsx
+import {
+  SpatiusAvatarCanvas,
+  SpatiusAvatarError,
+  SpatiusAvatarFrame,
+  SpatiusAvatarLoading,
+  SpatiusAvatarProvider,
+  SpatiusAvatarStatus,
+} from '@/components/spatialreal-avatar'
+
+export function AgentAvatar({ token, url, roomName }: {
+  token: string
+  url: string
+  roomName: string
+}) {
+  return (
+    <SpatiusAvatarProvider
+      appId={import.meta.env.VITE_SPATIALREAL_APP_ID}
+      avatarId={import.meta.env.VITE_SPATIALREAL_AVATAR_ID}
+      connection={{ token, url, roomName }}
+    >
+      <SpatiusAvatarFrame className="overflow-hidden">
+        <SpatiusAvatarCanvas className="min-h-[520px]" />
+        <SpatiusAvatarLoading />
+        <SpatiusAvatarError />
+
+        <div className="absolute inset-x-0 top-0 flex justify-end p-4">
+          <SpatiusAvatarStatus />
+        </div>
+      </SpatiusAvatarFrame>
+    </SpatiusAvatarProvider>
+  )
+}
+```
+
+This is the same composition pattern used in the working Vite demo: an avatar frame for rendering, built-in overlays for loading and failure states, and context-driven controls for microphone and session UI.
+
+### Adding microphone controls with context
+
+Use `useSpatiusAvatarContext()` inside the provider tree when you want to drive UI from connection state or publish the local microphone into the avatar session.
+
+```tsx
+import { useState } from 'react'
+
+import {
+  SpatiusAvatarCanvas,
+  SpatiusAvatarError,
+  SpatiusAvatarFrame,
+  SpatiusAvatarLoading,
+  SpatiusAvatarProvider,
+  SpatiusAvatarStatus,
+  useSpatiusAvatarContext,
+} from '@/components/spatialreal-avatar'
+
+function AvatarPanel() {
+  const avatar = useSpatiusAvatarContext()
+  const [pending, setPending] = useState(false)
+
+  const toggleMicrophone = async () => {
+    if (pending) return
+
+    setPending(true)
+
+    try {
+      if (avatar.isPublishingMicrophone) {
+        await avatar.stopPublishingMicrophone()
+      } else {
+        await avatar.startPublishingMicrophone()
+      }
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+      <section className="space-y-4">
+        <SpatiusAvatarFrame>
+          <SpatiusAvatarCanvas />
+          <SpatiusAvatarLoading />
+          <SpatiusAvatarError />
+        </SpatiusAvatarFrame>
+
+        <div className="flex items-center justify-between rounded-2xl border p-3">
+          <button
+            disabled={!avatar.isConnected || pending}
+            onClick={() => void toggleMicrophone()}
+            type="button"
+          >
+            {avatar.isPublishingMicrophone ? 'Mute mic' : 'Enable mic'}
+          </button>
+
+          <SpatiusAvatarStatus />
+        </div>
+      </section>
+
+      <section className="rounded-3xl border p-4">
+        {avatar.room
+          ? 'Render your LiveKit transcript or agent UI here.'
+          : 'Waiting for the LiveKit session to become available...'}
+      </section>
+    </div>
+  )
+}
+
+export function VoiceAgentAvatar(props: {
+  token: string
+  url: string
+  roomName: string
+}) {
+  return (
+    <SpatiusAvatarProvider
+      appId={import.meta.env.VITE_SPATIALREAL_APP_ID}
+      avatarId={import.meta.env.VITE_SPATIALREAL_AVATAR_ID}
+      connection={props}
+    >
+      <AvatarPanel />
+    </SpatiusAvatarProvider>
+  )
+}
+```
+
+<Note>
+`SpatiusAvatarCanvas` must render inside a container with non-zero width and height. The provider waits for the canvas container to be measurable before it starts loading the avatar.
+</Note>
+
+## Features
+
+- Render a Spatius avatar surface with a small set of composable shadcn-style primitives.
+- Connect AvatarKit and LiveKit through `SpatiusAvatarProvider` without writing your own player wiring.
+- Show built-in loading, error, and connection status UI out of the box.
+- Access the active LiveKit room and avatar session state through `useSpatiusAvatarContext()`.
+- Start, stop, reconnect, disconnect, and publish microphone audio with hook-based controls.
+
+## Installation
+
+`AvatarKit UI` is built on:
+
+- **shadcn/ui** conventions (local component files + Tailwind styles)
+- **[LiveKit Agent UI](https://livekit.com/products/agents-ui) ecosystem** (`@livekit/components-react`, `@livekit/components-styles`)
+
+Before adding this AvatarKit UI component to your project, you can use this [guide](https://ui.shadcn.com/docs/installation/manual) to setup shadcn
+
+```bash
+npx shadcn@latest init
+npx shadcn@latest add https://ui.spatialreal.ai/r/spatialreal-avatar.json
+```
+
+## API Reference
+
+### Exports
+
+```tsx
+export {
+  SpatiusAvatarCanvas,
+  SpatiusAvatarError,
+  SpatiusAvatarFrame,
+  SpatiusAvatarLoading,
+  SpatiusAvatarProvider,
+  SpatiusAvatarStatus,
+  useSpatiusAvatar,
+  useSpatiusAvatarContext,
+}
+```
+
+### `SpatiusAvatarProvider`
+
+Initializes AvatarKit, connects the LiveKit-backed avatar stream, provides avatar state through React context, and renders remote room audio.
+
+| Prop | Type | Description |
+| --- | --- | --- |
+| `children` | `ReactNode` | Provider contents. All AvatarKit UI primitives that read context must be rendered inside this provider. |
+| `appId` | `string` | Your AvatarKit app ID. Required. |
+| `avatarId` | `string` | The avatar identifier to load. Required. |
+| `connection` | `{ roomName: string; token: string; url: string }` | LiveKit connection details for the avatar stream. Required. |
+| `enabled` | `boolean` | Defaults to `true`. When `false`, the provider does not initialize or connect the avatar. |
+| `publishMicrophone` | `boolean` | Defaults to `false`. When `true`, the provider starts publishing the local microphone after connection. |
+| `muted` | `boolean` | Mutes audio rendered by `RoomAudioRenderer`. |
+| `volume` | `number` | Playback volume passed to `RoomAudioRenderer`. |
+| `characterApiBaseUrl` | `string` | Optional override for the AvatarKit character API base URL. |
+| `drivingServiceMode` | `DrivingServiceMode` | AvatarKit driving mode. Defaults to `DrivingServiceMode.host`. |
+| `environment` | `Environment` | AvatarKit environment. Defaults to `Environment.intl`. |
+| `sdkLogLevel` | `LogLevel` | AvatarKit SDK log level. |
+| `sessionToken` | `string` | Optional AvatarKit session token to inject into `AvatarSDK`. |
+| `userId` | `string` | Optional end-user identifier passed to `AvatarSDK.setUserId()`. |
+| `playerOptions` | `AvatarPlayerOptions` | Options forwarded to `AvatarPlayer`. |
+| `onConnected` | `(room: Room \| null) => void` | Called once the avatar player connects and the LiveKit room is available. |
+| `onDisconnected` | `() => void` | Called when the avatar player disconnects unexpectedly or returns to idle. |
+| `onAvatarError` | `(error: Error) => void` | Called whenever avatar initialization, connection, reconnect, or microphone publishing fails. |
+| `onLoadProgress` | `(progress: LoadProgressInfo) => void` | Reports avatar asset download progress from `AvatarManager.shared.load()`. |
+| `onStateChange` | `(status: SpatiusAvatarConnectionStatus) => void` | Called whenever connection status changes. |
+| `onDisconnect` | `() => void` | Called after `session.end()` or `avatar.disconnect()` completes through the provider session wrapper. |
+
+### `SpatiusAvatarFrame`
+
+Visual wrapper for the avatar canvas and overlays.
+
+| Prop | Type | Description |
+| --- | --- | --- |
+| `tone` | `'default' \| 'muted' \| 'ghost'` | Visual treatment for the frame background. Defaults to `'default'`. |
+| `className` | `string` | Additional classes for layout and styling. |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | Standard div attributes such as `id`, `style`, and event handlers. |
+
+### `SpatiusAvatarCanvas`
+
+Mount target for `AvatarView`. The rendered avatar appears inside this div.
+
+| Prop | Type | Description |
+| --- | --- | --- |
+| `minHeight` | `CSSProperties['minHeight']` | Minimum canvas height. Defaults to `420`. |
+| `className` | `string` | Additional classes for sizing and styling. |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | Standard div attributes forwarded to the canvas container. |
+
+### `SpatiusAvatarLoading`
+
+Loading overlay shown while the avatar is initializing or connecting.
+
+| Prop | Type | Description |
+| --- | --- | --- |
+| `children` | `ReactNode` | Optional custom loading UI. When omitted, the default card shows current status and asset download progress. |
+| `className` | `string` | Additional classes for the overlay container. |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | Standard div attributes forwarded to the overlay container. |
+
+### `SpatiusAvatarError`
+
+Error overlay shown when avatar setup or streaming fails.
+
+| Prop | Type | Description |
+| --- | --- | --- |
+| `children` | `ReactNode` | Optional custom error UI. When omitted, the default card displays `error.message`. |
+| `className` | `string` | Additional classes for the overlay container. |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | Standard div attributes forwarded to the overlay container. |
+
+### `SpatiusAvatarStatus`
+
+Small status badge for the current avatar connection state.
+
+| Prop | Type | Description |
+| --- | --- | --- |
+| `className` | `string` | Additional classes for the badge. |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | Standard div attributes forwarded to the badge wrapper. |
+
+Supported status labels:
+
+- `idle`
+- `initializing`
+- `connecting`
+- `connected`
+- `disconnecting`
+- `error`
+
+### `useSpatiusAvatar(options)`
+
+Low-level hook that powers the provider. Use it when you want to wire AvatarKit into your own context or compose a custom provider.
+
+#### Options
+
+`useSpatiusAvatar()` accepts the same connection and SDK props as `SpatiusAvatarProvider`, except for `children`, `muted`, `volume`, and `onDisconnect`.
+
+```tsx
+const avatar = useSpatiusAvatar({
+  appId,
+  avatarId,
+  connection: {
+    roomName,
+    token,
+    url,
+  },
+  publishMicrophone: false,
+})
+```
+
+#### Return value
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `status` | `SpatiusAvatarConnectionStatus` | Current lifecycle state. |
+| `isLoading` | `boolean` | `true` while status is `initializing` or `connecting`. |
+| `isConnected` | `boolean` | `true` when the avatar player is connected. |
+| `error` | `Error \| null` | The most recent connection or runtime error. |
+| `downloadProgress` | `number \| null` | Asset download progress from `0` to `1`, or `null` when unavailable. |
+| `isPublishingMicrophone` | `boolean` | Indicates whether the local microphone track is currently published. |
+| `micTrack` | `Track \| undefined` | The published local microphone track, when available. |
+| `room` | `Room \| null` | LiveKit room instance backing the avatar session. |
+| `connection` | `SpatiusAvatarConnection` | The current connection config passed into the hook. |
+| `containerRef` | `(node: HTMLDivElement \| null) => void` | Ref callback that must be attached to the avatar canvas element. |
+| `session` | `UseSessionReturn` | Session object from `@livekit/components-react`, with `end()` mapped to `disconnect()`. |
+| `disconnect()` | `() => Promise<void>` | Disconnects the avatar stream and resets state to idle. |
+| `reconnect()` | `() => Promise<void>` | Attempts to reconnect the existing avatar player. |
+| `startPublishingMicrophone()` | `() => Promise<void>` | Publishes the local microphone into the avatar session. |
+| `stopPublishingMicrophone()` | `() => Promise<void>` | Stops microphone publishing. |
+
+### `useSpatiusAvatarContext()`
+
+Returns the current avatar state from `SpatiusAvatarProvider`.
+
+```tsx
+const avatar = useSpatiusAvatarContext()
+```
+
+Use this hook inside provider children to:
+
+- show or hide UI based on `avatar.status`
+- read the connected `avatar.room` for LiveKit chat and transcript components
+- call `avatar.startPublishingMicrophone()` and `avatar.stopPublishingMicrophone()`
+- invoke `avatar.disconnect()` or `avatar.reconnect()` from your own controls
+
+<Warning>
+`useSpatiusAvatarContext()` throws an error if it is used outside `SpatiusAvatarProvider`.
+</Warning>

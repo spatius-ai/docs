@@ -1,0 +1,146 @@
+---
+title: "State & Events"
+description: "How to observe connection, playback, errors, and recovery paths across integration modes."
+---
+
+**State & Events** is how your application knows whether the connection is online, what the Avatar is doing, and which part should recover when something fails. AvatarKit exposes client-side state through `AvatarController`. In Custom Mode and LiveKit Plugin integrations, part of the state also lives in your backend, plugin, or RTC room.
+
+Wire three signals first:
+
+| Signal | Callback | Use it to |
+|--------|----------|-----------|
+| Connection health | `onConnectionState` | Show connecting / failed UI and decide when to reconnect. |
+| Avatar activity | `onConversationState` | Show idle, speaking, or paused UI and coordinate barge-in. |
+| Failures | `onError` | Log stable error codes, refresh tokens, or surface unrecoverable issues. |
+
+Do not infer one signal from another. A connection can be `connected` while the Avatar is `idle`; a conversation can fail because playback data is bad even if the room or WebSocket is still online.
+
+## Connection Ownership
+
+Connection means the active path that carries avatar speech audio to Motion Server and brings audio and motion data back to AvatarKit. The owner depends on the integration mode.
+
+| Mode | Where the Motion Server connection lives | What the client observes |
+|------|------------------------------------------|--------------------------|
+| **Basic Mode** | AvatarKit connects to Motion Server from the client. | `ConnectionState`, `onError`, and `onConnectionState` on `AvatarController`. |
+| **Custom Mode** | Your backend connects to Motion Server through the Spatius Server SDK. | AvatarKit observes the downstream transport and playback state; your backend must also observe its server-side connection. |
+| **LiveKit Plugin** | Your agent worker starts the plugin; Motion Server publishes audio and motion data into the LiveKit room. | AvatarKit observes the LiveKit room / RTC path and playback state. |
+
+## `ConnectionState`
+
+`ConnectionState` answers one question: can this client path currently receive audio and motion data?
+
+```
+disconnected → connecting → connected
+                                ↓
+                             failed
+```
+
+| `ConnectionState` | Meaning |
+|-------------------|---------|
+| `disconnected` | No active connection. |
+| `connecting` | Handshake in progress. |
+| `connected` | Active and ready for avatar speech audio. |
+| `failed` | Connection failed. On iOS and Android the variant carries `code` and `message`. |
+
+Subscribe to `onConnectionState` on `AvatarController` to observe these transitions.
+
+→ Reference: [Web `ConnectionState`](/sdk-reference/web-sdk/reference#connectionstate) · [iOS `ConnectionState`](/sdk-reference/ios-sdk/api-reference#connectionstate) · [Android `ConnectionState`](/sdk-reference/android-sdk/api-reference#connectionstate)
+
+## Errors
+
+Client-side errors arrive through `onError` as `AvatarError` — a `{ code: ErrorCode, message: string }` shape. Switch on `code`; treat `message` as log-only.
+
+| Category | Representative codes | When you see them |
+|----------|---------------------|-------------------|
+| **Authentication** | `sessionTokenInvalid`, `sessionTokenExpired`, `appIDUnrecognized`, `insufficientBalance`, `concurrentLimitExceeded` | Token problems, billing limits, duplicate concurrent sessions. |
+| **Resource loading** | `avatarIDUnrecognized`, `failedToFetchAvatarMetadata`, `failedToDownloadAvatarAssets` | Bad Avatar ID or download failure. |
+| **Connection** | `websocketError`, `websocketClosedAbnormally`, `sessionTimeout`, `connectionInProgress` | WebSocket-level failures. |
+| **Server** | `serverError` | Motion Server reported an unexpected error. |
+
+For the full enumeration with WebSocket close codes, see [Resources → Error Codes](/resources/server-error).
+
+### Token expiry
+
+This is the most common Basic Mode production failure path. AvatarKit does not auto-recover.
+
+When the token expires, Motion Server closes the WebSocket with close code **4010**, `onError` reports `sessionTokenExpired` or `sessionTokenInvalid`, and `onConnectionState` transitions to `failed`.
+
+Your code fetches a fresh token, calls `AvatarSDK.setSessionToken(newToken)`, and starts the Basic Mode connection again.
+
+<Warning>
+Do **not** restart the same connection with the same expired token — you will loop on the same failure. Refresh the token first.
+</Warning>
+
+The same recovery shape applies to `insufficientBalance`, `concurrentLimitExceeded`, and `sessionTimeout`.
+
+## Recovery Ownership
+
+Start from where the failed connection lives:
+
+| Mode | Recovery owner | Recovery shape |
+|------|----------------|----------------|
+| **Basic Mode** | Client app | Inspect `AvatarError`, refresh tokens for auth failures, back off for transient failures, then restart the client connection. |
+| **Custom Mode** | Your backend plus client transport | Recover the Spatius Server SDK connection on your backend, then restore the downstream transport to AvatarKit. |
+| **LiveKit Plugin** | LiveKit room / agent worker | Let the room reconnect, and restart the plugin or agent worker only if the server-side session failed. |
+
+The `Avatar` and `AvatarView` instances stay valid across reconnects. You usually do not need to reload the Avatar just because the connection dropped.
+
+## `ConversationState`
+
+`ConversationState` answers a different question: what is the Avatar doing with the audio and motion data it has received?
+
+It is driven by avatar speech audio, playback control, and motion data. See [Audio and Motion Data](/concepts/audio-io) for the data path.
+
+```
+idle → playing → idle
+        ↕
+      paused
+```
+
+| `ConversationState` | Meaning |
+|---------------------|---------|
+| `idle` | No active response — breathing animation only. |
+| `playing` | Actively rendering audio + motion data. |
+| `paused` | Playback paused, state and buffers preserved. |
+
+<Note>
+Android also defines an `Active` state between `idle` and `playing`, representing the period after avatar speech audio is received but before playable motion data is available.
+</Note>
+
+Subscribe to `onConversationState` on `AvatarController` to observe transitions.
+
+→ Reference: [Web `ConversationState`](/sdk-reference/web-sdk/reference#conversationstate) · [iOS `ConversationState`](/sdk-reference/ios-sdk/api-reference#conversationstate) · [Android `ConversationState`](/sdk-reference/android-sdk/api-reference#conversationstate)
+
+### State change reasons
+
+`onConversationState` fires with an optional `StateChangeReason`:
+
+| Reason | Meaning |
+|--------|---------|
+| `userAction` | Your code called `pause()`, `resume()`, or `interrupt()`. |
+| `playbackEnd` | Audio + motion data ran out naturally. |
+| `networkError` | Network failure caused the transition. |
+| `serverError` | Motion Server reported an error. |
+| `fallbackMode` | AvatarKit entered fallback mode due to abnormal motion data. |
+
+### Rendering events
+
+| Callback | Payload | Fires when |
+|----------|---------|------------|
+| `onFirstRendering` | — | The first frame is rendered (iOS only). |
+| `onFrameRateInfo` | `FrameRateInfo` | Periodic FPS report (iOS and Android). |
+
+→ Reference: [Web `AvatarController`](/sdk-reference/web-sdk/reference#avatarcontroller) · [iOS `AvatarController`](/sdk-reference/ios-sdk/api-reference#avatarcontroller) · [Android `AvatarController`](/sdk-reference/android-sdk/api-reference#avatarcontroller)
+
+## Tips for production
+
+- **Always listen to `onError`.** Silent failures in audio and motion pipelines are expensive to debug after the fact.
+- **Log the `code`, not the `message`.** Codes are stable; messages are human-readable and may change.
+- **Treat `failed` as a state, not an event.** Keep it visible until retry logic moves the connection forward.
+- **Bound your retries.** Auth failures and quota failures do not become healthy through tight reconnect loops.
+
+## Go next
+
+- **[Sessions & Lifecycle](/concepts/sessions-lifecycle)** if you need to understand where each connection lives.
+- **[Audio and Motion Data](/concepts/audio-io)** if playback state looks wrong because audio timing or end-of-stream handling is wrong.
+- **[Avatars](/concepts/avatars)** if errors point to Avatar ID or asset loading failures.

@@ -1,0 +1,127 @@
+---
+title: "Toolchain Setup"
+description: "Configure your web build tool to load AvatarKit WebAssembly assets"
+---
+
+AvatarKit uses WebAssembly for avatar rendering. Your build tool must serve `.wasm` files with the correct MIME type and keep them as external assets instead of inlining them into JavaScript.
+
+<Warning>
+**Required:** Complete this setup before initializing the Web SDK. Missing WASM configuration commonly appears as a `.wasm` 404, an incorrect MIME type error, or a failed SDK initialization.
+</Warning>
+
+<Tabs>
+<Tab title="Vite">
+
+Use the official AvatarKit Vite plugin:
+
+```typescript title="vite.config.ts"
+import { defineConfig } from 'vite'
+import { avatarkitVitePlugin } from '@spatialwalk/avatarkit/vite'
+
+export default defineConfig({
+  plugins: [
+    avatarkitVitePlugin(),
+  ],
+})
+```
+
+<Accordion title="What the plugin configures">
+
+The Vite plugin handles the WASM requirements for both development and production:
+
+- Serves `.wasm` files as `application/wasm` in the Vite dev server
+- Copies AvatarKit WASM files into `dist/assets/` during builds
+- Generates a `_headers` file for Cloudflare Pages deployments
+- Configures Vite options such as `optimizeDeps`, `assetsInclude`, and `assetsInlineLimit`
+
+</Accordion>
+
+<Accordion title="Manual Vite configuration">
+
+Use this only if you cannot use `avatarkitVitePlugin()`:
+
+```typescript title="vite.config.ts"
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  optimizeDeps: {
+    exclude: ['@spatialwalk/avatarkit'],
+  },
+  assetsInclude: ['**/*.wasm'],
+  build: {
+    assetsInlineLimit: 0,
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.endsWith('.wasm')) {
+            return 'assets/[name][extname]'
+          }
+          return 'assets/[name]-[hash][extname]'
+        },
+      },
+    },
+  },
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      if (req.url?.endsWith('.wasm')) {
+        res.setHeader('Content-Type', 'application/wasm')
+      }
+      next()
+    })
+  },
+})
+```
+
+</Accordion>
+
+</Tab>
+<Tab title="Next.js">
+
+Wrap your Next.js config with `withAvatarkit`:
+
+```javascript title="next.config.mjs"
+import { withAvatarkit } from '@spatialwalk/avatarkit/next'
+
+export default withAvatarkit({
+  // ...your existing Next.js config
+})
+```
+
+<Accordion title="What the wrapper configures">
+
+The Next.js wrapper handles the Webpack and response-header work needed for AvatarKit WASM assets:
+
+- Fixes asset path resolution so WASM files load from `/_next/static/chunks/`
+- Copies `.wasm` files into `static/chunks/` during the client build
+- Adds the `application/wasm` response header for `/_next/static/chunks/*.wasm`
+- Preserves any existing `webpack` and `headers` configuration
+
+</Accordion>
+
+<Accordion title="Composing with other wrappers">
+
+If your project already uses another Next.js config wrapper, apply `withAvatarkit` to the final wrapped config:
+
+```javascript title="next.config.mjs"
+import { withAvatarkit } from '@spatialwalk/avatarkit/next'
+import withOtherPlugin from 'other-plugin'
+
+export default withAvatarkit(withOtherPlugin({
+  // ...your existing Next.js config
+}))
+```
+
+</Accordion>
+
+</Tab>
+</Tabs>
+
+## Verify Setup
+
+After configuring your toolchain, run your app and confirm the AvatarKit `.wasm` request succeeds:
+
+- The request should return `200`
+- The response header should include `Content-Type: application/wasm`
+- The file should be loaded as a separate `.wasm` asset, not inlined into JavaScript
+
+If the WASM request fails, use the Vite plugin or Next.js wrapper above before debugging SDK initialization code.

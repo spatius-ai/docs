@@ -1,0 +1,54 @@
+---
+title: "Server Error Codes"
+description: "Stable server-side SDK error codes and handling fields"
+---
+
+For backend integrations, use your server SDK's structured error fields as the source of truth.
+
+- [Server SDK reference](/sdk-reference/python-sdk/python-sdk)
+
+Server-side integrations should account for session token failures, WebSocket handshake failures, runtime server errors, and unexpected connection closures.
+
+## Common Server SDK Error Codes
+
+These stable error codes are useful when building retry, logging, and alerting flows on your backend.
+
+| Error code | Meaning |
+|------------|---------|
+| `sessionTokenExpired` | Session token expired or is no longer authorized |
+| `sessionTokenInvalid` | Session token is invalid or empty |
+| `appIDUnrecognized` | App ID is not recognized by the server |
+| `appIDMismatch` | Session token belongs to a different app |
+| `avatarNotFound` | Requested avatar does not exist |
+| `billingRequired` | Session is blocked by billing requirements |
+| `creditsExhausted` | Runtime or connect-time credits are exhausted |
+| `sessionDurationExceeded` | Session hit a billing-enforced duration limit |
+| `unsupportedSampleRate` | Audio sample rate is not accepted by the handshake |
+| `invalidEgressConfig` | LiveKit egress configuration is invalid |
+| `egressUnavailable` | Egress service is unavailable or not configured |
+| `idleTimeout` | Session was closed because no input was received |
+| `upstreamError` | Upstream internal service failed |
+| `protocolError` | Invalid protobuf payload or unexpected message sequence |
+| `connectionFailed` | Transport-level connection setup failed |
+| `connectionClosed` | WebSocket closed unexpectedly |
+| `serverError` | Server returned an unclassified error |
+| `invalidRequest` | Client request payload or parameters are invalid |
+| `unknown` | Fallback code when the SDK cannot classify the failure |
+
+## Server SDK Error Fields
+
+When handling server SDK errors, check these fields to determine the correct recovery path:
+
+- `code`: stable SDK error code for programmatic handling
+- `phase`: where the failure happened, such as `session_token`, `websocket_connect`, or `websocket_runtime`
+- `http_status`: HTTP status for token or upgrade failures
+- `server_code`, `server_title`, `server_detail`: normalized details returned by the server
+- `connection_id`, `req_id`: correlation IDs for tracing requests in logs
+- `close_code`, `close_reason`: WebSocket close details for unexpected disconnects
+
+## Recommended Handling Flow
+
+1. Log `code`, `phase`, and correlation IDs (`connection_id`, `req_id`).
+2. Retry only transient failures (for example `connectionClosed`, `connectionFailed`, `idleTimeout`).
+3. Surface configuration/auth failures (`sessionTokenInvalid`, `appIDMismatch`) to operators.
+4. Alert on recurring `upstreamError`, `serverError`, or `protocolError`.

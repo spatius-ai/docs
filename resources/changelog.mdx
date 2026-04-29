@@ -1,0 +1,114 @@
+---
+title: "Changelog"
+---
+
+<Update label="1.0.0-beta.80" description="2025-01" tags={["Web SDK"]}>
+**Next.js Plugin** - Added `withAvatarkit` wrapper for Next.js projects to automate WASM file configuration with webpack
+- Patches Emscripten `scriptDirectory` for correct asset resolution
+- Copies WASM files to `static/chunks/` automatically
+- Adds `application/wasm` Content-Type headers
+- Preserves existing webpack and headers configurations
+</Update>
+
+<Update label="1.0.0-beta.75" description="2025-01" tags={["Web SDK"]}>
+**Local Log Upload** - Automatic local log upload for debugging and troubleshooting
+</Update>
+
+<Update label="1.0.0-beta.71" description="2024-12" tags={["Web SDK"]}>
+**API Refinement** - Improved API structure by marking internal classes with `@internal` for better code organization
+
+**Type Safety** - Enhanced type definitions by hiding internal implementation details from public API
+</Update>
+
+<Update label="1.0.0-beta.64" description="2024-12" tags={["Web SDK"]}>
+**Vite Plugin** - Added `avatarkitVitePlugin` to automate WASM file configuration
+- Automatically handles WASM MIME types in dev server
+- Copies WASM files during build
+- Generates `_headers` file for Cloudflare Pages
+</Update>
+
+<Update label="1.0.0-beta.63" description="2024-12" tags={["Web SDK"]}>
+**Audio Context API** - Added `initializeAudioContext()` method that must be called in user gesture context
+- Ensures AudioContext is created properly to satisfy browser security policies
+- All audio operations now require prior initialization
+</Update>
+
+<Update label="1.0.0-beta.55" description="2024-11" tags={["Web SDK"]}>
+**Eye Tracking Control** - Added `eyeTrackingEnabled` parameter to `PostProcessingConfig` for real-time control
+
+**Point Count API** - Added `getPointCount()` method to `AvatarController` to get avatar point cloud count
+</Update>
+
+<Update label="1.0.0-beta.51" description="2024-11" tags={["Web SDK"]}>
+**Post-Processing Enhancement** - Added `translation` and `eyePose` fields to `PostProcessingConfig`
+
+**Bugfix** - Fixed avatar settings update issue when using cached avatars
+</Update>
+
+<Update label="1.0.0-beta.45" description="2024-10" tags={["Web SDK"]}>
+**Immediate Rendering** - Post-processing and camera updates apply immediately when playback is paused
+
+**API Change** - Replaced `ready` Promise with `onFirstRendering` callback for better async handling
+</Update>
+
+<Update label="1.0.0-beta.36" description="2024-10" tags={["Web SDK"]}>
+**Audio Configuration** - Added configurable audio sample rate support (8000-48000 Hz, default: 16000)
+- Audio recording and playback automatically use configured sample rate
+</Update>
+
+<Update label="1.0.0-beta.35" description="2024-10" tags={["Web SDK"]}>
+**API Change** - Changed `setTransform()` method to `transform` getter/setter property
+</Update>
+
+<Update label="1.0.0-beta.29" description="2024-09" tags={["Web SDK"]}>
+**Breaking Changes** - Removed `Environment.test`, changed default log level to `off`
+
+**New Features** - Added avatar caching methods (`retrieve`, `clear`, `clearAll`)
+
+**Background Image** - Added background image control in `AvatarView`
+</Update>
+
+<Update label="1.0.0-beta.28" description="2024-09" tags={["Web SDK"]}>
+**Breaking Change** - Renamed `AvatarKit` to `AvatarSDK` for better consistency
+- Update imports: `AvatarKit` → `AvatarSDK`
+</Update>
+
+<Update label="1.0.0-beta.22" description="2024-08" tags={["Web SDK"]}>
+**API Changes** - Renamed `onAvatarState` to `onConversationState`, `Environment.us` to `Environment.intl`
+
+**Volume Control** - Added `setVolume()` and `getVolume()` methods for audio playback control
+</Update>
+
+<Update label="1.0.0-beta.17" description="2024-08" tags={["Web SDK"]}>
+**Fallback Mechanism** - Added automatic audio-only fallback when animation data is unavailable
+
+**API Change** - Moved playback mode configuration to `AvatarSDK.initialize()`
+</Update>
+
+<Update label="1.0.0-beta.3" description="2024-07" tags={["Web SDK"]}>
+**Architecture** - Refactored to three-layer architecture (Rendering, Playback, Network)
+
+**Dual Mode** - Added SDK mode and Host mode support
+</Update>
+
+<Update label="temp" description="temp" tags={["iOS SDK"]}>
+</Update>
+
+<Update label="temp" description="temp" tags={["Android SDK"]}>
+</Update>
+
+<Update label="temp" description="temp" tags={["Flutter"]}>
+</Update>
+
+<Update label="temp" description="temp" tags={["Go SDK"]}>
+</Update>
+
+<Update label="temp" description="temp" tags={["Python SDK"]}>
+</Update>
+
+<Update label="temp" description="temp" tags={["JavaScript SDK"]}>
+</Update>
+
+<Update label="temp" description="temp" tags={["API"]}>
+</Update>
+

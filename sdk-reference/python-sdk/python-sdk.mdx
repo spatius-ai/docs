@@ -1,0 +1,334 @@
+---
+title: "Python SDK"
+sidebarTitle: "Python"
+description: "Using the Python Server SDK"
+---
+
+A Python SDK for connecting to avatar services via WebSocket, supporting audio streaming and receiving animation frames.
+
+## Repository
+
+The Python SDK is available on GitHub: [spatialwalk/avatar-sdk-python](https://github.com/spatialwalk/avatar-sdk-python) and [PyPI](https://pypi.org/project/avatarkit/).
+
+```bash
+pip install avatarkit
+```
+
+## Requirements
+
+- `api_key`
+- `app_id`
+- `avatar_id`
+- console endpoint URL
+- ingress endpoint URL
+
+## Endpoints
+
+Build your endpoint URLs using your selected region (see [Regions](/api-reference/regions)):
+
+- Console endpoint URL: `https://console.<region>.spatialwalk.cloud/v1/console`
+- Ingress endpoint URL: `wss://api.<region>.spatialwalk.cloud/v2/driveningress`
+
+## Quick Start
+
+```python
+import asyncio
+from datetime import datetime, timedelta, timezone
+
+from avatarkit import new_avatar_session
+
+
+async def main():
+    session = new_avatar_session(
+        api_key="your-api-key",
+        app_id="your-app-id",
+        console_endpoint_url="https://console.us-west.spatialwalk.cloud/v1/console",
+        ingress_endpoint_url="wss://api.us-west.spatialwalk.cloud/v2/driveningress",
+        avatar_id="your-avatar-id",
+        expire_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+        transport_frames=lambda frame, last: print(f"Received frame: {len(frame)} bytes"),
+        on_error=lambda err: print(f"Error: {err}"),
+        on_close=lambda: print("Session closed"),
+    )
+
+    await session.init()
+    connection_id = await session.start()
+    print(f"Connected: {connection_id}")
+
+    audio_data = b"..."  # Your PCM audio data
+    request_id = await session.send_audio(audio_data, end=True)
+    print(f"Sent audio: {request_id}")
+
+    await asyncio.sleep(10)
+    await session.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Session Configuration
+
+Use `new_avatar_session()` to configure and create a session:
+
+```python
+from datetime import datetime, timedelta, timezone
+
+from avatarkit import new_avatar_session
+
+
+session = new_avatar_session(
+    avatar_id="avatar-123",
+    api_key="your-api-key",
+    app_id="your-app-id",
+    # Set use_query_auth=True for web-style auth that sends appId and sessionKey
+    # in the WebSocket query string instead of request headers.
+    use_query_auth=False,
+    expire_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+    console_endpoint_url="https://console.us-west.spatialwalk.cloud/v1/console",
+    ingress_endpoint_url="wss://api.us-west.spatialwalk.cloud/v2/driveningress",
+    sample_rate=16000,
+    transport_frames=on_frame_received,
+    on_error=on_error,
+    on_close=on_close,
+)
+```
+
+## Session Lifecycle
+
+```python
+# 1. Initialize and request a session token
+await session.init()
+
+# 2. Start the WebSocket connection
+connection_id = await session.start()
+
+# 3. Send audio data
+request_id = await session.send_audio(audio_bytes, end=True)
+
+# 4. Receive animation frames through the callback
+
+# 5. Close the session
+await session.close()
+```
+
+## Audio Format
+
+The SDK currently supports **mono 16-bit PCM (`s16le`)** audio:
+
+- Sample rate: `8000`, `16000`, `22050`, `24000`, `32000`, `44100`, `48000`
+- Channels: `1` (mono)
+- Bit depth: `16-bit`
+- Format: raw PCM bytes
+
+```python
+with open("audio.pcm", "rb") as f:
+    audio_data = f.read()
+
+await session.send_audio(audio_data, end=True)
+```
+
+## LiveKit Egress Mode
+
+When configured with `livekit_egress`, audio and animation data are streamed to a LiveKit room instead of being returned through the WebSocket connection. For end-to-end integration details, see the [LiveKit Agent server side guide](/livekit-plugin/server).
+
+```python
+from datetime import datetime, timedelta, timezone
+
+from avatarkit import LiveKitEgressConfig, new_avatar_session
+
+
+session = new_avatar_session(
+    avatar_id="avatar-123",
+    api_key="your-api-key",
+    app_id="your-app-id",
+    console_endpoint_url="https://console.us-west.spatialwalk.cloud/v1/console",
+    ingress_endpoint_url="wss://api.us-west.spatialwalk.cloud/v2/driveningress",
+    expire_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+    livekit_egress=LiveKitEgressConfig(
+        url="wss://livekit.example.com",
+        api_key="livekit-api-key",
+        api_secret="livekit-api-secret",
+        room_name="my-room",
+        publisher_id="avatar-publisher",
+    ),
+)
+```
+
+When LiveKit egress is enabled:
+
+- the server streams output to the specified LiveKit room
+- the `transport_frames` callback is not invoked
+- audio and animation data are published under the configured publisher ID
+
+### Interrupt
+
+The `interrupt()` method sends an interrupt signal to stop current audio processing. This is only available when using LiveKit egress mode.
+
+```python
+request_id = await session.send_audio(audio_data, end=True)
+
+# Later, interrupt the most recent in-flight request.
+interrupted_id = await session.interrupt()
+print(f"Interrupted request: {interrupted_id}")
+```
+
+The interrupt uses the most recent request ID, even after `end=True` has been sent.
+
+## Callbacks
+
+### `transport_frames`
+
+Receives animation frames from the server:
+
+```python
+def on_frame_received(frame_data: bytes, is_last: bool):
+    print(f"Received frame: {len(frame_data)} bytes")
+    if is_last:
+        print("This is the last frame")
+```
+
+### `on_error`
+
+Handles structured SDK errors from the session:
+
+```python
+from avatarkit import AvatarSDKError
+
+
+def on_error(error: Exception):
+    print(f"Session error: {error}")
+
+    if isinstance(error, AvatarSDKError):
+        print("  code:", error.code.value)
+        print("  phase:", error.phase)
+        print("  http_status:", error.http_status)
+        print("  server_code:", error.server_code)
+        print("  server_detail:", error.server_detail)
+```
+
+The SDK reports structured `AvatarSDKError` instances for token creation failures, WebSocket upgrade rejections, handshake failures, runtime `ServerError` messages, and unexpected connection drops.
+
+### `on_close`
+
+Called when the session closes:
+
+```python
+def on_close():
+    print("Session has been closed")
+```
+
+## Error Handling
+
+Use `SessionTokenError` for token creation failures and `AvatarSDKError` for all other structured SDK errors:
+
+```python
+from avatarkit import AvatarSDKError, SessionTokenError
+
+
+try:
+    await session.init()
+    await session.start()
+except SessionTokenError as error:
+    print("token failed", error.code.value, error.server_detail)
+except AvatarSDKError as error:
+    print("sdk error", error.code.value, error.phase, error.server_detail)
+```
+
+`AvatarSDKError` and `SessionTokenError` expose these fields:
+
+- `code` - stable SDK error code
+- `message` - human-readable message
+- `phase` - failure phase such as `session_token`, `websocket_connect`, `websocket_handshake`, `websocket_runtime`, or `websocket_send`
+- `http_status` - HTTP status for token or WebSocket upgrade failures
+- `server_code` - server-provided error code, including runtime protobuf `ServerError.code`
+- `server_title` / `server_detail` - parsed server error details when available
+- `connection_id` / `req_id` - server correlation identifiers when available
+- `raw_body` - raw HTTP rejection body for token or WebSocket upgrade failures
+- `close_code` / `close_reason` - WebSocket close details for unexpected disconnects
+
+### Common `AvatarSDKErrorCode` values
+
+- `sessionTokenExpired` - session token expired or unauthorized
+- `sessionTokenInvalid` - invalid or empty session token
+- `appIDUnrecognized` - App ID is not recognized by the server
+- `appIDMismatch` - session token belongs to a different app
+- `avatarNotFound` - avatar does not exist
+- `billingRequired` - session denied by billing checks
+- `creditsExhausted` - runtime or connect-time credits exhausted
+- `sessionDurationExceeded` - billing-enforced session timeout reached
+- `unsupportedSampleRate` - handshake rejected unsupported audio sample rate
+- `invalidEgressConfig` - LiveKit egress config is invalid
+- `egressUnavailable` - egress service is unavailable or not configured
+- `idleTimeout` - server closed the session after input inactivity
+- `upstreamError` - internal upstream service failed
+- `protocolError` - invalid protobuf or unexpected message sequence
+- `connectionFailed` - transport-level connection failure
+- `connectionClosed` - unexpected WebSocket close
+- `serverError` - server-side failure that did not match a more specific mapping
+- `invalidRequest` - other client-side request validation errors
+- `unknown` - fallback when the SDK cannot classify the failure
+
+For server-side error details, see [Server Error Codes](/resources/server-error).
+
+## API Reference
+
+### `AvatarSession`
+
+Main class for managing avatar sessions.
+
+#### Methods
+
+- `async init()` - initialize the session and obtain a token
+- `async start() -> str` - start the WebSocket connection and return a `connection_id`
+- `async send_audio(audio: bytes, end: bool = False) -> str` - send audio data and return a request ID
+- `async interrupt() -> str` - interrupt current audio processing in LiveKit egress mode
+- `async close()` - close the session and clean up resources
+- `config -> SessionConfig` - current session configuration
+
+### `SessionConfig`
+
+Configuration dataclass for avatar sessions.
+
+#### Fields
+
+- `avatar_id: str` - avatar identifier
+- `api_key: str` - API key for authentication
+- `app_id: str` - application identifier
+- `use_query_auth: bool` - send WebSocket auth in query params instead of headers
+- `expire_at: datetime` - session expiration time
+- `sample_rate: int` - audio sample rate, default `16000`
+- `bitrate: int` - audio bitrate, default `0`
+- `transport_frames: Callable[[bytes, bool], None]` - frame callback
+- `on_error: Callable[[Exception], None]` - error callback
+- `on_close: Callable[[], None]` - close callback
+- `console_endpoint_url: str` - Console API URL
+- `ingress_endpoint_url: str` - ingress WebSocket URL
+- `livekit_egress: Optional[LiveKitEgressConfig]` - LiveKit egress configuration
+
+### `LiveKitEgressConfig`
+
+Configuration for streaming to a LiveKit room.
+
+#### Fields
+
+- `url: str` - LiveKit server URL, for example `wss://livekit.example.com`
+- `api_key: str` - LiveKit API key
+- `api_secret: str` - LiveKit API secret
+- `room_name: str` - room name to join
+- `publisher_id: str` - publisher identity in the room
+- `extra_attributes: dict[str, str]` - extra participant attributes
+- `idle_timeout: int` - idle timeout in seconds, `0` uses server defaults
+
+### Utility Functions
+
+- `generate_log_id() -> str` - generate a unique log ID in the format `YYYYMMDDHHMMSS_<nanoid>`
+
+### Exceptions
+
+- `AvatarSDKError` - structured SDK error with stable code and context fields
+- `SessionTokenError` - subclass of `AvatarSDKError` raised when session token creation fails
+
+## Changelog
+
+[avatar-sdk-python releases](https://github.com/spatialwalk/avatar-sdk-python/releases)

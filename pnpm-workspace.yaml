@@ -1,0 +1,5 @@
+allowBuilds:
+  '@vvago/vale': true
+  keytar: true
+  puppeteer: true
+  sharp: true

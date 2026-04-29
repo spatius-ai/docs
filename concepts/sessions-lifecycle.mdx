@@ -1,0 +1,103 @@
+---
+title: "Sessions & Lifecycle"
+description: "How a Spatius session starts, connects, renders, and cleans up across integration modes."
+---
+
+A **session** is one running instance of an Avatar in your app. It starts when you configure AvatarKit and ends when you close the connection and release the view.
+
+The client-side path is:
+
+```text
+Initialize -> Load Avatar -> Mount AvatarView -> Connect -> Cleanup
+```
+
+The first three steps are the same across modes. The connection step depends on whether you use Basic Mode, Custom Mode, or the LiveKit Plugin.
+
+## Initialize
+
+`AvatarSDK.initialize()` sets process-wide AvatarKit configuration:
+
+- App ID and environment.
+- Audio format.
+- Driving mode.
+- Logging.
+
+Call it before loading Avatars or creating views. The Session Token can be set before or after initialization, but it must be valid before the mode-specific connection starts.
+
+<Note>
+Calling `initialize()` again updates configuration in place. It does not automatically close existing connections, unload Avatars, or destroy views. Use `AvatarSDK.cleanup()` only when you need a clean process-level reset.
+</Note>
+
+→ Reference: [Web `AvatarSDK`](/sdk-reference/web-sdk/reference#avatarsdk) · [iOS `AvatarSDK`](/sdk-reference/ios-sdk/api-reference#avatarsdk) · [Android `AvatarSDK`](/sdk-reference/android-sdk/api-reference#avatarsdk)
+
+## Load Avatar
+
+Load the Avatar before you try to display it:
+
+```text
+Avatar ID -> AvatarManager.load() -> Avatar
+```
+
+Loading downloads and caches avatar assets. It does not open a connection to Motion Server and does not consume a Session Token.
+
+See [Avatars](/concepts/avatars) for Avatar ID, `AvatarManager`, and cache behavior.
+
+## Mount AvatarView
+
+Mount the loaded `Avatar` in an `AvatarView`. The view creates the render surface and owns the `AvatarController` for that surface.
+
+After mount:
+
+- The Avatar can display idle motion.
+- Your app can access the `AvatarController`.
+- Playback can start once the connection path is online and motion data arrives.
+
+You do not construct `AvatarController` directly; it belongs to the view because it needs the same render context.
+
+→ Reference: [Web `AvatarView`](/sdk-reference/web-sdk/reference#avatarview) · [iOS `AvatarView`](/sdk-reference/ios-sdk/api-reference#avatarview) · [Android `AvatarView`](/sdk-reference/android-sdk/api-reference#avatarview)
+
+## Connect
+
+Connect brings the path between avatar speech audio, Motion Server, and AvatarKit online. This is the step where modes differ.
+
+| Mode | Connection owner | What your app does |
+|------|------------------|--------------------|
+| **Basic Mode** | AvatarKit on the client connects to Motion Server. | Set a valid Session Token, then start the controller. |
+| **Custom Mode** | Your backend connects to Motion Server through the Spatius Server SDK. | Start the backend session and deliver audio and motion data to AvatarKit through your transport. |
+| **LiveKit Plugin** | Your agent worker starts the plugin; Motion Server publishes audio and motion data into the LiveKit room. | Join the room from the client and let AvatarKit render from room data. |
+
+<Warning>
+Do not treat `controller.start()` as the universal connection step. It is the Basic Mode client connection path. Custom Mode and LiveKit Plugin integrations bring the Motion Server connection online outside the client.
+</Warning>
+
+→ Reference: [Web `AvatarController.start`](/sdk-reference/web-sdk/reference#start) · [iOS `AvatarController.start`](/sdk-reference/ios-sdk/api-reference#start) · [Android `AvatarController.start`](/sdk-reference/android-sdk/api-reference#start)
+
+## Cleanup
+
+Tear down in the reverse direction:
+
+1. Close the active connection for your mode.
+2. Destroy or unmount the `AvatarView`.
+3. Release cached Avatar assets only if nothing else is using them.
+4. Call `AvatarSDK.cleanup()` only for a full process-level reset.
+
+<Warning>
+On Android, tear the view down explicitly when the host activity or fragment is destroyed. Skipping this can leak GPU resources.
+</Warning>
+
+→ Reference: [Web `AvatarController.close`](/sdk-reference/web-sdk/reference#close) · [iOS `AvatarController.close`](/sdk-reference/ios-sdk/api-reference#close) · [Android `AvatarController.close`](/sdk-reference/android-sdk/api-reference#close)
+
+## What can go wrong
+
+| Symptom | Likely cause |
+|---------|--------------|
+| Avatar never appears | Avatar was not loaded, the view was not mounted, or rendering resources were released too early. |
+| Connection fails immediately | Missing, expired, or invalid Session Token in Basic Mode; server-side connection issue in Custom Mode or LiveKit Plugin. |
+| Audio plays but avatar does not move | Motion data is not reaching AvatarKit, or the wrong transport path is online. |
+| Resources leak after navigation | View cleanup was skipped, especially on Android. |
+
+## Go next
+
+- **[Avatars](/concepts/avatars)** if the session is blocked before the view mounts.
+- **[Audio and Motion Data](/concepts/audio-io)** if the session is online and you need to deliver avatar speech audio and motion data.
+- **[State & Events](/concepts/state-events)** if connection or playback state is failing at runtime.

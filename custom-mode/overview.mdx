@@ -1,0 +1,38 @@
+---
+title: "Overview"
+description: "Custom Mode overview"
+---
+
+import { CustomModeRtcTransportDiagram, CustomModeOwnTransportDiagram } from '/snippets/spatius-diagrams.jsx'
+
+## Architecture
+
+Custom Mode lets your backend interact directly with Motion Server. This gives you full control over the path between Motion Server and AvatarKit.
+
+In Custom Mode, your backend uses the Spatius Server SDK to establish and manage the WebSocket connection to Motion Server. Use this mode when you need to optimize chat latency, customize transport, or integrate AvatarKit into an existing real-time media pipeline.
+
+### With egress config
+
+<Frame>
+  <CustomModeRtcTransportDiagram />
+</Frame>
+
+> You can set a Motion Server egress config to publish generated audio and motion data to a supported RTC provider. Your application's downstream transport is then handled by that RTC provider.
+
+### Without egress config
+
+<Frame>
+  <CustomModeOwnTransportDiagram />
+</Frame>
+
+> Without an egress config, Motion Server returns the generated motion data to your server. Your application is then responsible for the downstream transport of both audio and motion data.
+
+## Contact us
+
+Custom Mode integrations can be more involved than Basic Mode. If you need help designing or debugging your integration, please reach out to us.
+
+## Examples
+
+<Card title="Custom Mode example" icon="github" href="https://github.com/spatialwalk/avatarkit-voice-agent-demo/tree/main/host-mode" horizontal>
+  Explore a reference implementation that uses Custom Mode.
+</Card>
