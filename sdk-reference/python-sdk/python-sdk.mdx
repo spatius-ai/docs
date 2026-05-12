@@ -1,33 +1,68 @@
 ---
 title: "Python SDK"
 sidebarTitle: "Python"
-description: "Using the Python Server SDK"
+description: "Using the Spatius Python Server SDK"
 ---
 
-A Python SDK for connecting to avatar services via WebSocket, supporting audio streaming and receiving animation frames.
+The Spatius Python SDK creates server-side avatar sessions over WebSocket. It handles session-token creation, WebSocket authentication, audio upload, animation-frame callbacks, and optional egress to LiveKit or Agora.
 
 ## Repository
 
-The Python SDK is available on GitHub: [spatialwalk/avatar-sdk-python](https://github.com/spatialwalk/avatar-sdk-python) and [PyPI](https://pypi.org/project/avatarkit/).
+The Python SDK is available on GitHub: [spatius-ai/spatius-sdk-python](https://github.com/spatius-ai/spatius-sdk-python) and [PyPI](https://pypi.org/project/spatius/).
 
 ```bash
-pip install avatarkit
+pip install spatius
 ```
+
+Install the optional Ogg Opus encoder support when you want the SDK to encode raw PCM before sending:
+
+```bash
+pip install "spatius[opus]"
+```
+
+The optional encoder uses `opuslib`, which requires a working `libopus` runtime on the host system.
 
 ## Requirements
 
 - `api_key`
 - `app_id`
 - `avatar_id`
-- console endpoint URL
-- ingress endpoint URL
+- `expire_at`
+- audio bytes in a supported input format
 
-## Endpoints
+The SDK defaults to the `us-west` region. You only need to pass endpoint URLs when using custom infrastructure.
 
-Build your endpoint URLs using your selected region (see [Regions](/api-reference/regions)):
+## Regions and Endpoints
 
-- Console endpoint URL: `https://console.<region>.spatialwalk.cloud/v1/console`
-- Ingress endpoint URL: `wss://api.<region>.spatialwalk.cloud/v2/driveningress`
+Pass `region` to let the SDK compose endpoint URLs:
+
+```python
+session = new_avatar_session(
+    api_key="your-api-key",
+    app_id="your-app-id",
+    avatar_id="your-avatar-id",
+    region="us-west",
+    expire_at=expire_at,
+)
+```
+
+The SDK composes these URLs:
+
+- Console endpoint URL: `https://console.<region>.spatius.ai/v1/console`
+- Ingress endpoint URL: `wss://api.<region>.spatius.ai/v2/driveningress`
+
+Explicit endpoint URLs override `region`:
+
+```python
+session = new_avatar_session(
+    api_key="your-api-key",
+    app_id="your-app-id",
+    avatar_id="your-avatar-id",
+    expire_at=expire_at,
+    console_endpoint_url="https://console.example.com/v1/console",
+    ingress_endpoint_url="wss://api.example.com/v2/driveningress",
+)
+```
 
 ## Quick Start
 
@@ -35,19 +70,19 @@ Build your endpoint URLs using your selected region (see [Regions](/api-referenc
 import asyncio
 from datetime import datetime, timedelta, timezone
 
-from avatarkit import new_avatar_session
+from spatius import new_avatar_session
 
 
 async def main():
     session = new_avatar_session(
         api_key="your-api-key",
         app_id="your-app-id",
-        console_endpoint_url="https://console.us-west.spatialwalk.cloud/v1/console",
-        ingress_endpoint_url="wss://api.us-west.spatialwalk.cloud/v2/driveningress",
         avatar_id="your-avatar-id",
         expire_at=datetime.now(timezone.utc) + timedelta(minutes=5),
-        transport_frames=lambda frame, last: print(f"Received frame: {len(frame)} bytes"),
-        on_error=lambda err: print(f"Error: {err}"),
+        transport_frames=lambda frame, last: print(
+            f"Received frame: {len(frame)} bytes, last={last}"
+        ),
+        on_error=lambda err: print(f"Session error: {err}"),
         on_close=lambda: print("Session closed"),
     )
 
@@ -55,9 +90,9 @@ async def main():
     connection_id = await session.start()
     print(f"Connected: {connection_id}")
 
-    audio_data = b"..."  # Your PCM audio data
+    audio_data = b"..."  # mono PCM s16le audio bytes
     request_id = await session.send_audio(audio_data, end=True)
-    print(f"Sent audio: {request_id}")
+    print(f"Sent audio request: {request_id}")
 
     await asyncio.sleep(10)
     await session.close()
@@ -74,25 +109,25 @@ Use `new_avatar_session()` to configure and create a session:
 ```python
 from datetime import datetime, timedelta, timezone
 
-from avatarkit import new_avatar_session
+from spatius import AudioFormat, new_avatar_session
 
 
 session = new_avatar_session(
     avatar_id="avatar-123",
     api_key="your-api-key",
     app_id="your-app-id",
-    # Set use_query_auth=True for web-style auth that sends appId and sessionKey
-    # in the WebSocket query string instead of request headers.
     use_query_auth=False,
     expire_at=datetime.now(timezone.utc) + timedelta(minutes=5),
-    console_endpoint_url="https://console.us-west.spatialwalk.cloud/v1/console",
-    ingress_endpoint_url="wss://api.us-west.spatialwalk.cloud/v2/driveningress",
+    region="us-west",
     sample_rate=16000,
+    audio_format=AudioFormat.PCM_S16LE,
     transport_frames=on_frame_received,
     on_error=on_error,
     on_close=on_close,
 )
 ```
+
+`use_query_auth=False` sends WebSocket credentials in headers. Set `use_query_auth=True` for web-style auth that sends `appId` and `sessionKey` in the WebSocket query string.
 
 ## Session Lifecycle
 
@@ -106,7 +141,7 @@ connection_id = await session.start()
 # 3. Send audio data
 request_id = await session.send_audio(audio_bytes, end=True)
 
-# 4. Receive animation frames through the callback
+# 4. Receive animation frames through transport_frames
 
 # 5. Close the session
 await session.close()
@@ -114,19 +149,89 @@ await session.close()
 
 ## Audio Format
 
-The SDK currently supports **mono 16-bit PCM (`s16le`)** audio:
+The SDK supports two session-level input formats:
 
-- Sample rate: `8000`, `16000`, `22050`, `24000`, `32000`, `44100`, `48000`
+- `AudioFormat.PCM_S16LE` - mono 16-bit PCM bytes
+- `AudioFormat.OGG_OPUS` - one continuous Ogg Opus stream per request ID
+
+### PCM Input
+
+- Sample rate: one of `8000`, `16000`, `22050`, `24000`, `32000`, `44100`, `48000`
 - Channels: `1` (mono)
 - Bit depth: `16-bit`
 - Format: raw PCM bytes
 
 ```python
+from spatius import AudioFormat, new_avatar_session
+
+
+session = new_avatar_session(
+    ...,
+    sample_rate=16000,
+    audio_format=AudioFormat.PCM_S16LE,
+)
+
 with open("audio.pcm", "rb") as f:
     audio_data = f.read()
 
 await session.send_audio(audio_data, end=True)
 ```
+
+### Ogg Opus Input
+
+- Sample rate: one of `8000`, `12000`, `16000`, `24000`, `48000`
+- Channels: `1` (mono)
+- Format: Ogg Opus pages/chunks
+- Request contract: each request ID must carry one continuous Ogg Opus stream across one or more `send_audio()` calls, and the final chunk must use `end=True`
+
+```python
+from spatius import AudioFormat, new_avatar_session
+
+
+session = new_avatar_session(
+    ...,
+    sample_rate=24000,
+    bitrate=32000,
+    audio_format=AudioFormat.OGG_OPUS,
+)
+
+with open("audio.ogg", "rb") as f:
+    while chunk := f.read(4096):
+        await session.send_audio(chunk, end=False)
+
+await session.send_audio(b"", end=True)
+```
+
+### Built-In PCM to Ogg Opus Encoder
+
+If you want the session to negotiate `AudioFormat.OGG_OPUS` but still provide raw PCM bytes to `send_audio()`, enable the optional internal encoder.
+
+```python
+from spatius import AudioFormat, OggOpusEncoderConfig, new_avatar_session
+
+
+encoded_outputs = []
+
+session = new_avatar_session(
+    ...,
+    sample_rate=24000,
+    bitrate=32000,
+    audio_format=AudioFormat.OGG_OPUS,
+    ogg_opus_encoder=OggOpusEncoderConfig(frame_duration_ms=20),
+    on_encoded_audio=lambda req_id, payload: encoded_outputs.append((req_id, payload)),
+)
+
+with open("audio_24000.pcm", "rb") as f:
+    pcm_audio = f.read()
+
+await session.send_audio(pcm_audio, end=True)
+```
+
+Notes:
+
+- The internal encoder is optional; if you do not install `spatius[opus]`, keep using PCM or provide pre-encoded Ogg Opus bytes yourself.
+- `on_encoded_audio` fires when internal encoding completes for a request and receives `(req_id, encoded_audio_bytes)`.
+- If `audio_format=AudioFormat.OGG_OPUS` and `ogg_opus_encoder` is unset, `send_audio()` forwards your pre-encoded Ogg Opus bytes unchanged.
 
 ## LiveKit Egress Mode
 
@@ -135,25 +240,25 @@ When configured with `livekit_egress`, audio and animation data are streamed to 
 ```python
 from datetime import datetime, timedelta, timezone
 
-from avatarkit import LiveKitEgressConfig, new_avatar_session
+from spatius import LiveKitEgressConfig, new_avatar_session
 
 
 session = new_avatar_session(
     avatar_id="avatar-123",
     api_key="your-api-key",
     app_id="your-app-id",
-    console_endpoint_url="https://console.us-west.spatialwalk.cloud/v1/console",
-    ingress_endpoint_url="wss://api.us-west.spatialwalk.cloud/v2/driveningress",
+    region="us-west",
     expire_at=datetime.now(timezone.utc) + timedelta(minutes=5),
     livekit_egress=LiveKitEgressConfig(
         url="wss://livekit.example.com",
-        api_key="livekit-api-key",
-        api_secret="livekit-api-secret",
+        api_token="livekit-token",
         room_name="my-room",
         publisher_id="avatar-publisher",
     ),
 )
 ```
+
+`api_key` and `api_secret` remain supported for backward compatibility, but they are deprecated. Prefer `api_token` for new integrations.
 
 When LiveKit egress is enabled:
 
@@ -161,9 +266,34 @@ When LiveKit egress is enabled:
 - the `transport_frames` callback is not invoked
 - audio and animation data are published under the configured publisher ID
 
-### Interrupt
+## Agora Egress Mode
 
-The `interrupt()` method sends an interrupt signal to stop current audio processing. This is only available when using LiveKit egress mode.
+When configured with `agora_egress`, audio and animation data are streamed to an Agora channel instead of being returned through the WebSocket connection.
+
+```python
+from datetime import datetime, timedelta, timezone
+
+from spatius import AgoraEgressConfig, new_avatar_session
+
+
+session = new_avatar_session(
+    avatar_id="avatar-123",
+    api_key="your-api-key",
+    app_id="your-app-id",
+    region="us-west",
+    expire_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+    agora_egress=AgoraEgressConfig(
+        channel_name="my-channel",
+        token="agora-token",
+        uid=0,
+        publisher_id="avatar-publisher",
+    ),
+)
+```
+
+## Interrupt
+
+The `interrupt()` method sends an interrupt signal to stop current audio processing. This is only available when using egress mode.
 
 ```python
 request_id = await session.send_audio(audio_data, end=True)
@@ -193,7 +323,7 @@ def on_frame_received(frame_data: bytes, is_last: bool):
 Handles structured SDK errors from the session:
 
 ```python
-from avatarkit import AvatarSDKError
+from spatius import AvatarSDKError
 
 
 def on_error(error: Exception):
@@ -223,7 +353,7 @@ def on_close():
 Use `SessionTokenError` for token creation failures and `AvatarSDKError` for all other structured SDK errors:
 
 ```python
-from avatarkit import AvatarSDKError, SessionTokenError
+from spatius import AvatarSDKError, SessionTokenError
 
 
 try:
@@ -247,7 +377,7 @@ except AvatarSDKError as error:
 - `raw_body` - raw HTTP rejection body for token or WebSocket upgrade failures
 - `close_code` / `close_reason` - WebSocket close details for unexpected disconnects
 
-### Common `AvatarSDKErrorCode` values
+### Common `AvatarSDKErrorCode` Values
 
 - `sessionTokenExpired` - session token expired or unauthorized
 - `sessionTokenInvalid` - invalid or empty session token
@@ -258,7 +388,7 @@ except AvatarSDKError as error:
 - `creditsExhausted` - runtime or connect-time credits exhausted
 - `sessionDurationExceeded` - billing-enforced session timeout reached
 - `unsupportedSampleRate` - handshake rejected unsupported audio sample rate
-- `invalidEgressConfig` - LiveKit egress config is invalid
+- `invalidEgressConfig` - egress config is invalid
 - `egressUnavailable` - egress service is unavailable or not configured
 - `idleTimeout` - server closed the session after input inactivity
 - `upstreamError` - internal upstream service failed
@@ -273,6 +403,12 @@ For server-side error details, see [Server Error Codes](/resources/server-error)
 
 ## API Reference
 
+This page includes usage guidance. The SDK source also keeps developer-facing docstrings on public classes and functions so generated API reference pages can stay close to the code.
+
+### `new_avatar_session(...)`
+
+Creates an `AvatarSession` from typed keyword parameters. It is the primary public factory.
+
 ### `AvatarSession`
 
 Main class for managing avatar sessions.
@@ -282,7 +418,7 @@ Main class for managing avatar sessions.
 - `async init()` - initialize the session and obtain a token
 - `async start() -> str` - start the WebSocket connection and return a `connection_id`
 - `async send_audio(audio: bytes, end: bool = False) -> str` - send audio data and return a request ID
-- `async interrupt() -> str` - interrupt current audio processing in LiveKit egress mode
+- `async interrupt() -> str` - interrupt current audio processing in egress mode
 - `async close()` - close the session and clean up resources
 - `config -> SessionConfig` - current session configuration
 
@@ -299,12 +435,17 @@ Configuration dataclass for avatar sessions.
 - `expire_at: datetime` - session expiration time
 - `sample_rate: int` - audio sample rate, default `16000`
 - `bitrate: int` - audio bitrate, default `0`
+- `audio_format: AudioFormat` - negotiated input format
+- `ogg_opus_encoder: Optional[OggOpusEncoderConfig]` - optional PCM to Ogg Opus encoder config
+- `on_encoded_audio: Optional[Callable[[str, bytes], None]]` - callback for encoded Ogg output
 - `transport_frames: Callable[[bytes, bool], None]` - frame callback
 - `on_error: Callable[[Exception], None]` - error callback
 - `on_close: Callable[[], None]` - close callback
-- `console_endpoint_url: str` - Console API URL
-- `ingress_endpoint_url: str` - ingress WebSocket URL
+- `region: str` - region used to compose default endpoints
+- `console_endpoint_url: str` - optional explicit Console API URL
+- `ingress_endpoint_url: str` - optional explicit ingress WebSocket URL
 - `livekit_egress: Optional[LiveKitEgressConfig]` - LiveKit egress configuration
+- `agora_egress: Optional[AgoraEgressConfig]` - Agora egress configuration
 
 ### `LiveKitEgressConfig`
 
@@ -313,12 +454,24 @@ Configuration for streaming to a LiveKit room.
 #### Fields
 
 - `url: str` - LiveKit server URL, for example `wss://livekit.example.com`
-- `api_key: str` - LiveKit API key
-- `api_secret: str` - LiveKit API secret
+- `api_key: str` - deprecated LiveKit API key
+- `api_secret: str` - deprecated LiveKit API secret
+- `api_token: str` - preferred pre-generated LiveKit access token
 - `room_name: str` - room name to join
 - `publisher_id: str` - publisher identity in the room
 - `extra_attributes: dict[str, str]` - extra participant attributes
 - `idle_timeout: int` - idle timeout in seconds, `0` uses server defaults
+
+### `AgoraEgressConfig`
+
+Configuration for streaming to an Agora channel.
+
+#### Fields
+
+- `channel_name: str` - Agora channel name
+- `token: str` - Agora token
+- `uid: int` - publisher UID, `0` for auto-assign
+- `publisher_id: str` - publisher identity/name
 
 ### Utility Functions
 
@@ -331,4 +484,4 @@ Configuration for streaming to a LiveKit room.
 
 ## Changelog
 
-[avatar-sdk-python releases](https://github.com/spatialwalk/avatar-sdk-python/releases)
+[spatius-sdk-python releases](https://github.com/spatius-ai/spatius-sdk-python/releases)
