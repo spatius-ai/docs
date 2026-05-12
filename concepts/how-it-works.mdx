@@ -1,20 +1,12 @@
 ---
-title: "How Spatius Works"
-sidebarTitle: "How it works"
-description: "How avatar speech audio becomes a locally rendered Avatar."
+title: "How It Works"
+sidebarTitle: "How It Works"
+description: "An overview of Spatius core components and integration patterns"
 ---
 
-Spatius does not stream a video of the Avatar. It takes the audio the Avatar should speak, turns that audio into motion data, and lets AvatarKit render the Avatar on the user's device.
+Spatius does not stream digital human video to the client. Instead, it **renders the Avatar locally on the client**. The cloud only transmits motion data, and client renders the Avatar in real time.
 
-The short version:
-
-```text
-TTS audio -> Motion Server -> motion data -> AvatarKit -> Avatar moves on screen
-```
-
-The audio is usually TTS output from your agent response. It is not the user's microphone audio unless your product intentionally makes the Avatar repeat or relay that audio.
-
-## What Happens
+## Overall Flow
 
 <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 12 }}>
 
@@ -43,7 +35,7 @@ config:
 graph LR
     A["<b>avatar speech audio</b><br/>usually TTS output"]
     B["<b>Motion Server</b><br/>generates motion data"]
-    C["<b>AvatarKit</b><br/>plays audio and renders locally"]
+    C["<b>AvatarKit</b><br/>local playback and rendering"]
     D["<b>your app</b><br/>observes state and handles recovery"]
 
     A --> B
@@ -53,62 +45,32 @@ graph LR
 
 </div>
 
-One Avatar response follows this sequence:
+> For one Avatar response: the audio the Avatar should speak is sent to Motion Server, Motion Server generates motion data, AvatarKit plays the audio locally while rendering synchronized lip and body motion, and your app observes the process through state callbacks.
 
-1. Your app chooses an Avatar and mounts an `AvatarView`.
-2. Your app brings the connection online for the integration mode you use.
-3. The audio the Avatar should say reaches Motion Server.
-4. Motion Server generates motion data for that audio.
-5. AvatarKit plays the audio and renders the matching Avatar movement locally.
-6. State and error callbacks tell your app when the Avatar is idle, playing, paused, failed, or ready to retry.
+## Core Components
 
-## What Each Component Does
+### AvatarKit Client SDK
 
-| Component | Role |
-|-----------|------|
-| **Your app** | Chooses the Avatar, provides avatar speech audio, controls lifecycle, interrupts responses, and handles recovery. |
-| **Motion Server** | Receives avatar speech audio and generates motion data. |
-| **AvatarKit** | Loads avatar assets, receives audio and motion data, plays audio, and renders the Avatar locally. |
+The client SDK covers Web, iOS, and Android. It renders the Avatar on the client and keeps the audio and digital human visuals synchronized.
 
-This boundary is the most important idea on the page: Motion Server sends data, not video. AvatarKit renders on the device.
+Reference: [Web](/sdk-reference/web-sdk/reference) | [iOS](/sdk-reference/ios-sdk/api-reference) | [Android](/sdk-reference/android-sdk/api-reference)
 
-## Where Modes Differ
+### Motion Server
 
-All modes use the same idea: audio in, motion data out, AvatarKit renders locally. The difference is who connects to Motion Server and how the output reaches AvatarKit.
+> Cloud service provided by Spatius.
 
-| Mode | Motion Server connection | How AvatarKit gets data |
-|------|--------------------------|--------------------------|
-| **Basic Mode** | AvatarKit connects from the client. | AvatarKit receives audio and motion data directly. |
-| **Custom Mode** | Your backend connects through the Spatius Server SDK. | Your backend forwards encoded audio and motion messages to AvatarKit. |
-| **LiveKit Plugin** | The agent worker starts the plugin. | Motion Server publishes audio and motion data into the LiveKit room; AvatarKit receives room data. |
+- **Input**: audio, the audio the digital human should speak, usually the TTS output from an ASR -> LLM -> TTS pipeline.
+- **Output**: motion data, about 20 KB/s, much lower than a video stream.
+- **Role**: drives AvatarKit on the client to produce the digital human speaking visuals. **Audio-video synchronization is handled by the SDK, so application developers don't need to manage it.**
 
-Use the mode pages for implementation details. This page is only the mental model.
+## Integration Modes
 
-## What Your App Still Owns
+Different integration modes match different development scenarios.
 
-Spatius handles audio-to-motion and local rendering. Your product still decides:
+| Mode | Description |
+|------|-------------|
+| **[Basic Mode](/basic-mode/overview)** | The simplest integration path. The client SDK connects directly to Motion Server, suitable for quickly integrating iOS, Android, or Web apps. |
+| **[LiveKit Plugin](/livekit-plugin/overview)** | For projects already using the LiveKit Agents framework. Integrate with only a few lines of code. |
+| **[Custom Mode](/custom-mode/overview)** | A custom integration path. You can reuse LiveKit or Agora as the transport layer, or build your own transport entirely. |
 
-- Which Avatar ID to load.
-- Where avatar speech audio comes from.
-- When to initialize, connect, interrupt, retry, and clean up.
-- How to refresh tokens and recover from failed connections.
-- What UI to show for loading, idle, playing, paused, and failed states.
-
-## Where to Go Next
-
-| If you are thinking about... | Read |
-|------------------------------|------|
-| Which digital human appears on screen | [Avatars](/concepts/avatars) |
-| When to initialize, connect, and clean up | [Sessions & Lifecycle](/concepts/sessions-lifecycle) |
-| Audio format, motion data, response end, or interruption | [Audio and Motion Data](/concepts/audio-io) |
-| UI state, errors, token expiry, or reconnects | [State & Events](/concepts/state-events) |
-
-## Common Failure Paths
-
-| Symptom | Likely cause | Read |
-|---------|--------------|------|
-| Avatar does not appear | Avatar ID, assets, or view mount problem | [Avatars](/concepts/avatars) |
-| Connection fails or token expires | Session Token or connection recovery problem | [State & Events](/concepts/state-events) |
-| Audio is silent, distorted, or out of sync | Wrong audio format or sample rate | [Audio and Motion Data](/concepts/audio-io#avatar-speech-audio) |
-| Audio plays but the Avatar does not move | Motion data is not reaching AvatarKit | [Audio and Motion Data](/concepts/audio-io#motion-data) |
-| Playback never returns to idle | The response end was not marked correctly | [Audio and Motion Data](/concepts/audio-io#response-end-and-interruption) |
+For mode selection, see [How to Integrate](/getting-started/how-to-integrate).

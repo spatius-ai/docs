@@ -30,9 +30,9 @@
             "icon": "lightbulb",
             "pages": [
               "concepts/how-it-works",
-              "concepts/avatars",
-              "concepts/sessions-lifecycle",
-              "concepts/audio-io",
+              "concepts/avatar",
+              "concepts/audio",
+              "concepts/lifecycle",
               "concepts/state-events"
             ]
           },
@@ -145,11 +145,7 @@
       "href": "https://app.spatius.ai"
     }
   },
-  "redirects": [
-    { "source": "/concepts/lifecycle", "destination": "/concepts/sessions-lifecycle" },
-    { "source": "/concepts/audio",     "destination": "/concepts/audio-io" },
-    { "source": "/concepts/events",    "destination": "/concepts/state-events" }
-  ],
+  "redirects": [],
   "customCSS": "/custom.css",
   "contextual": {
     "options": [
