@@ -10,9 +10,9 @@
 
 Spatius docs has 4 Concept pages already shipped on this branch:
 
-- `concepts/avatars.mdx`
-- `concepts/sessions-lifecycle.mdx`
-- `concepts/audio-io.mdx`
+- `concepts/avatar.mdx`
+- `concepts/audio.mdx`
+- `concepts/lifecycle.mdx`
 - `concepts/state-events.mdx`
 
 They follow a Codex-validated hybrid IA — Concepts hold mental model + cross-cutting warnings; SDK Reference holds method signatures and platform-specific behavior. Each Concept page links to per-platform anchors in SDK Reference (Web/iOS/Android). Strict naming conventions are enforced via `AGENT.md` (Motion Server / motion data / AvatarKit / `ConnectionState` / `ConversationState`).
@@ -53,9 +53,9 @@ GPT raised 11 findings (2 Critical, 5 High, 3 Medium, 2 Low). We accepted 10 in 
 Documentation
 └── Concepts
     ├── How it works              ← NEW (concepts/how-it-works.mdx)
-    ├── Avatars
-    ├── Sessions & Lifecycle
-    ├── Audio I/O
+    ├── Avatar
+    ├── Audio
+    ├── Lifecycle
     └── State & Events
 ```
 
@@ -117,9 +117,9 @@ This is the canonical statement of Mode boundaries. SDK behavior changes that mo
 
 Each entry uses the format **trigger condition → what you get → deep link** (not a definition sentence):
 
-- **[Avatars](/concepts/avatars)** — when you need to choose a look or load assets before the pipeline runs.
-- **[Sessions & Lifecycle](/concepts/sessions-lifecycle)** — when you need to bring the pipeline online or tear it down.
-- **[Audio I/O](/concepts/audio-io)** — when you need to send audio into the pipeline or stop it mid-flow.
+- **[Avatar](/concepts/avatar)** — when you need to choose a look or load assets before the pipeline runs.
+- **[Lifecycle](/concepts/lifecycle)** — when you need to bring the pipeline online or tear it down.
+- **[Audio](/concepts/audio)** — when you need to send audio into the pipeline or stop it mid-flow.
 - **[State & Events](/concepts/state-events)** — when something goes wrong or you need to react to runtime state.
 
 ### 6.5 Common failure paths
@@ -128,8 +128,8 @@ Runtime entry points to deep pages, anchored at subsection level:
 
 - **Token expired** → [State & Events: Token expiry](/concepts/state-events#what-happens-when-my-session-token-expires)
 - **Connection dropped** → [State & Events: Recovery](/concepts/state-events#how-do-i-recover-from-a-dropped-connection)
-- **Audio format mismatch** → [Audio I/O: Sample rate](/concepts/audio-io#audio-input-format)
-- **Bad Avatar ID / asset download fail** → [Avatars](/concepts/avatars) + [State & Events: ErrorCode](/concepts/state-events#what-can-go-wrong)
+- **Audio format mismatch** -> [Audio: Sample rate](/concepts/audio#audio-input-format)
+- **Bad Avatar ID / asset download fail** -> [Avatar](/concepts/avatar) + [State & Events: ErrorCode](/concepts/state-events#what-can-go-wrong)
 
 ## 7. The 4 Invariants the Page Promises
 
@@ -152,17 +152,17 @@ Template (applies to all 4 deep pages):
 
 Verification: reading first 120 words alone is sufficient to understand the page's scope and responsibility.
 
-### 8.1 `concepts/avatars.mdx`
+### 8.1 `concepts/avatar.mdx`
 
 > An **Avatar** is a digital-human asset bundle identified by an **Avatar ID** — a stable string you obtain from Spatius Studio. In the Spatius pipeline, the Avatar is what AvatarKit renders at the on-device end after motion data starts flowing in. Avatars are loaded on demand: AvatarKit downloads and caches the assets when you call `AvatarManager.shared.load(id)`, and hands you back an `Avatar` object you attach to a view and a controller.
 
-### 8.2 `concepts/sessions-lifecycle.mdx`
+### 8.2 `concepts/lifecycle.mdx`
 
 > A **session** is one running instance of an avatar in your app, from initial SDK configuration to final cleanup. A session is what brings the Spatius pipeline online and tears it down — without an active session, no audio reaches Motion Server and no motion data reaches AvatarKit. Every session goes through the same four stages, in order: **Initialize → Load → Render → Connect**, each with preconditions the previous stage must satisfy.
 
-### 8.3 `concepts/audio-io.mdx`
+### 8.3 `concepts/audio.mdx`
 
-> **Audio I/O** is how your application sends audio to AvatarKit and how it stops mid-utterance. Audio is the pipeline's input — what AvatarKit forwards to Motion Server in exchange for motion data. Two things matter for a correct integration: **format** (what bytes are accepted) and **timing** (when to push, when to mark end-of-stream, when to interrupt).
+> **Audio** is how your application sends audio to AvatarKit and how it stops mid-utterance. Audio is the pipeline's input — what AvatarKit forwards to Motion Server in exchange for motion data. Two things matter for a correct integration: **format** (what bytes are accepted) and **timing** (when to push, when to mark end-of-stream, when to interrupt).
 
 ### 8.4 `concepts/state-events.mdx`
 
@@ -196,7 +196,7 @@ Conditions under which this design needs to be revisited:
 | Spatius adds a second pipeline (e.g. text-driven) | Overview pipeline diagram + all 4 deep page openings need rework | Abstract entry to "driver input adapter" (GPT H4, deferred until then) |
 | Concept count exceeds 8 | Flat sidebar starts to overload | Consider Kubernetes-style nesting; re-evaluate the LiveKit/LiveAvatar/Prisma 5-item baseline |
 | A third state machine appears (beyond Connection + Conversation) | State & Events two-pillar structure becomes unbalanced | Re-split State & Events |
-| New client-side SDK component (beyond Avatar / AvatarManager / AvatarController / AvatarView) | Sessions & Lifecycle 4-stage table becomes incomplete | Update Sessions & Lifecycle and Overview's "Who does what" table |
+| New client-side SDK component (beyond Avatar / AvatarManager / AvatarController / AvatarView) | Lifecycle 4-stage table becomes incomplete | Update Lifecycle and Overview's "Who does what" table |
 | Mode behavior changes (e.g. SDK Mode adds auto-reconnect) | Some cells in §6.3 become wrong | This table is the single source of Mode boundaries — behavior change PR must update it |
 
 ## 11. Risks and Mitigations
@@ -213,7 +213,7 @@ Conditions under which this design needs to be revisited:
 
 ### Structure & form
 - [ ] `concepts/how-it-works.mdx` exists; slug `/concepts/how-it-works`; sidebar label `How it works`; H1 `How Spatius Works`
-- [ ] `docs.json` Concepts `pages` order: `how-it-works` → `avatars` → `sessions-lifecycle` → `audio-io` → `state-events` (5 flat items)
+- [ ] `docs.json` Concepts `pages` order: `how-it-works` -> `avatar` -> `audio` -> `lifecycle` -> `state-events` (5 flat items)
 - [ ] Overview contains exactly 5 H2 sections in this order: The pipeline / Terms / Who does what / Where each concept fits / Common failure paths
 
 ### Overview content coverage
@@ -260,9 +260,9 @@ Conditions under which this design needs to be revisited:
 | # | File | Change | Approx size |
 |---|---|---|---|
 | 1 | `concepts/how-it-works.mdx` | NEW — full Overview per §6 | ~120 lines |
-| 2 | `concepts/avatars.mdx` | Replace opening per §8.1 | -4 / +5 lines |
-| 3 | `concepts/sessions-lifecycle.mdx` | Replace opening per §8.2 | -3 / +5 lines |
-| 4 | `concepts/audio-io.mdx` | Replace opening per §8.3 | -3 / +4 lines |
+| 2 | `concepts/avatar.mdx` | Replace opening per §8.1 | -4 / +5 lines |
+| 3 | `concepts/lifecycle.mdx` | Replace opening per §8.2 | -3 / +5 lines |
+| 4 | `concepts/audio.mdx` | Replace opening per §8.3 | -3 / +4 lines |
 | 5 | `concepts/state-events.mdx` | Replace opening per §8.4 | -2 / +3 lines |
 | 6 | `docs.json` | Insert `"concepts/how-it-works"` as first item in Concepts `pages` | +1 line |
 | 7 | `AGENT.md` | (Optional) add 3 new conventions per §12 | ~+25 lines |

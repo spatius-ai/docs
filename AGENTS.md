@@ -32,9 +32,9 @@ When you rename or move a page, also add an entry to `docs.json > redirects` so 
 
 `concepts/` pages are **mental model + cross-cutting warnings** for the avatar pipeline. They are **not** API exhaustion. The four pages are:
 
-- `concepts/avatars.mdx` — what an Avatar is, how IDs/loading/caching behave
-- `concepts/sessions-lifecycle.mdx` — Initialize → Load → Render → Connect, plus Cleanup
-- `concepts/audio-io.mdx` — accepted audio format, when to send, how to interrupt
+- `concepts/avatar.mdx` — what an Avatar is, how IDs/loading/caching behave
+- `concepts/audio.mdx` — accepted audio format, when to send, how to interrupt
+- `concepts/lifecycle.mdx` — Initialize -> Load -> Render -> Connect, plus Cleanup
 - `concepts/state-events.mdx` — connection/conversation state, errors, reconnect
 
 Rules for editing concept pages:
@@ -43,7 +43,7 @@ Rules for editing concept pages:
 - **Don't** put cross-platform code-tab walls (Web / iOS / Android snippets), method signatures, return-type tables, or anything that would need to be rewritten when an SDK ships a new version. Those live in `sdk-reference/{web,ios,android}-sdk/api-reference.mdx` (and `web-sdk/reference.mdx`).
 - **Don't** add "Driving Modes" or "Choose your integration" content here — that lives in `getting-started/how-to-integrate.mdx`. The standalone `concepts/integrations.mdx` was removed because it duplicated that page and the per-Mode chapter overviews.
 
-This split was established in this branch's history; see commits prefixed `docs(concepts/...)` for the worked examples on Avatars and Audio I/O.
+This split was established in this branch's history; see commits prefixed `docs(concepts/...)` for the worked examples on Avatar and Audio.
 
 Detailed concept-page writing standard: [`docs/superpowers/specs/concept-page-writing-standard.md`](./docs/superpowers/specs/concept-page-writing-standard.md).
 
@@ -75,7 +75,7 @@ Do not unify them without being asked. The historical `app.spatialreal.ai` was r
 ## Mintlify-specific conventions used here
 
 - **MDX components**: `<Tabs>`, `<Tab>`, `<Steps>`, `<Step>`, `<Note>`, `<Warning>`, `<Card>`, `<CardGroup>`, `<Frame>`, `<Accordion>`, `<AccordionGroup>` — all built-in.
-- **Mermaid blocks**: use ` ```mermaid actions={false} ` and pass the `themeVariables` block already used in `concepts/sessions-lifecycle.mdx` for visual consistency. Wrap in a white-bg `<div>` so dark theme doesn't invert the diagram badly.
+- **Mermaid blocks**: use ` ```mermaid actions={false} ` and pass the `themeVariables` block already used in `concepts/lifecycle.mdx` for visual consistency. Wrap in a white-bg `<div>` so dark theme doesn't invert the diagram badly.
 - **Custom JSX snippets**: `snippets/spatius-diagrams.jsx` exports React/SVG components (e.g. `SpatiusArchitectureDiagram`) consumed in mdx via `import` then `<SpatiusArchitectureDiagram />`. Styled by classes in `custom.css` (CSS variables prefixed `--spatius-diagram-*`).
 - **`customCSS`**: `/custom.css` is wired in `docs.json`; it ships globally so changes affect every page.
 - **Frontmatter**: `title`, `sidebarTitle` (when nav label should differ from page H1), `description`. Sidebar always shows `sidebarTitle ?? title`, **not** the slug — renaming a page's slug doesn't change its sidebar label, you must edit frontmatter too.

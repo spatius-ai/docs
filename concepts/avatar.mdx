@@ -1,0 +1,37 @@
+---
+title: "Avatar"
+sidebarTitle: "Avatar"
+description: "The concept, source, and related assets of a digital human Avatar"
+---
+
+**Avatar** is digital human - the virtual character rendered by Spatius on your user's screen.
+
+## Sources
+
+### Public Avatars
+
+Official characters or Avatars made public by other people. You can browse them on [app.spatius.ai](https://app.spatius.ai/avatars/library), copy the `avatar-id`, and use it directly.
+
+<Frame>
+  <img src="/images/avatars.png" alt="Public Avatars" />
+</Frame>
+
+### Personal Avatars
+
+Avatars you create yourself on [Spatius Studio](https://app.spatius.ai).
+
+## Related Concepts
+
+### `avatar-id`
+
+The unique ID of an Avatar asset. The client uses this ID to call `AvatarManager.load(id)` and load the corresponding assets. Method signatures differ slightly across Web, iOS, and Android.
+
+Reference: [Web](/sdk-reference/web-sdk/reference#avatarmanager) | [iOS](/sdk-reference/ios-sdk/api-reference#avatarmanager) | [Android](/sdk-reference/android-sdk/api-reference#avatarmanager)
+
+### `avatar assets`
+
+The Avatar asset package downloaded by the client SDK.
+
+- **Format**: 3DGS (3D Gaussian Splatting) digital human assets.
+- **Size**: About 5-10 MB.
+- **Limit**: The Avatar can only be rendered after the download completes.

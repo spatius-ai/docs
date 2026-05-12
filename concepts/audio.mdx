@@ -1,0 +1,23 @@
+---
+title: "Audio"
+sidebarTitle: "Audio"
+description: "The source of the Avatar's speech"
+---
+
+**Audio** is the source of the Avatar's speech - the audio that the digital human should "speak".
+
+## Key Facts
+
+- **It is not user microphone audio**: In voice-agent scenarios, user speech usually goes through ASR -> LLM -> TTS. **The TTS output** is the avatar speech audio. Spatius does not consume user microphone audio by default.
+- **It is sent to Motion Server**: Avatar speech audio is the input to Motion Server. Motion Server uses it to generate synchronized motion data.
+- **Who sends it**: In [Basic Mode](/basic-mode/overview), the client sends it. In [LiveKit Plugin](/livekit-plugin/overview), it is handled automatically. In [Custom Mode](/custom-mode/overview), the developer maintains the flow.
+
+## Format
+
+Motion Server accepts **mono 16-bit PCM (`s16le`)**. Choose one of the following sample rates and configure it during session initialization:
+
+`8000` / `16000` / `22050` / `24000` / `32000` / `44100` / `48000` Hz
+
+Audio is not resampled automatically. If the source does not match, convert it first. For details, see [FAQ - Supported Audio Format](/resources/faq#supported-audio-format).
+
+Reference: [Web `Configuration`](/sdk-reference/web-sdk/reference#configuration) | [iOS `AudioFormat`](/sdk-reference/ios-sdk/api-reference#audioformat) | [Android `AudioFormat`](/sdk-reference/android-sdk/api-reference#audioformat)
