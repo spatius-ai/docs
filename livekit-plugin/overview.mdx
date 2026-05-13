@@ -154,14 +154,14 @@ Full SDK API reference [here](/sdk-reference/web-sdk/reference).
 <Tab title="pip">
 
 ```bash
-pip install livekit-plugins-spatialreal
+pip install livekit-plugins-spatius
 ```
 
 </Tab>
 <Tab title="uv">
 
 ```bash
-uv add livekit-plugins-spatialreal
+uv add livekit-plugins-spatius
 ```
 
 </Tab>
@@ -169,25 +169,26 @@ uv add livekit-plugins-spatialreal
 
 ## Server setup
 
-If you already use [LiveKit Agents](https://docs.livekit.io/agents/), add `livekit-plugins-spatialreal` to your agent worker. The plugin attaches to your `AgentSession` and sends TTS audio to Spatius; Motion Server publishes the resulting audio and motion data to the same LiveKit room.
+If you already use [LiveKit Agents](https://docs.livekit.io/agents/), add `livekit-plugins-spatius` to your agent worker. The plugin attaches to your `AgentSession` and sends TTS audio to Spatius; Motion Server publishes the resulting audio and motion data to the same LiveKit room.
 
 Configure the required environment variables:
 
-- Spatius: `SPATIALREAL_API_KEY`, `SPATIALREAL_APP_ID`, `SPATIALREAL_AVATAR_ID`
+- Spatius: `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`
+- Optional region: `SPATIUS_REGION` defaults to `us-west`
 - LiveKit: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`
 
 Then create an `AvatarSession` and start it with your agent session and room:
 
 ```python
 from livekit.agents import AgentSession, JobContext
-from livekit.plugins import spatialreal
+from livekit.plugins import spatius
 
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
 
     # Your existing agent session
     session = AgentSession(vad=vad, stt=stt, llm=llm, tts=tts)
-    avatar = spatialreal.AvatarSession()
+    avatar = spatius.AvatarSession()
     await avatar.start(session, room=ctx.room)
 
     await session.start(agent=YourAgent(), room=ctx.room)

@@ -1,80 +1,202 @@
 ---
 title: "Golang SDK"
 sidebarTitle: "Golang"
-description: "Using the Golang SDK"
+description: "Using the Spatius Golang SDK"
 ---
 
-## Repository
+The Go SDK creates Spatius avatar sessions from backend services. It requests a short-lived session token from the Console API, opens the ingress WebSocket, sends audio, and returns animation frames through callbacks.
 
-The Golang SDK is available on GitHub: [spatialwalk/avatar-sdk-go](https://github.com/spatialwalk/avatar-sdk-go).
+## Install
 
 ```bash
-go get github.com/spatialwalk/avatar-sdk-go
+go get github.com/spatius-ai/spatius-sdk-go
 ```
+
+Repository: [spatius-ai/spatius-sdk-go](https://github.com/spatius-ai/spatius-sdk-go)
 
 ## Quick start
 
 ```go
+package main
+
 import (
-	avatarsdkgo "github.com/spatialwalk/avatar-sdk-go"
+	"context"
+	"log"
+	"time"
+
+	spatius "github.com/spatius-ai/spatius-sdk-go"
 )
 
 func main() {
-	session := avatarsdkgo.NewAvatarSession(
-		avatarsdkgo.WithAPIKey("your-api-key"),
-		avatarsdkgo.WithAppID("your-app-id"),
-		avatarsdkgo.WithAvatarID("your-avatar-id"),
-		avatarsdkgo.WithConsoleEndpointURL("https://console.us-west.spatialwalk.cloud/v1/console"),
-		avatarsdkgo.WithIngressEndpointURL("wss://api.us-west.spatialwalk.cloud/v2/driveningress"),
-		avatarsdkgo.WithExpireAt(time.Now().Add(5 * time.Minute)),
-		avatarsdkgo.WithTransportFrames(func(data []byte, last bool) {
-			// handle animation frame
+	ctx := context.Background()
+
+	session := spatius.NewAvatarSession(
+		spatius.WithAPIKey("your-api-key"),
+		spatius.WithAppID("your-app-id"),
+		spatius.WithAvatarID("your-avatar-id"),
+		spatius.WithRegion("us-west"),
+		spatius.WithExpireAt(time.Now().Add(5*time.Minute).UTC()),
+		spatius.WithTransportFrames(func(data []byte, last bool) {
+			// Handle animation frame bytes.
 		}),
-		avatarsdkgo.WithOnError(func(err error) {
-			// handle error
+		spatius.WithOnError(func(err error) {
+			// Handle async session errors.
 		}),
-		avatarsdkgo.WithOnClose(func() {
-			// handle close
+		spatius.WithOnClose(func() {
+			// Handle connection close.
 		}),
 	)
 
 	if err := session.Init(ctx); err != nil {
-		// handle init error
-	}
-
-	connectionID, err := session.Start(ctx)
-	if err != nil {
-		// handle start error
+		log.Fatal(err)
 	}
 	defer session.Close()
 
-	// Send audio
-	requestID, err := session.SendAudio(audioData, true)
+	connectionID, err := session.Start(ctx)
 	if err != nil {
-		// handle error
+		log.Fatal(err)
 	}
+	log.Printf("connection id: %s", connectionID)
+
+	audioBytes := []byte{} // Replace with mono PCM audio bytes.
+	reqID, err := session.SendAudio(audioBytes, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("request id: %s", reqID)
 }
 ```
 
-## Egress Mode
+## Region configuration
 
-For real-time applications, you can configure egress to stream avatar output directly to a real-time platform like [**LiveKit** (rooms)](https://docs.livekit.io/intro/overview/). See [LiveKit Agent server side guide](/livekit-plugin/server) for full configuration and code examples.
-
-Quick example with LiveKit:
+The SDK defaults to `us-west`. Passing a region is enough for normal production use:
 
 ```go
-session := avatarsdkgo.NewAvatarSession(
-	// ... other options ...
-	avatarsdkgo.WithLiveKitEgress(&avatarsdkgo.LiveKitEgressConfig{
+session := spatius.NewAvatarSession(
+	spatius.WithRegion("us-west"),
+)
+```
+
+The SDK composes endpoint URLs from the region:
+
+- Console endpoint URL: `https://console.<region>.spatius.ai/v1/console`
+- Ingress endpoint URL: `wss://api.<region>.spatius.ai/v2/driveningress`
+
+Explicit endpoint URLs override `WithRegion`:
+
+```go
+session := spatius.NewAvatarSession(
+	spatius.WithRegion("us-west"),
+	spatius.WithConsoleEndpointURL("https://console.example.com/v1/console"),
+	spatius.WithIngressEndpointURL("wss://api.example.com/v2/driveningress"),
+)
+```
+
+## Session lifecycle
+
+1. Create a session with `NewAvatarSession`.
+2. Call `Init(ctx)` to exchange the API key and expiry time for a session token.
+3. Call `Start(ctx)` to open the ingress WebSocket and configure the avatar session.
+4. Call `SendAudio(audio, end)` for each audio chunk.
+5. Call `Interrupt()` when playback should stop.
+6. Call `Close()` when the session is done.
+
+`SendAudio` returns the request ID associated with the audio. The callback passed to `WithTransportFrames` receives animation frame payloads and a `last` flag.
+
+## Audio format
+
+PCM 16-bit little-endian is the default input format:
+
+```go
+session := spatius.NewAvatarSession(
+	spatius.WithSampleRate(24000),
+	spatius.WithAudioFormat(spatius.AudioFormatPCMS16LE),
+)
+```
+
+The SDK also supports Ogg Opus sessions:
+
+```go
+session := spatius.NewAvatarSession(
+	spatius.WithAudioFormat(spatius.AudioFormatOggOpus),
+	spatius.WithSampleRate(24000),
+	spatius.WithBitrate(32000),
+	spatius.WithOggOpusEncoder(nil),
+)
+```
+
+Passing `nil` to `WithOggOpusEncoder` enables the default encoder config.
+
+## Authentication mode
+
+By default, WebSocket authentication is sent in headers:
+
+```go
+session := spatius.NewAvatarSession(
+	spatius.WithUseQueryAuth(false),
+)
+```
+
+For web-style query authentication, enable:
+
+```go
+session := spatius.NewAvatarSession(
+	spatius.WithUseQueryAuth(true),
+)
+```
+
+## LiveKit egress
+
+Use LiveKit egress when Spatius should publish avatar output directly into a LiveKit room:
+
+```go
+session := spatius.NewAvatarSession(
+	spatius.WithLiveKitEgress(&spatius.LiveKitEgressConfig{
 		URL:         "wss://your-livekit-server.com",
-		APIKey:      "livekit-api-key",
-		APISecret:   "livekit-api-secret",
-		RoomName:    "your-room-name",
+		APIToken:    "livekit-access-token",
+		RoomName:    "room-name",
 		PublisherID: "avatar-publisher",
+		ExtraAttributes: map[string]string{
+			"role": "avatar",
+		},
+		IdleTimeout: 60,
 	}),
 )
 ```
 
+Prefer `APIToken` for new integrations. `APIKey` and `APISecret` remain available for older setups.
+
+## Options
+
+Core options:
+
+- `WithAPIKey(apiKey string)` - Console API key.
+- `WithAppID(appID string)` - application ID.
+- `WithAvatarID(avatarID string)` - avatar ID.
+- `WithExpireAt(expireAt time.Time)` - session token expiry.
+- `WithRegion(region string)` - region used to compose default endpoint URLs.
+- `WithConsoleEndpointURL(endpointURL string)` - explicit Console API URL.
+- `WithIngressEndpointURL(endpointURL string)` - explicit ingress WebSocket URL.
+
+Audio options:
+
+- `WithSampleRate(sampleRate int)` - input sample rate in Hz.
+- `WithBitrate(bitrate int)` - target bitrate for encoded sessions.
+- `WithAudioFormat(audioFormat AudioFormat)` - `AudioFormatPCMS16LE` or `AudioFormatOggOpus`.
+- `WithOggOpusEncoder(config *OggOpusEncoderConfig)` - enable client-side PCM to Ogg Opus encoding.
+
+Callbacks:
+
+- `WithTransportFrames(func([]byte, bool))` - receives animation frame payloads.
+- `WithOnEncodedAudio(func(string, []byte))` - receives internally encoded audio by request ID.
+- `WithOnError(func(error))` - receives async session errors.
+- `WithOnClose(func())` - runs when the session closes.
+
+Egress options:
+
+- `WithLiveKitEgress(config *LiveKitEgressConfig)` - stream output to LiveKit.
+- `WithAgoraEgress(config *AgoraEgressConfig)` - stream output to Agora.
+
 ## Changelog
 
-https://github.com/spatialwalk/avatar-sdk-go/releases
+See [GitHub releases](https://github.com/spatius-ai/spatius-sdk-go/releases).

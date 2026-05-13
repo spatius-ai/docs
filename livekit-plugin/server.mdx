@@ -10,7 +10,7 @@ This guide covers the LiveKit Agents plugin path for sending avatar speech audio
 
 ## Using the LiveKit Agents Framework
 
-If you already use [LiveKit Agents](https://docs.livekit.io/agents/) to build your voice agent, the simplest option is [livekit-plugins-spatialreal](https://github.com/spatialwalk/livekit-plugins-spatialreal). The plugin hooks into your agent pipeline and sends TTS audio to Spatius; Motion Server publishes the lip-synced audio and motion stream into your LiveKit room.
+If you already use [LiveKit Agents](https://docs.livekit.io/agents/) to build your voice agent, the simplest option is [livekit-plugins-spatius](https://github.com/spatius-ai/livekit-plugins-spatius). The plugin hooks into your agent pipeline and sends TTS audio to Spatius; Motion Server publishes the lip-synced audio and motion stream into your LiveKit room.
 
 For a working end-to-end reference, see [AvatarKit Voice Agent Demo](https://github.com/spatialwalk/avatarkit-voice-agent-demo/tree/main/livekit-cascade-voice-agent).
 
@@ -23,23 +23,24 @@ For a working end-to-end reference, see [AvatarKit Voice Agent Demo](https://git
 
 Interruption and conversation state are handled inside the plugin.
 
-### livekit-plugins-spatialreal
+### livekit-plugins-spatius
 
 **Install**
 
 ```bash
-pip install livekit-plugins-spatialreal
+pip install livekit-plugins-spatius
 ```
 
 **Configure**
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `SPATIALREAL_API_KEY` | Yes | Your Spatius API key |
-| `SPATIALREAL_APP_ID` | Yes | Your Spatius app ID |
-| `SPATIALREAL_AVATAR_ID` | Yes | Avatar to use |
-| `SPATIALREAL_CONSOLE_ENDPOINT` | No | Override console endpoint |
-| `SPATIALREAL_INGRESS_ENDPOINT` | No | Override ingress endpoint |
+| `SPATIUS_API_KEY` | Yes | Your Spatius API key |
+| `SPATIUS_APP_ID` | Yes | Your Spatius app ID |
+| `SPATIUS_AVATAR_ID` | Yes | Avatar to use |
+| `SPATIUS_REGION` | No | Region used to compose endpoints. Defaults to `us-west` |
+| `SPATIUS_CONSOLE_ENDPOINT` | No | Override console endpoint |
+| `SPATIUS_INGRESS_ENDPOINT` | No | Override ingress endpoint |
 | `LIVEKIT_URL` | Yes | Your LiveKit server URL |
 | `LIVEKIT_API_KEY` | Yes | LiveKit API key |
 | `LIVEKIT_API_SECRET` | Yes | LiveKit API secret |
@@ -50,13 +51,13 @@ Create an `AvatarSession` and start it with your agent session and room. The plu
 
 ```python
 from livekit.agents import Agent, AgentSession, JobContext, cli, WorkerOptions
-from livekit.plugins import spatialreal
+from livekit.plugins import spatius
 
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
 
     session = AgentSession(vad=vad, stt=stt, llm=llm, tts=tts)
-    avatar = spatialreal.AvatarSession()
+    avatar = spatius.AvatarSession()
     await avatar.start(session, room=ctx.room)
 
     await session.start(agent=YourAgent(), room=ctx.room)
@@ -65,4 +66,4 @@ if __name__ == "__main__":
     cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
 ```
 
-Full API and options: **[livekit-plugins-spatialreal](https://github.com/spatialwalk/livekit-plugins-spatialreal)** (PyPI: [livekit-plugins-spatialreal](https://pypi.org/project/livekit-plugins-spatialreal/)).
+Full API and options: **[livekit-plugins-spatius](https://github.com/spatius-ai/livekit-plugins-spatius)** (PyPI: [livekit-plugins-spatius](https://pypi.org/project/livekit-plugins-spatius/)).
