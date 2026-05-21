@@ -1,68 +1,60 @@
 ---
-title: 'Welcome to Spatius Documentation'
+title: "Welcome to Spatius"
 sidebarTitle: "Welcome"
+description: "What Spatius is, the core components, and how to start integrating."
 ---
 
 import { SpatiusArchitectureDiagram } from '/snippets/spatius-diagrams.jsx'
 
-Spatius is the next-generation infrastructure for empathetic human-AI interactions. We build **real-time**, **high-fidelity**, and **cost-effective** digital avatar interactions through on-device rendering technology.
-
+Spatius turns avatar speech audio into real-time motion data. Your client renders the avatar locally, so you do not need to stream avatar video frames.
 
 <Frame>
   <SpatiusArchitectureDiagram />
 </Frame>
 
+## Core components
 
-## Why Spatius?
+| Term | What it is |
+| --- | --- |
+| **Spatius** | The platform — [Spatius Studio](https://app.spatius.ai) for managing apps and avatars, Motion Server in the cloud, and the AvatarKit SDKs you ship in your app. |
+| **AvatarKit** | The client SDK family that downloads avatar assets, renders the avatar locally, and plays synchronized audio. Available for Web, iOS, Android, and Flutter. |
+| **Motion Server** | The Spatius cloud service that receives avatar speech audio and returns lip-sync motion data, ~10–15 KB/s. |
 
+## Pick your path
 
-Traditional digital avatar solutions force painful trade-offs between cost, visual quality, and real-time performance. Spatius solves this trilemma:
+Spatius integrations split into two categories.
 
+### Already using a third-party agent or realtime platform?
 
-| Metric | Traditional Cloud Rendering | Spatius On-Device |
-| --- | --- | --- |
-| **Bandwidth** | 1-2 MB/s (Video Stream) | 10-20 KB/s (Motion Data) |
-| **Cost** | High GPU rental costs | Ultra-low edge compute |
-| **Latency** | > 3s | < 1.5s |
-| **Compatibility** | High-speed network dependent | 99% of Android/iOS/Web devices |
+<CardGroup cols={1}>
+  <Card title="LiveKit Agents Integration" icon="radio" href="/livekit-agents/overview">
+    Add `livekit-plugins-spatius` to your LiveKit Agents worker. Web client today.
+  </Card>
+</CardGroup>
 
+Agora support is on the roadmap.
 
-## Use Cases
+### Building directly with Spatius SDKs?
 
+<CardGroup cols={2}>
+  <Card title="Direct Mode" icon="bolt" href="/direct-mode/overview">
+    Your client connects to Motion Server directly. Smallest footprint; your backend only mints Session Tokens.
+  </Card>
+  <Card title="Backend Mode" icon="server" href="/backend-mode/overview">
+    Your backend owns ASR, LLM, TTS, the Server SDK, and the downstream transport.
+  </Card>
+</CardGroup>
 
-- **Online Education** - Immersive 1-on-1 tutoring with precise lip-sync for language learning and K12
-- **Recruitment & Training** - 7x24h AI interviewers and role play training simulations
-- **Customer Service** - Brand ambassadors with visual eye contact that builds emotional connection
-- **Social & Entertainment Apps** - Lifelike AI companions and virtual hosts for social platforms and interactive entertainment
-- **AI Hardware with Screens** - Bring expressive avatars to smart displays, robots, and other screen-equipped AI devices
+## Next steps
 
-
-## Creating an account
-
-### Spatius Studio
-
-[Spatius Studio](https://app.spatius.ai/) is your control center where you can:
-
-- Free access to a large avatar library
-- Manage your API keys
-- Monitor your usage
-- Control your subscription
-- Create and finetune your own avatar
-
-
-## Quick Start
-
-
-<Card
-  title="Start building in 5 minutes"
-  icon="rocket"
-  href="/getting-started/quickstart"
-  horizontal
->
-  Run the LiveKit + Spatius agent demo and see your avatar in action.
-</Card>
-
-
-## About Us
-
-Learn more about Spatius and our mission at [spatius.ai](https://spatius.ai/).
+<CardGroup cols={3}>
+  <Card title="Get credentials" icon="key" href="/getting-started/credentials">
+    App ID, Avatar ID, Session Token, API Key — who issues each and where each is used.
+  </Card>
+  <Card title="Choose your integration path" icon="route" href="/getting-started/how-to-integrate">
+    Detailed comparison across categories and paths.
+  </Card>
+  <Card title="Run a quickstart" icon="bolt" href="/quickstarts/overview">
+    Web, iOS, Android, and Flutter first-run quickstarts.
+  </Card>
+</CardGroup>

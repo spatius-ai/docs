@@ -1,87 +1,70 @@
 ---
 title: "Demo Projects"
-description: "Complete working examples for every platform"
+sidebarTitle: "Demo Matrix"
+description: "Runnable end-to-end examples mapped by platform and integration path."
 ---
 
-Get started quickly with our demo projects. Each repository contains a fully functional application you can run immediately.
+The Spatius demo repository is the runnable companion to these docs. Use it when you want to clone code, fill credentials, and see an avatar render, connect, and speak.
+
+<Card
+  title="spatius-ai/spatius-avatarkit-demo"
+  icon="github"
+  href="https://github.com/spatius-ai/spatius-avatarkit-demo"
+  horizontal
+>
+  One consolidated repository containing every demo referenced from these docs.
+</Card>
+
+<Note>
+SDK Reference pages document the packages and APIs you import into your app. Demo projects are end-to-end examples that combine SDKs, credentials, client apps, and optional backend services.
+</Note>
+
+## Demo matrix
+
+| Platform | Direct Mode | Backend Mode | LiveKit Agents Integration |
+| --- | --- | --- | --- |
+| **Web** | [Web quickstart](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/web/speech-to-avatar-quickstart) — minimal smoke test<br />[Web reference clients](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/web/reference) — React / Vue / vanilla / Next.js | [Web Backend Mode client](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/backend-mode/clients/web) | [LiveKit Agents Integration quickstart](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agent-quickstart) — Gemini Live quickstart<br />[LiveKit Agents Integration reference](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agents-reference-demo) — cascade & end-to-end backends |
+| **iOS** | [iOS Direct Mode](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/ios) | [iOS Backend Mode client](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/backend-mode/clients/ios) | Not provided today. LiveKit iOS SDKs exist, but the current AvatarKit RTC demo path is Web-only. |
+| **Android** | [Android Direct Mode](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/android) | [Android Backend Mode client](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/backend-mode/clients/android) | Not provided today. LiveKit Android SDKs exist, but the current AvatarKit RTC demo path is Web-only. |
+| **Flutter** | [Flutter Direct Mode](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/flutter) | [Flutter Backend Mode client](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/backend-mode/clients/flutter) | Not provided today. The current AvatarKit RTC demo path is Web-only. |
+
+Classification reminder:
+
+- **LiveKit Agents Integration** belongs to [Platform Integrations](/livekit-agents/overview).
+- **Direct Mode** and **Backend Mode** belong to [Standalone Integrations](/getting-started/how-to-integrate).
+- The **LiveKit Room example** validates the [RTC Adapter](/sdk-reference/web-sdk/rtc-adapter) wiring against a LiveKit room (token, connect, adapter init, avatar load, mic publish). Remote audio playback and motion-driven rendering only happen when a producer is publishing into the room — it is not the full Backend Mode + RTC transport voice-agent demo.
+
+Transport options such as Backend Mode with LiveKit, future Agora support, and your own WebSocket are configured inside the relevant integration guide. They are not top-level demo categories.
+
+## Recommended starting points
+
+| Goal | Start here | What it proves |
+| --- | --- | --- |
+| Fastest Web SDK smoke test | [`speech-to-avatar-quickstart`](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/web/speech-to-avatar-quickstart) | App ID, Avatar ID, Session Token, avatar loading, Motion Server connection, and PCM audio send. |
+| Full Web client reference | [Web Direct Mode reference](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/web/reference) | Direct Mode SDK integration across React, Vue, vanilla JavaScript, and Next.js. |
+| iOS / Android / Flutter Direct Mode samples | [iOS Direct Mode](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/ios), [Android Direct Mode](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/android), or [Flutter Direct Mode](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/flutter) | Native and Flutter AvatarKit setup with runtime Session Token input. |
+| Fastest Web voice-agent demo | [LiveKit Agents Integration quickstart](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agent-quickstart) | LiveKit token server, agent dispatch, `livekit-plugins-spatius`, AvatarKit RTC, and microphone flow. |
+| Full LiveKit Agents Integration reference | [LiveKit Agents Integration reference](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agents-reference-demo) | Cascade and end-to-end agent backends with Vite and Next.js frontend apps. |
+| Backend-owned audio pipeline | [Backend Mode reference](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/backend-mode) | Backend-owned ASR, LLM, TTS pipeline and thin clients that consume encoded audio and motion messages. |
+| RTC Adapter LiveKit example | [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-room-demo) | Validates `@spatius/avatarkit-rtc` + `LiveKitProvider` wiring (token, connect, adapter init, avatar load, mic publish). Remote audio playback and motion rendering only when a producer is in the room. Not the full voice-agent pattern. |
+| Backend Mode + RTC transport (full voice agent) | Not packaged in this repository yet | Full pattern: backend owns ASR / LLM / TTS / Server SDK, mints LiveKit tokens, and publishes audio + motion into the LiveKit room; RTC Adapter renders in the Web client. Assemble from the Backend Mode demo + the LiveKit example above, or use the [LiveKit Agents quickstart](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agent-quickstart) for an end-to-end runnable equivalent. |
+
+## Clone and run
+
+```bash
+git clone https://github.com/spatius-ai/spatius-avatarkit-demo.git
+cd spatius-avatarkit-demo
+```
+
+Each demo folder has its own README with `.env.example`, dependency installation, and run commands. The READMEs are the source of truth for run instructions; this page is the index.
+
+## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Voice Agent + Avatar Demo" icon="microphone" href="https://github.com/spatialwalk/avatarkit-voice-agent-demo">
-    Fully functioning voice agent + avatar example projects that run after filling API keys in `.env`.
+  <Card title="Choose your integration path" icon="route" href="/getting-started/how-to-integrate">
+    Pick Direct Mode, LiveKit Agents Integration, or Backend Mode.
   </Card>
-  <Card title="Web Demo" icon="globe" href="https://github.com/spatialwalk/avatar-kit-web-demo">
-    Vanilla JS, Vue, and React examples with Vite and Next.js configurations.
-  </Card>
-  <Card title="iOS Demo" icon="apple" href="https://github.com/spatialwalk/avatar-kit-ios-demo">
-    Swift / SwiftUI example with SDK Mode integration.
-  </Card>
-  <Card title="Android Demo" icon="android" href="https://github.com/spatialwalk/avatar-kit-android-demo">
-    Kotlin / Compose example with SDK Mode integration.
+  <Card title="Quickstarts" icon="bolt" href="/quickstarts/overview">
+    Run the platform SDK quickstarts before diving into a full demo.
   </Card>
 </CardGroup>
-
-## Voice Agent + Avatar
-
-**Repository:** [github.com/spatialwalk/avatarkit-voice-agent-demo](https://github.com/spatialwalk/avatarkit-voice-agent-demo)
-
-A fully functioning voice agent + avatar demo collection for real-time interaction.
-
-- End-to-end voice agent + avatar pipeline
-- Multiple runnable example projects
-- Works out of the box after filling required API keys in `.env`
-
-```bash
-git clone https://github.com/spatialwalk/avatarkit-voice-agent-demo.git
-cd avatarkit-voice-agent-demo
-```
-
-## Web
-
-**Repository:** [github.com/spatialwalk/avatar-kit-web-demo](https://github.com/spatialwalk/avatar-kit-web-demo)
-
-Includes multiple framework examples:
-
-| Example | Framework | Build Tool |
-|---------|-----------|------------|
-| Vanilla | Plain TypeScript | Vite |
-| Vue | Vue 3 + Composition API | Vite |
-| React | React 18+ | Vite / Next.js |
-
-```bash
-git clone https://github.com/spatialwalk/avatar-kit-web-demo.git
-cd avatar-kit-web-demo
-pnpm install
-pnpm dev
-```
-
-## iOS
-
-**Repository:** [github.com/spatialwalk/avatar-kit-ios-demo](https://github.com/spatialwalk/avatar-kit-ios-demo)
-
-- Swift 6.2 / SwiftUI
-- iOS 16+
-- Metal rendering
-
-```bash
-git clone https://github.com/spatialwalk/avatar-kit-ios-demo.git
-```
-
-Open the `.xcodeproj` in Xcode, set your App ID and Session Token, then run on a physical device.
-
-<Warning>
-Metal rendering is not supported in the iOS Simulator. Use a physical device for testing.
-</Warning>
-
-## Android
-
-**Repository:** [github.com/spatialwalk/avatar-kit-android-demo](https://github.com/spatialwalk/avatar-kit-android-demo)
-
-- Kotlin / Jetpack Compose
-- API 24+
-- Vulkan rendering
-
-```bash
-git clone https://github.com/spatialwalk/avatar-kit-android-demo.git
-```
-
-Open in Android Studio, set your App ID and Session Token, then run on a physical device or emulator with Vulkan support.

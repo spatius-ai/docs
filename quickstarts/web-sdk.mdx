@@ -1,0 +1,89 @@
+---
+title: "Web SDK Quickstart"
+sidebarTitle: "Web SDK"
+description: "Run the minimal Direct Mode demo with @spatius/avatarkit in a browser."
+---
+
+<Card
+  title="GitHub Repository"
+  icon="github"
+  href="https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/web/speech-to-avatar-quickstart"
+  horizontal
+>
+  Minimal Web Direct Mode demo. Streams prerecorded PCM audio and renders the lip-synced avatar.
+</Card>
+
+This quickstart targets the [Direct Mode](/direct-mode/overview) path. No agent backend or LiveKit setup needed — just credentials.
+
+## Prerequisites
+
+- Node.js 18+
+- pnpm
+- Spatius credentials. See [Credentials](/getting-started/credentials) for what each value is and where to get it.
+  - `VITE_SPATIUS_APP_ID` — from [Spatius Studio](https://app.spatius.ai/apps)
+  - `VITE_SPATIUS_AVATAR_ID` — from the [Avatar Library](https://app.spatius.ai/avatars/library)
+  - `VITE_SPATIUS_SESSION_TOKEN` — see [Session token API](/api-reference/api-reference)
+
+## Run it
+
+<Steps>
+<Step title="Clone the repo and enter the quickstart folder">
+
+```bash
+git clone https://github.com/spatius-ai/spatius-avatarkit-demo.git
+cd spatius-avatarkit-demo/direct-mode/clients/web/speech-to-avatar-quickstart
+```
+
+</Step>
+
+<Step title="Install dependencies">
+
+```bash
+pnpm install
+```
+
+</Step>
+
+<Step title="Create your .env">
+
+```bash
+cp .env.example .env
+```
+
+Fill `VITE_SPATIUS_APP_ID`, `VITE_SPATIUS_AVATAR_ID`, and `VITE_SPATIUS_SESSION_TOKEN`.
+
+</Step>
+
+<Step title="Run the dev server">
+
+```bash
+pnpm dev
+```
+
+</Step>
+
+<Step title="Open the demo">
+
+Open `http://localhost:3000`, click **Connect Avatar**, then **Send Audio**. The avatar should load, connect to Motion Server, and play the demo audio with lip sync.
+
+</Step>
+</Steps>
+
+## What this validates
+
+| Check | What it tells you |
+| --- | --- |
+| Avatar loads | App ID + Avatar ID are correct, asset CDN reachable. |
+| Connect button succeeds | Session Token is valid, Motion Server connection works. |
+| Audio plays with lip sync | PCM audio format and rendering pipeline are wired up end to end. |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Direct Mode guide" icon="book" href="/direct-mode/web">
+    Full Web SDK integration with your own audio source.
+  </Card>
+  <Card title="Browse all demos" icon="github" href="/resources/demo-projects">
+    Multi-framework Web references (React / Vue / Vanilla / Next.js) plus iOS, Android, and Flutter.
+  </Card>
+</CardGroup>

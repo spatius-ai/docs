@@ -1,0 +1,104 @@
+---
+title: "AvatarKit Flutter SDK Reference"
+sidebarTitle: "Flutter"
+description: "Install and use the AvatarKit Flutter SDK."
+---
+
+## Installation
+
+Add the Flutter package:
+
+```yaml title="pubspec.yaml"
+dependencies:
+  spatius: ^1.0.0
+```
+
+Then install dependencies:
+
+```bash
+flutter pub get
+```
+
+The package supports iOS and Android Flutter apps.
+
+## Import
+
+```dart
+import 'package:spatius/avatar_kit.dart' hide ConnectionState, Transform;
+```
+
+## Initialize
+
+Initialize AvatarKit once before loading avatars or creating an avatar view.
+
+```dart
+await AvatarSDK.initialize(
+  appID: appId,
+  configuration: Configuration(
+    region: 'us-west',
+    audioFormat: const AudioFormat(sampleRate: 16000),
+    drivingServiceMode: DrivingServiceMode.sdk,
+    logLevel: LogLevel.all,
+  ),
+);
+
+await AvatarSDK.setSessionToken(sessionToken);
+```
+
+Use `DrivingServiceMode.sdk` for [Direct Mode](/direct-mode/overview). Use `DrivingServiceMode.host` when your Flutter app receives audio and motion messages from a [Backend Mode](/backend-mode/overview).
+
+## Load an avatar
+
+```dart
+final avatar = await AvatarManager.shared.load(
+  id: avatarId,
+  onProgress: (progress) {
+    // Update loading UI.
+  },
+);
+```
+
+## Render and control playback
+
+The Flutter view creates an `AvatarController` when the platform view is ready. Keep that controller and use it for lifecycle, state, and audio operations.
+
+```dart
+void onAvatarViewCreated(AvatarController controller) {
+  controller.onConnectionState = (state, errorMessage) {
+    // Observe Direct Mode connection state.
+  };
+
+  controller.onConversationState = (state) {
+    // Observe avatar playback state.
+  };
+
+  controller.onError = (error) {
+    // Log or surface AvatarError.
+  };
+}
+```
+
+For Direct Mode audio input, start the connection and send PCM chunks:
+
+```dart
+await controller.start();
+controller.send(audioBytes, end: isLastChunk);
+```
+
+For Backend Mode input, feed audio and motion messages received from your backend:
+
+```dart
+final conversationId = await controller.yieldAudioData(audioBytes, end: isLastChunk);
+controller.yieldAnimations(framesData, conversationID: conversationId);
+```
+
+## Demos
+
+<CardGroup cols={2}>
+  <Card title="Flutter Direct Mode demo" icon="github" href="https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/flutter">
+    Direct Mode sample with bundled PCM files.
+  </Card>
+  <Card title="Flutter Backend Mode demo" icon="github" href="https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/backend-mode/clients/flutter">
+    Flutter client that talks to the Backend Mode reference server.
+  </Card>
+</CardGroup>

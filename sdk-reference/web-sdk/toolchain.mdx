@@ -16,7 +16,7 @@ Use the official AvatarKit Vite plugin:
 
 ```typescript title="vite.config.ts"
 import { defineConfig } from 'vite'
-import { avatarkitVitePlugin } from '@spatialwalk/avatarkit/vite'
+import { avatarkitVitePlugin } from '@spatius/avatarkit/vite'
 
 export default defineConfig({
   plugins: [
@@ -45,7 +45,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   optimizeDeps: {
-    exclude: ['@spatialwalk/avatarkit'],
+    exclude: ['@spatius/avatarkit'],
   },
   assetsInclude: ['**/*.wasm'],
   build: {
@@ -80,7 +80,7 @@ export default defineConfig({
 Wrap your Next.js config with `withAvatarkit`:
 
 ```javascript title="next.config.mjs"
-import { withAvatarkit } from '@spatialwalk/avatarkit/next'
+import { withAvatarkit } from '@spatius/avatarkit/next'
 
 export default withAvatarkit({
   // ...your existing Next.js config
@@ -103,7 +103,7 @@ The Next.js wrapper handles the Webpack and response-header work needed for Avat
 If your project already uses another Next.js config wrapper, apply `withAvatarkit` to the final wrapped config:
 
 ```javascript title="next.config.mjs"
-import { withAvatarkit } from '@spatialwalk/avatarkit/next'
+import { withAvatarkit } from '@spatius/avatarkit/next'
 import withOtherPlugin from 'other-plugin'
 
 export default withAvatarkit(withOtherPlugin({

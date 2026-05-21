@@ -1,36 +1,111 @@
 ---
-title: "How to Integrate"
-description: "Pick the right integration mode based on your stack"
+title: "Choose Your Integration Path"
+sidebarTitle: "Choose path"
+description: "Pick a Platform Integration or a Standalone Integration based on whether you build on a third-party agent platform."
 ---
 
 <Info>
-Spatius is an **avatar-only** service — it takes audio in and outputs real-time avatar motion. Voice conversation, speech synthesis, and agent logic are handled by your application or third-party services.
+Spatius is an **avatar-only** service. It takes avatar speech audio and returns real-time motion data. Conversation logic (ASR, LLM, TTS) and turn-taking are owned by your app or by the agent framework you choose.
 </Info>
 
-## Pick your mode
+## Pick your category first
 
-<AccordionGroup>
-  <Accordion title="Are you using LiveKit Agents?">
-    Use **[LiveKit Plugin for Spatius](/livekit-plugin/overview)** -- Add to your existing voice agent, it handles session, audio, and interrupts automatically.
-  </Accordion>
-  <Accordion title="Are you an iOS / Android app developer, or just want to test as quickly as possible?">
-    Use **[Basic Mode](/basic-mode/overview)** -- Recommended starting point. Client SDK handles everything, no server code needed.
-  </Accordion>
-  <Accordion title="Are you an advanced / enterprise developer who needs custom control?">
-    Use **[Custom Mode](/custom-mode/overview)** -- Build your own agent and plug into Spatius. You can reuse LiveKit as the transport layer, or go further and customize the transport end-to-end.
-  </Accordion>
-</AccordionGroup>
+Spatius integrations come in two categories.
 
-## Compare
+- **Platform Integrations** — you already use a third-party realtime / agent platform; Spatius slots in via a platform-specific package. Today: LiveKit Agents Integration.
+- **Standalone Integrations** — you build directly with Spatius SDKs without going through a third-party agent platform. Today: Direct Mode and Backend Mode.
 
-| Mode | Latency | Dev Effort | Platform |
+## Decision matrix
+
+| Category | Path | Choose it when | What connects to Spatius |
 | --- | --- | --- | --- |
-| **[LiveKit Plugin](/livekit-plugin/overview)** | 🟢 Ultra-Low | 🟢 Low | Web |
-| **[Basic Mode](/basic-mode/overview)** | 🟡 Moderate | 🟢 Low | Web / iOS / Android |
-| **[Custom Mode](/custom-mode/overview)** | 🟢 Ultra-Low | 🟡 Medium / High (depends) | Web / iOS / Android |
+| Platform Integrations | **[LiveKit Agents Integration](#livekit-agents-integration)** | You already use LiveKit Agents or want a turnkey voice-agent path. | LiveKit agent worker through `livekit-plugins-spatius` |
+| Standalone Integrations | **[Direct Mode](#direct-mode)** | You have avatar speech audio and want the smallest client-side integration. | AvatarKit client SDK |
+| Standalone Integrations | **[Backend Mode](#backend-mode)** | Your backend owns ASR / LLM / TTS / transport. | Spatius Server SDK |
 
-## Start from runnable examples
+## LiveKit Agents Integration
 
-<Card title="AvatarKit Voice Agent Demo" icon="code" href="https://github.com/spatialwalk/avatarkit-voice-agent-demo" horizontal>
-  Clone, fill in `.env`, and run.
-</Card>
+LiveKit Agents Integration is the Platform Integration for [LiveKit Agents](https://docs.livekit.io/agents/). The `livekit-plugins-spatius` Python package attaches to your agent's `AgentSession` and pipes agent audio to Motion Server.
+
+Use it when:
+
+- Your backend runs a LiveKit Agents worker.
+- You want LiveKit room transport handled for you.
+- Your Web client renders avatar audio and motion from the LiveKit room.
+
+<CardGroup cols={2}>
+  <Card title="LiveKit Agents Integration guide" icon="book" href="/livekit-agents/overview">
+    Add `livekit-plugins-spatius` and the AvatarKit RTC client to your app.
+  </Card>
+  <Card title="LiveKit Agents Integration quickstart" icon="radio" href="/livekit-agents/quickstart">
+    Run the React + LiveKit Agents + Gemini Live demo.
+  </Card>
+</CardGroup>
+
+## Direct Mode
+
+Direct Mode maps to `DrivingServiceMode.sdk` in SDK code. It is the simplest Standalone Integration: your client app connects to Motion Server directly using a short-lived Session Token issued by your backend.
+
+Use it when:
+
+- You already have avatar speech audio — your own TTS, a TTS provider, or prerecorded audio.
+- You want Web, iOS, Android, or Flutter clients to own avatar playback.
+- Your backend can host a minimal Session Token endpoint that calls the [Console API](/api-reference/api-reference).
+
+<CardGroup cols={2}>
+  <Card title="Direct Mode guide" icon="book" href="/direct-mode/overview">
+    Architecture, requirements, and per-platform setup.
+  </Card>
+  <Card title="Web SDK quickstart" icon="globe" href="/quickstarts/web-sdk">
+    Validate App ID, Avatar ID, Session Token, and rendering in a browser.
+  </Card>
+  <Card title="Flutter SDK quickstart" icon="mobile" href="/quickstarts/flutter-sdk">
+    Validate the Flutter package on iOS or Android.
+  </Card>
+</CardGroup>
+
+## Backend Mode
+
+Backend Mode is the Standalone Integration for teams that need full control over the audio pipeline and downstream transport. Your backend uses a Spatius Server SDK to connect to Motion Server, then delivers encoded audio and motion messages to AvatarKit clients over a transport you choose.
+
+Use it when:
+
+- Your backend owns ASR, LLM, TTS, turn-taking, and interruption policy.
+- You need to tune latency or transport behavior.
+- You need a custom WebSocket or RTC transport between your backend and clients.
+
+<CardGroup cols={2}>
+  <Card title="Backend Mode guide" icon="server" href="/backend-mode/overview">
+    Server SDK, transport options, and architecture.
+  </Card>
+  <Card title="Browse all demos" icon="github" href="/resources/demo-projects">
+    Run the Backend Mode reference implementations.
+  </Card>
+</CardGroup>
+
+## Transport is a second decision
+
+Transport options live inside an integration path, not as separate top-level choices:
+
+| Transport | Where it belongs |
+| --- | --- |
+| **Direct to Motion Server** | Default transport for Direct Mode. |
+| **Your own WebSocket** | Backend Mode with [your own transport](/backend-mode/own-transport). |
+| **LiveKit Room** | Two distinct uses — see below. |
+| **Agora Room** | On the Spatius roadmap. Final placement (Platform Integration vs Backend Mode transport) depends on the integration shape Agora support takes. |
+
+LiveKit appears in two completely different positions and these must not be confused:
+
+- **LiveKit Agents Integration** uses LiveKit both as the agent framework (via `livekit-plugins-spatius`) and as the room transport. Choose this when you build agents on LiveKit Agents.
+- **[Backend Mode with LiveKit](/backend-mode/with-livekit)** uses your own backend with the Spatius Server SDK, and merely uses LiveKit as the downstream transport between your backend and your clients. No LiveKit Agents involved.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Get credentials" icon="key" href="/getting-started/credentials">
+    App ID, Avatar ID, Session Token, and API Key — who issues each and where each is used.
+  </Card>
+  <Card title="Demo matrix" icon="grid" href="/resources/demo-projects">
+    Every runnable demo by platform and integration path.
+  </Card>
+</CardGroup>

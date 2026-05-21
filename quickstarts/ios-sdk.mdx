@@ -1,0 +1,96 @@
+---
+title: "iOS SDK Quickstart"
+sidebarTitle: "iOS SDK"
+description: "Run the iOS Direct Mode sample with AvatarKit."
+---
+
+<Card
+  title="GitHub Repository"
+  icon="github"
+  href="https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/ios"
+  horizontal
+>
+  SwiftUI sample implementing the avatar pipeline: VAD → ASR → LLM → TTS → AvatarKit.
+</Card>
+
+This quickstart targets the [Direct Mode](/direct-mode/overview) path on iOS. The sample app pastes the Session Token in the UI rather than fetching from a backend — convenient for first-run validation.
+
+## Prerequisites
+
+- Xcode 16+
+- iOS 16+ device or simulator (real device recommended for mic input)
+- Spatius credentials. See [Credentials](/getting-started/credentials).
+  - **App ID** — from [Spatius Studio](https://app.spatius.ai/apps)
+  - **Avatar ID** — from the [Avatar Library](https://app.spatius.ai/avatars/library)
+  - **Session Token** — see [Session token API](/api-reference/api-reference)
+- An OpenAI API key for the ASR + LLM + TTS pipeline used by the sample.
+
+## Run it
+
+<Steps>
+<Step title="Clone and open the sample">
+
+```bash
+git clone https://github.com/spatius-ai/spatius-avatarkit-demo.git
+cd spatius-avatarkit-demo/direct-mode/clients/ios
+brew install xcodegen
+```
+
+Generate and open the Xcode project:
+
+```bash
+xcodegen generate
+open AvatarDemo.xcodeproj
+```
+
+</Step>
+
+<Step title="Configure credentials">
+
+Edit `AvatarDemo/Config.swift`:
+
+```swift
+appID = "<your-app-id>"
+avatarID = "<your-avatar-id>"
+openAIApiKey = "<your-openai-api-key>"
+```
+
+`Session Token` is not stored in `Config.swift` — paste it in the app UI at runtime.
+
+</Step>
+
+<Step title="Build and run">
+
+Use Xcode to build and run on a connected iOS device or simulator. The `AvatarKit.xcframework` is downloaded automatically on first build from the configured release.
+
+</Step>
+
+<Step title="Start a conversation">
+
+In the running app:
+
+1. Paste your Session Token.
+2. Tap **Start Conversation**.
+3. Speak and pause. The avatar should respond with lip-synced speech.
+
+</Step>
+</Steps>
+
+## What this validates
+
+| Check | What it tells you |
+| --- | --- |
+| Avatar renders | App ID + Avatar ID are correct, framework is correctly embedded. |
+| Conversation starts | Session Token is valid, Motion Server connection works. |
+| Avatar speaks | Full pipeline (mic → ASR → LLM → TTS → AvatarKit) is wired up end to end. |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="iOS SDK reference" icon="book" href="/sdk-reference/ios-sdk/api-reference">
+    Complete iOS API documentation.
+  </Card>
+  <Card title="Browse all demos" icon="github" href="/resources/demo-projects">
+    Web (multi-framework) and Android samples in addition to iOS.
+  </Card>
+</CardGroup>

@@ -1,0 +1,92 @@
+---
+title: "Android SDK Quickstart"
+sidebarTitle: "Android SDK"
+description: "Run the Android Direct Mode sample with AvatarKit."
+---
+
+<Card
+  title="GitHub Repository"
+  icon="github"
+  href="https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/android"
+  horizontal
+>
+  Kotlin + Compose sample implementing the avatar pipeline: VAD → ASR → LLM → TTS → AvatarKit.
+</Card>
+
+This quickstart targets the [Direct Mode](/direct-mode/overview) path on Android. The sample app pastes the Session Token in the UI rather than fetching from a backend — convenient for first-run validation.
+
+## Prerequisites
+
+- Android Studio (latest stable)
+- JDK 17
+- Android API 24+ device or emulator (arm64-v8a, real device recommended)
+- Spatius credentials. See [Credentials](/getting-started/credentials).
+  - **App ID** — from [Spatius Studio](https://app.spatius.ai/apps)
+  - **Avatar ID** — from the [Avatar Library](https://app.spatius.ai/avatars/library)
+  - **Session Token** — see [Session token API](/api-reference/api-reference)
+- An OpenAI API key for the ASR + LLM + TTS pipeline used by the sample.
+
+## Run it
+
+<Steps>
+<Step title="Clone and configure">
+
+```bash
+git clone https://github.com/spatius-ai/spatius-avatarkit-demo.git
+cd spatius-avatarkit-demo/direct-mode/clients/android
+cp local.properties.example local.properties
+```
+
+Fill `local.properties`:
+
+```properties
+SPATIUS_APP_ID=<your-app-id>
+SPATIUS_AVATAR_ID=<your-avatar-id>
+OPENAI_API_KEY=<your-openai-api-key>
+OPENAI_USE_PROXY=false
+```
+
+`Session Token` is not configured in files — paste it in the app UI at runtime.
+
+</Step>
+
+<Step title="Build">
+
+```bash
+JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradlew :app:assembleDebug
+```
+
+Install with Android Studio or `adb install`.
+
+</Step>
+
+<Step title="Start a conversation">
+
+In the running app:
+
+1. Initialize the avatar.
+2. Paste your Session Token.
+3. Tap **Start Conversation**.
+4. Speak and pause to trigger a round.
+
+</Step>
+</Steps>
+
+## What this validates
+
+| Check | What it tells you |
+| --- | --- |
+| Avatar renders | App ID + Avatar ID are correct, Maven dependency resolved. |
+| Conversation starts | Session Token is valid, Motion Server connection works. |
+| Avatar speaks | Full pipeline (mic → ASR → LLM → TTS → AvatarKit) is wired up end to end. |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Android SDK reference" icon="book" href="/sdk-reference/android-sdk/api-reference">
+    Complete Android API documentation.
+  </Card>
+  <Card title="Browse all demos" icon="github" href="/resources/demo-projects">
+    Web (multi-framework) and iOS samples in addition to Android.
+  </Card>
+</CardGroup>

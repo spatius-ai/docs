@@ -8,7 +8,7 @@ description: "Browse the complete API reference"
 
 ```kotlin title="build.gradle.kts"
 dependencies {
-    implementation("ai.spatialwalk:avatarkit:1.0.0-beta46")
+    implementation("ai.spatius:avatarkit:1.+")
 }
 ```
 
@@ -298,7 +298,7 @@ fun yield(animations: List<ByteArray>, reqId: String)
 ```
 
 **Parameters:**
-- `animations`: List of animation data
+- `animations`: List of encoded motion data frames
 - `reqId`: The request ID returned from yield audio
 </Accordion>
 
@@ -377,12 +377,12 @@ data class Configuration
 
 ##### Initializers
 
-<Accordion title="Configuration(environment, audioFormat, drivingServiceMode, logLevel)">
+<Accordion title="Configuration(region, audioFormat, drivingServiceMode, logLevel)">
 Creates a new configuration with the specified parameters.
 
 ```kotlin
 data class Configuration(
-    val environment: Environment,
+    val region: String,
     val audioFormat: AudioFormat = AudioFormat(16000),
     val drivingServiceMode: DrivingServiceMode = DrivingServiceMode.SDK,
     val logLevel: LogLevel = LogLevel.INFO
@@ -390,25 +390,11 @@ data class Configuration(
 ```
 
 **Parameters:**
-- `environment`: The environment to use
+- `region`: The region to connect to (currently only `"us-west"`)
 - `audioFormat`: The audio format configuration
 - `drivingServiceMode`: The driving service mode
 - `logLevel`: The log level
 </Accordion>
-
-### Environment
-
-Environment enum.
-
-```kotlin
-enum class Environment
-```
-
-| Case | Description |
-|------|-------------|
-| `intl` | International environment. |
-| `cn` | China environment. |
-| `test` | Test environment. |
 
 ### AudioFormat
 

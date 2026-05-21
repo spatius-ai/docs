@@ -22,26 +22,26 @@ Subscribe to state changes through `AvatarController.onConversationState`.
 Android also has an intermediate `Active` state. It means avatar speech audio has been received, but playable motion data is not ready yet.
 </Note>
 
-Detailed definitions for each platform: [Web `ConversationState`](/sdk-reference/web-sdk/reference#conversationstate) | [iOS `ConversationState`](/sdk-reference/ios-sdk/api-reference#conversationstate) | [Android `ConversationState`](/sdk-reference/android-sdk/api-reference#conversationstate)
+Detailed definitions for each platform: [Web `ConversationState`](/sdk-reference/web-sdk/reference#conversationstate) | [iOS `ConversationState`](/sdk-reference/ios-sdk/api-reference#conversationstate) | [Android `ConversationState`](/sdk-reference/android-sdk/api-reference#conversationstate) | [Flutter `ConversationState`](/sdk-reference/flutter-sdk/api-reference#render-and-control-playback)
 
 ## `ConnectionState`
 
 <Note>
-**Only available in [Basic Mode](/basic-mode/overview)**. In LiveKit Plugin and Custom Mode, the connection is managed by the plugin or developer backend, and is not exposed through `AvatarController.ConnectionState`.
+**Only available in [Direct Mode](/direct-mode/overview)**. In LiveKit Agents Integration and Backend Mode integrations, the connection is managed by the LiveKit Agents worker or developer backend, and is not exposed through `AvatarController.ConnectionState`.
 </Note>
 
-The WebSocket connection state from AvatarKit to Motion Server in Basic Mode.
+The WebSocket connection state from AvatarKit to Motion Server in Direct Mode integrations.
 
 | State | Meaning |
 |-------|---------|
 | `disconnected` | No active connection. |
 | `connecting` | Handshake in progress. |
 | `connected` | Connection is active and can receive avatar speech audio. |
-| `failed` | Connection failed. On iOS and Android, it carries `code` and `message`. |
+| `failed` | Connection failed. On iOS, Android, and Flutter SDKs, it carries additional error detail. |
 
 Subscribe to state changes through `AvatarController.onConnectionState`.
 
-Detailed definitions for each platform: [Web `ConnectionState`](/sdk-reference/web-sdk/reference#connectionstate) | [iOS `ConnectionState`](/sdk-reference/ios-sdk/api-reference#connectionstate) | [Android `ConnectionState`](/sdk-reference/android-sdk/api-reference#connectionstate)
+Detailed definitions for each platform: [Web `ConnectionState`](/sdk-reference/web-sdk/reference#connectionstate) | [iOS `ConnectionState`](/sdk-reference/ios-sdk/api-reference#connectionstate) | [Android `ConnectionState`](/sdk-reference/android-sdk/api-reference#connectionstate) | [Flutter `ConnectionState`](/sdk-reference/flutter-sdk/api-reference#render-and-control-playback)
 
 ## Errors (`onError`)
 
@@ -49,9 +49,9 @@ Subscribe through `AvatarController.onError`. Errors are grouped by category:
 
 | Category | Representative errors | Mode availability |
 |----------|-----------------------|-------------------|
-| **Authentication** | `sessionTokenExpired`, `sessionTokenInvalid`, `appIDUnrecognized`, `insufficientBalance`, `concurrentLimitExceeded` | Basic Mode only. Other modes handle these on the backend or plugin side. |
-| **Resource loading** | `avatarIDUnrecognized`, `avatarAssetsMissing`, `failedToFetchAvatarMetadata` | All modes. |
-| **Connection** | `websocketError`, `websocketClosedAbnormally`, `sessionTimeout` | Basic Mode only. |
-| **Server** | `serverError` | All modes. |
+| **Authentication** | `sessionTokenExpired`, `sessionTokenInvalid`, `appIDUnrecognized`, `insufficientBalance`, `concurrentLimitExceeded` | Direct Mode only. Other integrations handle these on the backend or plugin side. |
+| **Resource loading** | `avatarIDUnrecognized`, `avatarAssetsMissing`, `failedToFetchAvatarMetadata` | All integrations. |
+| **Connection** | `websocketError`, `websocketClosedAbnormally`, `sessionTimeout` | Direct Mode only. |
+| **Server** | `serverError` | All integrations. |
 
 Complete error enum, including WebSocket close codes: [Resources -> Error Codes](/resources/server-error).

@@ -1,6 +1,6 @@
 ---
 title: "Client Error Codes"
-description: "iOS, Android, and Web SDK error codes with recovery guidance"
+description: "Web, iOS, Android, and Flutter SDK error codes with recovery guidance"
 ---
 
 All client SDKs surface errors through the `AvatarController.onError` callback as `AvatarError`.
@@ -25,6 +25,13 @@ controller.onError = { error in
 controller?.onError = { error ->
     Log.e("Avatar", "Error: ${error.message}")
 }
+```
+</Tab>
+<Tab title="Flutter">
+```dart
+controller.onError = (error) {
+  debugPrint('Error: ${error.name}');
+};
 ```
 </Tab>
 </Tabs>
@@ -76,6 +83,10 @@ controller?.onError = { error ->
 | `FailedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
 | `ServerError(message, code)` | Server-side error. | Check the error message for details. |
 
+## Flutter — AvatarError
+
+Flutter surfaces `AvatarError` through `AvatarController.onError`. Error names match the client SDK categories above; log `error.name` and the current lifecycle phase for recovery.
+
 ## Recommended Handling Flow
 
 1. Log the error code and current lifecycle phase.
@@ -88,3 +99,4 @@ For platform-specific API details, see:
 - [Web SDK API reference](/sdk-reference/web-sdk/reference)
 - [iOS SDK API reference](/sdk-reference/ios-sdk/api-reference)
 - [Android SDK API reference](/sdk-reference/android-sdk/api-reference)
+- [Flutter SDK API reference](/sdk-reference/flutter-sdk/api-reference)

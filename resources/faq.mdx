@@ -18,22 +18,22 @@ See [Audio](/concepts/audio) for configuration details.
 
 <Accordion title="Avatar Playback Fallback Strategy">
 
-If the avatar animation drive data is abnormal after passing in audio, the fallback playback strategy will be triggered:
+If the motion data is abnormal after passing in audio, the fallback playback strategy will be triggered:
 
 - Audio plays normally
-- Animation plays idle breathing state / Animation stops
+- Avatar remains in idle breathing state, or motion playback stops
 
 </Accordion>
 
 <Accordion title="Session token expired or invalid">
 
-Session tokens have a limited lifetime. If you receive `sessionTokenExpired` or `sessionTokenInvalid`, request a new token from your server and set it via `AvatarSDK.sessionToken` before reconnecting.
+**Direct Mode only.** Session Tokens have a limited lifetime. If you receive `sessionTokenExpired` or `sessionTokenInvalid` on the Motion Server WebSocket, request a fresh Session Token from your backend and call `AvatarSDK.setSessionToken()` before reconnecting via `controller.start()`. RTC / LiveKit Agents / Backend Mode clients never see this error — they don't open that WebSocket and don't need a Session Token.
 
 </Accordion>
 
 <Accordion title="Avatar assets fail to download">
 
-Check your network connectivity and ensure the avatar ID is correct. If the issue persists, clear the local cache with `AvatarManager.clearAll()` and retry. On mobile, verify that your app has network permissions.
+Check your network connectivity and ensure the avatar ID is correct. If the issue persists, clear the local cache with `AvatarManager.clearAll()` and retry. On iOS, Android, or Flutter, verify that your app has network permissions.
 
 </Accordion>
 
@@ -50,7 +50,7 @@ AvatarKit Web uses WebAssembly for rendering. Your build tool must be configured
 - **Vite**: Use the AvatarKit Vite plugin.
 - **Next.js**: Use the AvatarKit Next.js wrapper component.
 
-See the [Web SDK guide](/basic-mode/web) for setup instructions.
+See the [Web SDK guide](/direct-mode/web) for setup instructions.
 
 </Accordion>
 
@@ -72,9 +72,9 @@ AvatarKit Android uses Vulkan for GPU rendering. Ensure the target device suppor
 
 </Accordion>
 
-<Accordion title="RTC: LiveKit version compatibility">
+<Accordion title="LiveKit RTC client: version compatibility">
 
-RTC Mode requires `livekit-client` at exactly version `2.16.1`. Other versions may cause connection or audio routing issues.
+The AvatarKit RTC client path requires `livekit-client` at exactly version `2.16.1`. Other versions may cause connection or audio routing issues.
 
 </Accordion>
 

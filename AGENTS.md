@@ -4,7 +4,7 @@ Repository guidance for any AI coding agent (Claude Code, Codex, Cursor, Copilot
 
 ## What this repo is
 
-Mintlify documentation site for **Spatius** (audio-driven real-time avatar platform by spatialwalk). Pure content repo — no build step, no test suite, no `package.json`, no lint. Production deploy is automatic on push to `main` via the Mintlify GitHub app.
+Mintlify documentation site for **Spatius** (audio-driven real-time avatar platform). Pure content repo — no build step, no test suite, no `package.json`, no lint. Production deploy is automatic on push to `main` via the Mintlify GitHub app.
 
 ## Local preview
 
@@ -18,13 +18,23 @@ A `dockerfile` exists for parity (`node:22-alpine` running `mint dev` on port 30
 
 ## Navigation: `docs.json` is the single source of truth
 
-Mintlify reads `docs.json` and serves only what is referenced from `navigation.tabs[*].groups[*].pages`. Files on disk that are not referenced exist but are unreachable through the sidebar. As of the post-cleanup state there are no orphans, but if you add a new `.mdx` and it doesn't appear in the sidebar, the most likely cause is a missing `docs.json` entry. Always check `docs.json` before assuming a page is reachable.
+Mintlify reads `docs.json` and serves only what is referenced from `navigation.tabs[*].groups[*].pages`. Files on disk that are not referenced exist but are unreachable through the sidebar. If you add a new `.mdx` and it doesn't appear in the sidebar, the most likely cause is a missing `docs.json` entry. Always check `docs.json` before assuming a page is reachable.
 
-Top-level structure:
+Top-level structure (Documentation tab):
 
-- **Documentation** tab → `getting-started/`, `concepts/`, `livekit-plugin/`, `basic-mode/`, `custom-mode/`, `resources/`
-- **SDK Reference** tab → `sdk-reference/{web,ios,android,python,go,js}-sdk/`
-- **API Reference** tab → `api-reference/` (Server REST API)
+1. **Start Here** — `getting-started/introduction`, `concepts/how-it-works`, `getting-started/credentials`, `getting-started/how-to-integrate`
+2. **Quickstarts** — platform SDK first-runs only (`quickstarts/{overview,web-sdk,ios-sdk,android-sdk,flutter-sdk}`). LiveKit Agents quickstart lives under its own group, not here.
+3. **Platform Integrations** — third-party realtime/agent platforms slot in via plugins. Today contains only the `LiveKit Agents` nested group (`livekit-agents/{overview,quickstart,client,server}`). Future home for Agora when product shape lands.
+4. **Standalone Integrations** — build directly with Spatius SDKs. Contains two nested groups: `Direct Mode` (`direct-mode/*`) and `Backend Mode` (`backend-mode/*` including `with-livekit` as a transport sub-page).
+5. **Concepts** — `concepts/{avatar,audio,lifecycle,state-events}` (mental model + cross-cutting warnings; `how-it-works` lives in Start Here as orientation).
+6. **Examples & Support** — `resources/demo-projects` (matrix), `faq`, Error Codes group, `changelog`.
+
+Other tabs:
+
+- **SDK Reference** → `sdk-reference/{web,ios,android,flutter,python,go}-sdk/` (no JS SDK in nav — not implemented yet)
+- **API Reference** → `api-reference/` (Server REST API)
+
+**Key IA boundary:** `backend-mode/with-livekit` lives under Standalone Integrations > Backend Mode even though it mentions LiveKit. It is a transport option for Backend Mode, not a Platform Integration. LiveKit Agents (Platform Integration) and Backend Mode with LiveKit Room transport (Standalone) must never be conflated. The phrase "Server-Side Integrations" was a previous interim grouping and is no longer used anywhere user-facing.
 
 When you rename or move a page, also add an entry to `docs.json > redirects` so existing inbound links keep resolving (`{ "source": "/old/path", "destination": "/new/path" }`). Pure deletions don't need a redirect — only renames do.
 
@@ -34,43 +44,64 @@ When you rename or move a page, also add an entry to `docs.json > redirects` so 
 
 - `concepts/avatar.mdx` — what an Avatar is, how IDs/loading/caching behave
 - `concepts/audio.mdx` — accepted audio format, when to send, how to interrupt
-- `concepts/lifecycle.mdx` — Initialize -> Load -> Render -> Connect, plus Cleanup
+- `concepts/lifecycle.mdx` — Initialize → Load → Render → Connect, plus Cleanup
 - `concepts/state-events.mdx` — connection/conversation state, errors, reconnect
 
 Rules for editing concept pages:
 
 - **Do** include task-oriented narrative, mental model framing, shared-state warnings, links between concepts, and links out to `sdk-reference/` for exact signatures.
-- **Don't** put cross-platform code-tab walls (Web / iOS / Android snippets), method signatures, return-type tables, or anything that would need to be rewritten when an SDK ships a new version. Those live in `sdk-reference/{web,ios,android}-sdk/api-reference.mdx` (and `web-sdk/reference.mdx`).
-- **Don't** add "Driving Modes" or "Choose your integration" content here — that lives in `getting-started/how-to-integrate.mdx`. The standalone `concepts/integrations.mdx` was removed because it duplicated that page and the per-Mode chapter overviews.
+- **Don't** put cross-platform code-tab walls (Web / iOS / Android / Flutter snippets), method signatures, return-type tables, or anything that would need to be rewritten when an SDK ships a new version. Those live in `sdk-reference/{web,ios,android,flutter}-sdk/api-reference.mdx` (and `web-sdk/reference.mdx`).
+- **Don't** add "Driving Modes" or "Choose your integration" content here — that lives in `getting-started/how-to-integrate.mdx`.
 
-This split was established in this branch's history; see commits prefixed `docs(concepts/...)` for the worked examples on Avatar and Audio.
-
-Detailed concept-page writing standard: [`docs/superpowers/specs/concept-page-writing-standard.md`](./docs/superpowers/specs/concept-page-writing-standard.md).
-
-## Naming conventions (strict)
+## Brand and naming (strict)
 
 Use these names verbatim everywhere — including running prose, headings, code comments, diagram labels, and link text. Inconsistency in this list causes the most reader confusion and the most cross-page drift.
 
 | Term | Meaning |
 |------|---------|
+| **Spatius** | The product. Never use earlier internal brand names (any variant of the prior org or product spelling). |
 | **Motion Server** | The cloud service. Input: agent audio. Output: motion data. |
 | **motion data** | The driving data stream produced by Motion Server, ~10–15 KB/s, consumed by the on-device avatar to speak. Lowercase except at sentence start. |
 | **Avatar** / **avatar assets** | The digital-human resources (model, textures, metadata). "Avatar" when referring to the entity; "avatar assets" when referring to the downloadable bundle. |
 | **AvatarKit** | The client-side core SDK that handles rendering and playback. |
-| **avatarkit-rtc** | The RTC adapter layer (core + adapter). Always lowercase, hyphenated. |
-| **LiveKit Plugin** | A server-side concept; the package is `livekit-plugins-spatialreal`. |
+| **`@spatius/avatarkit-rtc`** | The RTC adapter package. Always lowercase, hyphenated, fully scoped. |
+| **LiveKit Agents Integration** | The public name for the **Platform Integration** that uses `livekit-plugins-spatius`. The user-facing name in nav is "LiveKit Agents Integration"; do not call the integration path "LiveKit Integration" or "LiveKit Plugin". |
+| **Direct Mode Integration** | The public name for the path that maps to `DrivingServiceMode.sdk` in SDK code. |
+| **Backend Mode Integration** | The public name for the path that maps to `DrivingServiceMode.host` in SDK code. |
 | **`ConnectionState`** / **`ConversationState`** | The two state enum types. Always in code style with this exact casing. |
 
 Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "Spatius Server", "renderer SDK", "RTC plugin"). If you find an existing page using a different term, either fix it in the same change or flag it explicitly — silent drift is the failure mode this section exists to prevent.
 
-## Domain rules
+### RTC Adapter naming
 
-Two domains, intentionally split:
+- `@spatius/avatarkit-rtc` is the **Web SDK RTC transport adapter**. Treat it as part of the Web SDK family alongside `@spatius/avatarkit`, not as a peer of the iOS / Android / Flutter SDKs.
+- Do not describe `@spatius/avatarkit-rtc` itself as a diagnostic, smoke test, or debug helper. The demo directory `platform-integrations/livekit-room-demo` is the minimal LiveKit example exercising the adapter. Future provider examples (e.g. Agora) would sit as siblings under `platform-integrations/` (e.g. `platform-integrations/agora-room/`).
+- **LiveKit Agents** is a Platform Integration; **LiveKit Room** (and future **Agora Room**) is a transport provider; the **RTC Adapter** (`@spatius/avatarkit-rtc`) is the Web SDK adapter that renders the avatar stream from that transport.
+- Backend Mode can use an RTC transport. In that pattern the Web client uses the RTC Adapter; backend wiring still belongs to Backend Mode docs.
 
-- `app.spatius.ai` — Studio (the product app). Always link Studio CTAs / login to this.
-- `docs.spatialreal.ai` — these docs. Used in the navbar `llms.txt` link.
+## Brand-asset reference
 
-Do not unify them without being asked. The historical `app.spatialreal.ai` was rebranded out across all content; if you see it appear, it's a regression.
+| Asset | Value |
+|------|------|
+| Product | Spatius |
+| Studio | `https://app.spatius.ai` |
+| Website | `https://spatius.ai` |
+| Docs | `https://docs.spatius.ai` |
+| GitHub org | `spatius-ai` |
+| Consolidated demo repo | `https://github.com/spatius-ai/spatius-avatarkit-demo` |
+| npm | `@spatius/avatarkit`, `@spatius/avatarkit-rtc` |
+| Python | `livekit-plugins-spatius` |
+| Android (Maven) | `ai.spatius:avatarkit` |
+| iOS | `AvatarKit.xcframework` (downloaded from `spatius-ai/avatarkit-ios-release`) |
+| Flutter | `spatius` |
+| Env vars | `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`, `SPATIUS_REGION=us-west`. Vite-built frontends use `VITE_SPATIUS_*`. |
+| Logo files | `/images/spatius-logo-mark-black.svg`, `/images/spatius-logo-mark-white.svg` (SVG, never PNG) |
+
+## Endpoint discipline
+
+- Spatius currently operates in **one region: `us-west`**. Other historical region slugs are removed. The endpoint domain is `*.us-west.spatius.ai` only — never a `*.cloud` TLD under any historical brand.
+- Reference URLs (for advanced users): `https://console.us-west.spatius.ai/v1/console`, `wss://api.us-west.spatius.ai/v2/driveningress`.
+- **Quickstarts and normal demo setup** ask users to set only `SPATIUS_REGION` (defaulting to `us-west`). Do **not** ask users to set `SPATIUS_CONSOLE_ENDPOINT` or `SPATIUS_INGRESS_ENDPOINT` in any setup flow — those exist as commented-out "Advanced override" env vars only.
 
 ## Mintlify-specific conventions used here
 
@@ -80,6 +111,10 @@ Do not unify them without being asked. The historical `app.spatialreal.ai` was r
 - **`customCSS`**: `/custom.css` is wired in `docs.json`; it ships globally so changes affect every page.
 - **Frontmatter**: `title`, `sidebarTitle` (when nav label should differ from page H1), `description`. Sidebar always shows `sidebarTitle ?? title`, **not** the slug — renaming a page's slug doesn't change its sidebar label, you must edit frontmatter too.
 
+## Page-bottom CTA convention
+
+Every page that has a "what to do next" section uses the heading `## Next steps`. Don't introduce variants like "Get Started", "Go next", "Examples", or "Beyond quickstarts". Each `## Next steps` block contains 2–3 `<Card>`s pointing to logical follow-ups.
+
 ## Source-of-truth for SDK behavior
 
-When documenting SDK behavior, the authoritative source is the published SDK source — not memory, not the existing docs. The Web SDK lives at `https://github.com/spatialwalk/avatar-kit-web` (package `@spatialwalk/avatarkit`); iOS/Android equivalents are referenced from `sdk-reference/{ios,android}-sdk/`. Verify method names and semantics against the SDK before asserting them in a concept page.
+When documenting SDK behavior, the authoritative source is the published SDK source — not memory, not the existing docs. Verify method names and semantics against the SDK before asserting them in a concept page.
