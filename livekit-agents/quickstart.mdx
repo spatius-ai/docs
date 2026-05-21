@@ -7,7 +7,7 @@ description: "Build a voice avatar with Spatius, LiveKit Agents, and Gemini Live
 <Card
   title="GitHub Repository"
   icon="github"
-  href="https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agent-quickstart"
+  href="https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agent-quickstart"
   horizontal
 >
   Source code for this quickstart.
@@ -28,8 +28,8 @@ This quickstart targets the [LiveKit Agents Integration](/livekit-agents/overvie
 <Step title="Clone the repo and enter the quickstart folder">
 
 ```bash
-git clone https://github.com/spatius-ai/spatius-avatarkit-demo.git
-cd spatius-avatarkit-demo/platform-integrations/livekit-agents-demo/livekit-agent-quickstart
+git clone https://github.com/spatius-ai/spatius-avatar-demo.git
+cd spatius-avatar-demo/platform-integrations/livekit-agents-demo/livekit-agent-quickstart
 ```
 
 </Step>
@@ -65,19 +65,19 @@ The backend's `pyproject.toml` pins `livekit-agents`, `livekit-plugins-google`, 
 
 ```bash
 # Terminal 1: token server
-cd spatius-avatarkit-demo/platform-integrations/livekit-agents-demo/livekit-agent-quickstart/backend
+cd spatius-avatar-demo/platform-integrations/livekit-agents-demo/livekit-agent-quickstart/backend
 uv run token_server.py
 ```
 
 ```bash
 # Terminal 2: LiveKit agent worker
-cd spatius-avatarkit-demo/platform-integrations/livekit-agents-demo/livekit-agent-quickstart/backend
+cd spatius-avatar-demo/platform-integrations/livekit-agents-demo/livekit-agent-quickstart/backend
 uv run agent.py dev
 ```
 
 ```bash
 # Terminal 3: frontend
-cd spatius-avatarkit-demo/platform-integrations/livekit-agents-demo/livekit-agent-quickstart/frontend
+cd spatius-avatar-demo/platform-integrations/livekit-agents-demo/livekit-agent-quickstart/frontend
 pnpm dev
 ```
 
@@ -115,7 +115,7 @@ The Google project behind `GOOGLE_API_KEY` cannot reach Gemini Live API for the 
 
 - **Verify Live access** in AI Studio's "Stream Realtime" tab with the same key. If the test there fails too, the project itself is denied — issue a key from a project that has Live API enabled.
 - **Switch model** — change `E2E_GOOGLE_MODEL` to a model your project is allowed to call. The quickstart defaults to `gemini-2.5-flash-native-audio-preview-12-2025`; widely-available alternatives include `gemini-2.0-flash-live-001` and `gemini-live-2.5-flash-preview`.
-- **Use a different realtime LLM** — replace `google.realtime.RealtimeModel` in `agent.py` with OpenAI / Azure / xAI Realtime. The [reference demos](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agents-reference-demo) show several provider wirings.
+- **Use a different realtime LLM** — replace `google.realtime.RealtimeModel` in `agent.py` with OpenAI / Azure / xAI Realtime. The [reference demos](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agents-reference-demo) show several provider wirings.
 
 ## Next steps
 
