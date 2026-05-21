@@ -28,7 +28,7 @@ The RTC Adapter is **part of the Web SDK family**, not a standalone cross-platfo
 | Backend Mode with LiveKit / future Agora transport | Yes. The Web client uses the RTC Adapter. |
 | LiveKit Agents Integration | Yes. The Web client uses the RTC Adapter with `LiveKitProvider`. |
 
-The [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-room-demo) demo is the minimal LiveKit example for the RTC Adapter; it is not the full Backend Mode + RTC transport voice-agent demo. Future provider examples (e.g. Agora) would sit as siblings under `platform-integrations/` (e.g. `platform-integrations/agora-room/`).
+The [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-room-demo) demo is the minimal LiveKit example for the RTC Adapter; it is not the full Backend Mode + RTC transport voice-agent demo. Future provider examples (e.g. Agora) would sit as siblings under `platform-integrations/` (e.g. `platform-integrations/agora-room/`).
 
 ## Install
 
@@ -92,7 +92,7 @@ const player = new AvatarPlayer(provider, avatarView, options)
 
 | Provider | Status |
 | --- | --- |
-| `LiveKitProvider` | Documented here. Demoed in [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-room-demo). |
+| `LiveKitProvider` | Documented here. Demoed in [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-room-demo). |
 | `AgoraProvider` | Exported by `@spatius/avatarkit-rtc`. Not documented or demoed in this repo yet — API surface mirrors `LiveKitProvider`. |
 
 The same `AvatarPlayer` surface works across providers — code that talks to the player does not need to change when the provider swaps. Both providers are exported from the package root:

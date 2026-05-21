@@ -27,8 +27,8 @@ It is not the same as [LiveKit Agents Integration](/livekit-agents/overview), wh
 
 ## Demos
 
-- [Backend Mode demo](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/backend-mode) — the backend half (ASR/LLM/TTS + Spatius Server SDK). It ships with its own WebSocket transport; swap in LiveKit egress to match this pattern.
-- [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-room-demo) — validates the RTC Adapter's LiveKit wiring (token, room connect, adapter init, avatar load, mic publish). Remote audio playback and motion rendering only happen when a publisher (e.g. a Backend Mode service or LiveKit Agents worker) is in the room — this example alone has no producer. Not the full Backend Mode + RTC transport voice-agent demo.
+- [Backend Mode demo](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/backend-mode) — the backend half (ASR/LLM/TTS + Spatius Server SDK). It ships with its own WebSocket transport; swap in LiveKit egress to match this pattern.
+- [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-room-demo) — validates the RTC Adapter's LiveKit wiring (token, room connect, adapter init, avatar load, mic publish). Remote audio playback and motion rendering only happen when a publisher (e.g. a Backend Mode service or LiveKit Agents worker) is in the room — this example alone has no producer. Not the full Backend Mode + RTC transport voice-agent demo.
 
 <Note>
 The full end-to-end demo of this pattern — a service that, given a character / avatar identifier, both mints LiveKit tokens *and* drives the corresponding ASR / LLM / TTS pipeline through the Spatius Server SDK into the same LiveKit room — is not packaged in this repository yet. The two halves above are runnable today; assemble them by switching the Backend Mode backend to LiveKit egress and pointing the Web client at the same room.
