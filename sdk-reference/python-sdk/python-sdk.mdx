@@ -4,7 +4,7 @@ sidebarTitle: "Python"
 description: "Using the Spatius Python Server SDK"
 ---
 
-The Spatius Python SDK creates server-side avatar sessions over WebSocket. It handles session-token creation, WebSocket authentication, audio upload, animation-frame callbacks, and optional egress to LiveKit or Agora.
+The Spatius Python SDK creates server-side avatar sessions over WebSocket. It handles session-token creation, WebSocket authentication, audio upload, motion frame payload callbacks, and optional egress to LiveKit or Agora.
 
 ## Repository
 
@@ -141,7 +141,7 @@ connection_id = await session.start()
 # 3. Send audio data
 request_id = await session.send_audio(audio_bytes, end=True)
 
-# 4. Receive animation frames through transport_frames
+# 4. Receive encoded motion frame payloads through transport_frames
 
 # 5. Close the session
 await session.close()
@@ -235,7 +235,7 @@ Notes:
 
 ## LiveKit Egress Mode
 
-When configured with `livekit_egress`, audio and animation data are streamed to a LiveKit room instead of being returned through the WebSocket connection. For end-to-end integration details, see the [LiveKit Agent server side guide](/livekit-plugin/server).
+When configured with `livekit_egress`, audio and motion data are streamed to a LiveKit room instead of being returned through the WebSocket connection. For end-to-end integration details, see the [LiveKit Agent server side guide](/livekit-agents/server).
 
 ```python
 from datetime import datetime, timedelta, timezone
@@ -264,11 +264,11 @@ When LiveKit egress is enabled:
 
 - the server streams output to the specified LiveKit room
 - the `transport_frames` callback is not invoked
-- audio and animation data are published under the configured publisher ID
+- audio and motion data are published under the configured publisher ID
 
 ## Agora Egress Mode
 
-When configured with `agora_egress`, audio and animation data are streamed to an Agora channel instead of being returned through the WebSocket connection.
+When configured with `agora_egress`, audio and motion data are streamed to an Agora channel instead of being returned through the WebSocket connection.
 
 ```python
 from datetime import datetime, timedelta, timezone
@@ -309,7 +309,7 @@ The interrupt uses the most recent request ID, even after `end=True` has been se
 
 ### `transport_frames`
 
-Receives animation frames from the server:
+Receives encoded motion frame payloads from the server:
 
 ```python
 def on_frame_received(frame_data: bytes, is_last: bool):

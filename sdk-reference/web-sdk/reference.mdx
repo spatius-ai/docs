@@ -1,25 +1,24 @@
 ---
 title: "AvatarKit Web SDK Reference"
 sidebarTitle: "Reference"
-description: "Complete documentation for AvatarKit Web SDK"
+description: "Complete API reference for @spatius/avatarkit (Web)."
 ---
 
 ## Quick Reference
 
-| Class | Purpose | Key Methods |
+| Class | Purpose | Key methods |
 |-------|---------|-------------|
-| `AvatarSDK` | SDK initialization | `initialize()`, `setSessionToken()` |
-| `AvatarManager` | Avatar loading | `load()` |
-| `AvatarView` | 3D rendering | `onFirstRendering`, `dispose()` |
-| `AvatarController` | Communication | `start()`, `send()`, `pause()`, `interrupt()` |
+| `AvatarSDK` | SDK initialization and global configuration | `initialize()`, `setSessionToken()` |
+| `AvatarManager` | Avatar asset loading and caching | `load()`, `clearAll()` |
+| `AvatarView` | 3D rendering view | constructor, `dispose()`, `onFirstRendering` |
+| `AvatarController` | Runtime communication and playback control | `start()`, `send()`, `pause()`, `interrupt()`, `close()` |
 
-<Warning>
-**Important:** App ID and Session Token are paired and must be used together. Each App ID corresponds to a specific list of avatars that can be driven. You must obtain both App ID and Session Token from the [Spatius Studio](https://app.spatius.ai).
-</Warning>
+<Note>
+**App ID** is required on every integration path and identifies your Spatius application (it scopes which avatars you can load). **Session Token** is only required for **Direct Mode** (`DrivingServiceMode.sdk`), where it authenticates the Motion Server WebSocket; RTC / LiveKit Agents / Backend Mode paths do not need it. See [Credentials](/getting-started/credentials) for the per-path breakdown.
+</Note>
 
-```typescript
-export class AvatarSDK
-```
+For the minimum end-to-end integration walkthrough (install, build configuration, init, load, connect), see the [Direct Mode guide for Web](/direct-mode/web).
+
 ---
 
 ## AvatarSDK
@@ -27,55 +26,74 @@ export class AvatarSDK
 Main entry point for SDK initialization and global configuration.
 
 ```typescript
-import { AvatarSDK, Environment } from '@spatialwalk/avatarkit'
+import { AvatarSDK } from '@spatius/avatarkit'
 ```
 
-### Static Properties
+### Static properties
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `isInitialized` | `boolean` | Whether SDK is initialized |
 | `appId` | `string \| null` | Current App ID |
-| `configuration` | `Configuration` | Current SDK configuration |
-| `sessionToken` | `string \| null` | Current session token |
-| `userId` | `string \| null` | Current user ID |
+| `configuration` | `Configuration \| null` | Current SDK configuration |
+| `sessionToken` | `string \| null` | Current Session Token |
+| `userId` | `string \| null` | Current user ID (telemetry) |
 | `version` | `string` | SDK version |
 
-### Static Methods
+### Static methods
 
 #### initialize(appId, configuration)
 
-Initialize the SDK. Must be called before any other operations.
+Initialize the SDK. Must be called before any other operation.
 
 ```typescript
 await AvatarSDK.initialize('your-app-id', {
-  environment: Environment.cn,  // or Environment.intl
-  drivingServiceMode: DrivingServiceMode.sdk,  // Optional, default: sdk
-  logLevel: LogLevel.warning,  // Optional, default: off
-  audioFormat: {  // Optional
+  region: 'us-west',
+  drivingServiceMode: DrivingServiceMode.sdk,    // optional, default: sdk
+  logLevel: LogLevel.warning,                    // optional, default: off
+  audioFormat: {                                  // optional
     channelCount: 1,
     sampleRate: 16000,
   },
 })
 ```
 
+<Note>
+`region` is accepted at runtime by `@spatius/avatarkit@1.0.0`, but the published TypeScript types do not yet expose it on `Configuration`. To pass it without a type error, drop one declaration-merging file into your project:
+
+```typescript title="avatarkit-region.d.ts"
+import '@spatius/avatarkit'
+
+declare module '@spatius/avatarkit' {
+  interface Configuration {
+    readonly region?: string
+  }
+}
+```
+
+A future SDK release will add `region` natively and this augmentation can be removed. Currently `'us-west'` is the only region.
+</Note>
+
 #### setSessionToken(token)
 
-Set session token for authentication. **Only required for SDK Mode** (server-driven animation).
+Set the Session Token used to authenticate the Motion Server WebSocket. **Only required in Direct Mode** (`DrivingServiceMode.sdk`); `AvatarController.start()` opens that WebSocket and authenticates with the token.
 
 ```typescript
 AvatarSDK.setSessionToken('your-session-token')
 ```
 
-**Important:**
-- **Only needed for SDK Mode** - not required for Host Mode or RTC Mode
-- Token must be obtained from your backend server
-- Token has max 24 hours validity
-- Token must be paired with App ID
+- Required for `DrivingServiceMode.sdk` before calling `AvatarController.start()`.
+- **Not required** for `DrivingServiceMode.host` (LiveKit Agents Integration, RTC Adapter path, Backend Mode). Those paths receive audio + motion through their own transport and do not open a Motion Server WebSocket from the client; `AvatarManager.load()` fetches avatar metadata over an App-ID-scoped public endpoint.
+- The token must be obtained from your backend (see [Session token API](/api-reference/api-reference)).
+- Maximum 24-hour validity.
+- Token must be paired with the App ID used in `initialize()`.
+
+<Note>
+`setSessionToken()` can be called before or after `initialize()`. If called before, the token is applied automatically during initialization.
+</Note>
 
 #### setUserId(userId)
 
-Set user ID for logging and analytics.
+Set a user identifier for logging and telemetry.
 
 ```typescript
 AvatarSDK.setUserId('user-123')
@@ -83,7 +101,7 @@ AvatarSDK.setUserId('user-123')
 
 #### cleanup()
 
-Release all SDK resources. Call when SDK is no longer needed.
+Release all SDK resources. Call when the SDK is no longer needed.
 
 ```typescript
 AvatarSDK.cleanup()
@@ -93,30 +111,33 @@ AvatarSDK.cleanup()
 
 ## AvatarManager
 
-Handles avatar loading and caching.
+Handles avatar asset loading and caching. Access via the singleton `AvatarManager.shared`.
 
 ```typescript
-import { AvatarManager } from '@spatialwalk/avatarkit'
+import { AvatarManager } from '@spatius/avatarkit'
 ```
 
-### Static Properties
+### Static properties
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `shared` | `AvatarManager` | Singleton instance |
 
-### Instance Methods
+### Instance methods
 
 #### load(id, onProgress?)
 
-Load an avatar by ID.
+Load an avatar by ID. Downloads and caches the avatar's assets.
 
 ```typescript
 const avatar = await AvatarManager.shared.load('avatar-id', (progress) => {
   switch (progress.type) {
-    case 'downloading':
-      console.log(`Loading: ${progress.progress}%`)
+    case 'downloading': {
+      // progress.progress is in 0..1; multiply by 100 to render as a percentage.
+      const percent = Math.round((progress.progress ?? 0) * 100)
+      console.log(`Loading: ${percent}%`)
       break
+    }
     case 'completed':
       console.log('Load complete')
       break
@@ -127,12 +148,10 @@ const avatar = await AvatarManager.shared.load('avatar-id', (progress) => {
 })
 ```
 
-**Parameters:**
-
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `id` | `string` | Avatar ID |
-| `onProgress` | `(progress: LoadProgressInfo) => void` | Progress callback |
+| `onProgress` | `(progress: LoadProgressInfo) => void` | Optional progress callback |
 
 **Returns:** `Promise<Avatar | null>`
 
@@ -148,10 +167,10 @@ AvatarManager.shared.clearAll()
 
 ## AvatarView
 
-3D rendering view that displays the avatar.
+3D rendering view. Automatically creates a Canvas element and an associated `AvatarController`.
 
 ```typescript
-import { AvatarView } from '@spatialwalk/avatarkit'
+import { AvatarView } from '@spatius/avatarkit'
 ```
 
 ### Constructor
@@ -163,25 +182,33 @@ const avatarView = new AvatarView(avatar, container)
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `avatar` | `Avatar` | Loaded avatar object |
-| `container` | `HTMLElement` | Container element (canvas auto-fills container) |
+| `container` | `HTMLElement` | Container element (canvas auto-fills the container) |
 
 <Warning>
-**⚠️ Important:** The container element MUST have non-zero width and height. The canvas will automatically fill the container size.
+**Container requirement:** the container element must have non-zero `width` and `height`. The canvas fills the container and auto-resizes via `ResizeObserver`.
 </Warning>
 
-### Instance Properties
+### Instance properties
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `controller` | `AvatarController` | Communication controller |
-| `onFirstRendering` | `() => void` | Callback when first frame renders |
-| `transform` | `{ x, y, scale }` | Avatar position and scale |
+| `controller` | `AvatarController` | Communication controller (read-only) |
+| `transform` | `{ x, y, scale }` | Avatar position and scale (see below) |
+| `onFirstRendering` | `() => void` | Callback fired when the first frame renders |
 
-### Instance Methods
+**Transform coordinates**
+
+| Field | Range | Description |
+|-------|-------|-------------|
+| `x` | -1 to 1 | Horizontal offset (-1 = left, 0 = center, 1 = right) |
+| `y` | -1 to 1 | Vertical offset (-1 = bottom, 0 = center, 1 = top) |
+| `scale` | > 0 | Scale factor (1.0 = original size) |
+
+### Instance methods
 
 #### dispose()
 
-Clean up view resources. Call when view is no longer needed.
+Release all view resources. Call when the view is no longer needed (see [Lifecycle management](#lifecycle-management) for details).
 
 ```typescript
 avatarView.dispose()
@@ -191,21 +218,14 @@ avatarView.dispose()
 
 ## AvatarController
 
-Handles real-time communication with the avatar service.
+Handles runtime communication with Motion Server and playback control.
 
 ```typescript
 // Accessed via AvatarView
 const controller = avatarView.controller
 ```
 
-### Instance Properties
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `connectionState` | `ConnectionState` | Current connection state |
-| `conversationState` | `ConversationState` | Current conversation state |
-
-### Event Callbacks
+### Event callbacks
 
 ```typescript
 // Connection state changes
@@ -215,20 +235,22 @@ controller.onConnectionState = (state: ConnectionState) => {
 
 // Conversation state changes
 controller.onConversationState = (state: ConversationState) => {
-  // 'idle' | 'playing' | 'pausing'
+  // 'idle' | 'playing' | 'paused'
 }
 
-// Error handling
+// Error events
 controller.onError = (error: AvatarError) => {
   console.error('Error:', error.code, error.message)
 }
 ```
 
-### Instance Methods
+### `DrivingServiceMode.sdk` methods
+
+Available when `drivingServiceMode` is `DrivingServiceMode.sdk` (the Direct Mode path).
 
 #### initializeAudioContext()
 
-Initialize audio context. **MUST be called in user gesture context.**
+Initialize the audio context. **Must be called inside a user-gesture handler** (e.g. a `click` listener).
 
 ```typescript
 button.addEventListener('click', async () => {
@@ -238,7 +260,7 @@ button.addEventListener('click', async () => {
 
 #### start()
 
-Connect to the avatar service. SDK mode only.
+Connect to Motion Server.
 
 ```typescript
 await controller.start()
@@ -246,38 +268,40 @@ await controller.start()
 
 #### send(audioData, end)
 
-Send audio data to server. SDK mode only.
+Send avatar speech audio. Returns the `conversationId` for the current round.
 
 ```typescript
-// Send audio data (continue)
-controller.send(audioData, false)
-
-// Send final audio data (end conversation)
-controller.send(audioData, true)
+const conversationId = controller.send(
+  audioData,  // PCM16, mono, ArrayBuffer
+  end,        // true = end of conversation round
+)
 ```
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `audioData` | `ArrayBuffer` | PCM16 mono audio data |
-| `end` | `boolean` | Whether this is the final chunk |
+| `end` | `boolean` | Whether this is the final chunk of the current round |
 
-**Returns:** `string` - Conversation ID
+**`send()` behavior:**
+
+- `end: false` — continues the current conversation round.
+- `end: true` — marks the end of audio input for the current round. The avatar plays the remaining animation, then returns to idle (notified via `onConversationState`). Sending new audio after this starts a new round and interrupts any ongoing playback.
 
 #### close()
 
-Close service connection. SDK mode only.
+Close the Motion Server connection.
 
 ```typescript
 controller.close()
 ```
 
-### Host Mode Methods
+### `DrivingServiceMode.host` methods
 
-For Host Mode (`DrivingServiceMode.host`) only:
+Available when `drivingServiceMode` is `DrivingServiceMode.host` (the Backend Mode path).
 
 #### yieldAudioData(audioData, end)
 
-Provide audio data in Host Mode.
+Provide audio data when your backend owns the Motion Server connection.
 
 ```typescript
 const conversationId = controller.yieldAudioData(audioData, false)
@@ -285,62 +309,24 @@ const conversationId = controller.yieldAudioData(audioData, false)
 
 #### yieldFramesData(frames, conversationId)
 
-Provide animation frames in Host Mode.
+Provide encoded motion frames when using `DrivingServiceMode.host`. The `conversationId` must match the one returned by the corresponding `yieldAudioData()` call.
 
 ```typescript
-controller.yieldFramesData(animationDataArray, conversationId)
+controller.yieldFramesData(motionFrames, conversationId)
 ```
 
-### Common Methods (Both Modes)
+### Common methods
 
-#### pause()
-
-Pause current playback.
+Available in both `DrivingServiceMode.sdk` and `DrivingServiceMode.host`.
 
 ```typescript
-controller.pause()
-```
+controller.pause()                     // Pause audio + animation
+controller.resume()                    // Resume playback
+controller.interrupt()                 // Stop current playback
 
-#### resume()
-
-Resume paused playback.
-
-```typescript
-await controller.resume()
-```
-
-#### interrupt()
-
-Interrupt current playback and clear data.
-
-```typescript
-controller.interrupt()
-```
-
-#### clear()
-
-Clear all data and resources.
-
-```typescript
-controller.clear()
-```
-
-#### getCurrentConversationId()
-
-Get the current active conversation ID.
-
-```typescript
-const conversationId = controller.getCurrentConversationId()
-// Returns: string | null
-```
-
-#### setVolume(volume) / getVolume()
-
-Control playback volume (avatar audio only, not system volume).
-
-```typescript
-controller.setVolume(0.5)  // 50% volume (0.0 to 1.0)
-const currentVolume = controller.getVolume()
+// Volume control (avatar audio only, not system volume)
+controller.setVolume(0.5)              // 0.0 to 1.0
+controller.getVolume()                 // returns current volume
 ```
 
 ---
@@ -351,28 +337,21 @@ const currentVolume = controller.getVolume()
 
 ```typescript
 interface Configuration {
-  environment: Environment
-  drivingServiceMode?: DrivingServiceMode  // Default: 'sdk'
-  logLevel?: LogLevel                       // Default: 'off'
-  audioFormat?: AudioFormat                 // Default: { channelCount: 1, sampleRate: 16000 }
+  region?: string                            // Defaults to 'us-west' (currently the only region)
+  drivingServiceMode?: DrivingServiceMode    // Default: DrivingServiceMode.sdk
+  logLevel?: LogLevel                        // Default: LogLevel.off
+  audioFormat?: AudioFormat                  // Default: { channelCount: 1, sampleRate: 16000 }
 }
 ```
 
-### Environment
-
-```typescript
-enum Environment {
-  cn = 'cn',      // China region
-  intl = 'intl'   // International region
-}
-```
+See [Regions](/api-reference/regions) for endpoint details and override options. See the Note in [`initialize()`](#initialize-appid-configuration) about the `region` type-augmentation pattern needed for `@spatius/avatarkit@1.0.0`.
 
 ### DrivingServiceMode
 
 ```typescript
 enum DrivingServiceMode {
-  sdk = 'sdk',    // SDK handles WebSocket communication
-  host = 'host'   // Host provides audio and animation data
+  sdk = 'sdk',    // Client SDK handles the Motion Server connection (Direct Mode)
+  host = 'host',  // Your backend handles the Motion Server connection (Backend Mode)
 }
 ```
 
@@ -380,66 +359,215 @@ enum DrivingServiceMode {
 
 ```typescript
 enum LogLevel {
-  off = 'off',
-  error = 'error',
-  warning = 'warning',
-  all = 'all'
+  off = 'off',          // No logging (default)
+  error = 'error',      // Errors only
+  warning = 'warning',  // Errors + warnings
+  all = 'all',          // All logs
 }
 ```
 
 ### ConnectionState
+
+Reported via `onConnectionState`. Only emitted when `drivingServiceMode` is `DrivingServiceMode.sdk`.
 
 ```typescript
 enum ConnectionState {
   disconnected = 'disconnected',
   connecting = 'connecting',
   connected = 'connected',
-  failed = 'failed'
+  failed = 'failed',
 }
 ```
 
 ### ConversationState
 
+Reported via `onConversationState`.
+
 ```typescript
 enum ConversationState {
-  idle = 'idle',        // Breathing animation
-  playing = 'playing',  // Active conversation
-  pausing = 'pausing'   // Paused during playback
+  idle = 'idle',        // Breathing animation, waiting for input
+  playing = 'playing',  // Active conversation playback
+  paused = 'paused',    // Paused during playback
 }
 ```
+
+<Note>
+State transitions are notified immediately when the transition starts, not when the animation completes. For example, `playing` is reported as soon as the transition from `idle` begins.
+</Note>
 
 ### LoadProgressInfo
 
 ```typescript
 type LoadProgressInfo = {
   type: 'downloading' | 'completed' | 'failed'
-  progress?: number  // 0-100
+  progress?: number  // 0..1
   error?: Error
 }
 ```
 
+Multiply by 100 when rendering as a percentage in your UI.
+
 ### AudioFormat
+
+The SDK requires audio in **mono PCM16** format.
 
 ```typescript
 interface AudioFormat {
-  channelCount: 1  // Fixed to mono
-  sampleRate: number  // 8000 | 16000 | 22050 | 24000 | 32000 | 44100 | 48000
+  readonly channelCount: 1   // Fixed to mono
+  readonly sampleRate: number // 8000 | 16000 | 22050 | 24000 | 32000 | 44100 | 48000
 }
 ```
 
+| Property | Value |
+|----------|-------|
+| **Format** | PCM16 (16-bit signed integer, little-endian) |
+| **Channels** | Mono (1 channel) |
+| **Sample rate** | Configurable: 8000 / 16000 / 22050 / 24000 / 32000 / 44100 / 48000 Hz (default: 16000) |
+| **Data type** | `ArrayBuffer` or `Uint8Array` |
+
+**Data size:** 1 second at 16 kHz = 16,000 samples × 2 bytes = 32,000 bytes.
+
+<Accordion title="Converting MP3 to PCM16">
+
+```typescript
+async function mp3ToPcm16(mp3File: File, targetSampleRate: number): Promise<ArrayBuffer> {
+  const arrayBuffer = await mp3File.arrayBuffer()
+  const audioContext = new AudioContext({ sampleRate: targetSampleRate })
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0))
+
+  const length = audioBuffer.length
+  const channels = audioBuffer.numberOfChannels
+  const pcm16Buffer = new ArrayBuffer(length * 2)
+  const pcm16View = new DataView(pcm16Buffer)
+
+  // Mix to mono if stereo
+  const mono = channels === 1
+    ? audioBuffer.getChannelData(0)
+    : (() => {
+        const mixed = new Float32Array(length)
+        const left = audioBuffer.getChannelData(0)
+        const right = audioBuffer.getChannelData(1)
+        for (let i = 0; i < length; i++) mixed[i] = (left[i] + right[i]) / 2
+        return mixed
+      })()
+
+  // Float32 → Int16
+  for (let i = 0; i < length; i++) {
+    const s = Math.max(-1, Math.min(1, mono[i]))
+    pcm16View.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true)
+  }
+
+  audioContext.close()
+  return pcm16Buffer
+}
+```
+
+</Accordion>
+
 ---
 
-## Error Codes
+## Error Handling
+
+### AvatarError
+
+```typescript
+import { AvatarError } from '@spatius/avatarkit'
+
+try {
+  await avatarView.controller.start()
+} catch (error) {
+  if (error instanceof AvatarError) {
+    console.error('SDK error:', error.message, error.code)
+  }
+}
+```
+
+### Error callback
+
+```typescript
+avatarView.controller.onError = (error: AvatarError) => {
+  console.error('Controller error:', error.code, error.message)
+}
+```
+
+### Error codes
 
 | Code | Name | Description | Solution |
 |------|------|-------------|----------|
-| 1001 | `sdkNotVerified` | SDK not verified | Check SDK initialization |
-| 1002 | `avatarIdWrong` | Invalid avatar ID | Verify avatar ID |
-| 1003 | `avatarAssetsMissing` | Missing avatar assets | Check avatar resources |
-| 1004 | `avatarCameraSettingsWrong` | Invalid camera settings | Check camera config |
-| 1005 | `serviceError` | Server error | Check server status |
-| 1008 | `sendDataWrong` | Invalid audio data | Verify PCM16 format |
-| 1009 | `requestTimeout` | Request timeout | Check network |
+| 1001 | `sdkNotVerified` | SDK not verified | Check SDK initialization. |
+| 1002 | `avatarIdWrong` | Invalid avatar ID | Verify the Avatar ID. |
+| 1003 | `avatarAssetsMissing` | Missing avatar assets | Check avatar resources. |
+| 1004 | `avatarCameraSettingsWrong` | Invalid camera settings | Check camera config. |
+| 1005 | `serviceError` | Server error | Check server status. |
+| 1008 | `sendDataWrong` | Invalid audio data | Verify PCM16 format. |
+| 1009 | `requestTimeout` | Request timeout | Check network. |
+
+See [Error Codes](/resources/server-error) for the full server-side error reference.
+
+---
+
+## Lifecycle Management
+
+### Avatar switching
+
+```typescript
+// 1. Dispose the current view
+currentAvatarView.dispose()
+
+// 2. Load a new avatar
+const newAvatar = await AvatarManager.shared.load('new-avatar-id')
+
+// 3. Create a new view (reuse the same container)
+currentAvatarView = new AvatarView(newAvatar, container)
+
+// 4. Reconnect
+await currentAvatarView.controller.initializeAudioContext()
+await currentAvatarView.controller.start()
+```
+
+### Resource cleanup
+
+`dispose()` automatically cleans up:
+
+- WebSocket connections
+- Audio playback data and animation resources
+- Canvas elements and the render system
+- Event listeners and callbacks
+
+<Warning>
+Always call `dispose()` when the view is no longer needed. Failing to do so may cause memory leaks.
+</Warning>
+
+### Fallback mechanism
+
+If the WebSocket connection fails within 15 seconds, the SDK automatically enters **audio-only fallback mode** — audio continues playing without animation. This keeps playback uninterrupted when Motion Server is unreachable.
+
+- Fallback mode is interruptible like normal playback.
+- `onConnectionState` reports `failed` when the connection times out.
+
+---
+
+## Browser Compatibility
+
+| Browser | Minimum version | Rendering |
+|---------|-----------------|-----------|
+| Chrome / Edge | 90+ | WebGPU (preferred) |
+| Firefox | 90+ | WebGL |
+| Safari | 14+ | WebGL |
+| iOS Safari | 14+ | WebGL |
+| Android Chrome | 90+ | WebGL |
+
+---
+
+## Common Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Audio not working | `initializeAudioContext()` not in a user gesture | Call it inside a `click` or `touchstart` handler. |
+| Avatar not rendering | Container has zero dimensions | Set explicit `width` and `height` on the container. |
+| WASM MIME type error | Build tool misconfigured | Use the Vite plugin or Next.js wrapper. See [Toolchain Setup](/sdk-reference/web-sdk/toolchain). |
+| Session Token invalid | Token expired or not set | Refresh token from backend; call `setSessionToken()` before `start()`. |
+| WebSocket connection failed | Network or auth issue | Check network connectivity and Session Token validity. |
 
 ---
 
@@ -450,30 +578,29 @@ import {
   AvatarSDK,
   AvatarManager,
   AvatarView,
-  Environment,
   ConnectionState,
   ConversationState,
-} from '@spatialwalk/avatarkit'
+} from '@spatius/avatarkit'
 
 class AvatarApp {
   private avatarView: AvatarView | null = null
 
   async init(appId: string, sessionToken: string, avatarId: string, container: HTMLElement) {
-    // Initialize SDK
-    await AvatarSDK.initialize(appId, { environment: Environment.cn })
+    // Initialize the SDK
+    await AvatarSDK.initialize(appId, { region: 'us-west' })
     AvatarSDK.setSessionToken(sessionToken)
 
-    // Load avatar
+    // Load the avatar
     const avatar = await AvatarManager.shared.load(avatarId)
     if (!avatar) throw new Error('Failed to load avatar')
 
-    // Create view
+    // Create the view
     this.avatarView = new AvatarView(avatar, container)
     this.avatarView.onFirstRendering = () => {
       console.log('First frame rendered')
     }
 
-    // Set up handlers
+    // Wire up handlers
     this.avatarView.controller.onConnectionState = (state) => {
       console.log('Connection:', state)
     }
@@ -485,7 +612,7 @@ class AvatarApp {
     }
   }
 
-  // Must be called in user gesture context
+  // Must be called inside a user-gesture handler
   async start() {
     await this.avatarView?.controller.initializeAudioContext()
     await this.avatarView?.controller.start()

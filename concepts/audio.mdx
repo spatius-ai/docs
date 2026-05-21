@@ -10,7 +10,7 @@ description: "The source of the Avatar's speech"
 
 - **It is not user microphone audio**: In voice-agent scenarios, user speech usually goes through ASR -> LLM -> TTS. **The TTS output** is the avatar speech audio. Spatius does not consume user microphone audio by default.
 - **It is sent to Motion Server**: Avatar speech audio is the input to Motion Server. Motion Server uses it to generate synchronized motion data.
-- **Who sends it**: In [Basic Mode](/basic-mode/overview), the client sends it. In [LiveKit Plugin](/livekit-plugin/overview), it is handled automatically. In [Custom Mode](/custom-mode/overview), the developer maintains the flow.
+- **Who sends it**: In [Direct Mode](/direct-mode/overview), the client sends it. In [LiveKit Agents Integration](/livekit-agents/overview), it is handled automatically. In [Backend Mode](/backend-mode/overview), the developer maintains the flow.
 
 ## Format
 
@@ -20,4 +20,4 @@ Motion Server accepts **mono 16-bit PCM (`s16le`)**. Choose one of the following
 
 Audio is not resampled automatically. If the source does not match, convert it first. For details, see [FAQ - Supported Audio Format](/resources/faq#supported-audio-format).
 
-Reference: [Web `Configuration`](/sdk-reference/web-sdk/reference#configuration) | [iOS `AudioFormat`](/sdk-reference/ios-sdk/api-reference#audioformat) | [Android `AudioFormat`](/sdk-reference/android-sdk/api-reference#audioformat)
+Reference: [Web `Configuration`](/sdk-reference/web-sdk/reference#configuration) | [iOS `AudioFormat`](/sdk-reference/ios-sdk/api-reference#audioformat) | [Android `AudioFormat`](/sdk-reference/android-sdk/api-reference#audioformat) | [Flutter `AudioFormat`](/sdk-reference/flutter-sdk/api-reference#initialize)

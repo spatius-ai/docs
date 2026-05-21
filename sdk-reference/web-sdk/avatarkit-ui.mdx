@@ -18,7 +18,7 @@ import {
   SpatiusAvatarLoading,
   SpatiusAvatarProvider,
   SpatiusAvatarStatus,
-} from '@/components/spatialreal-avatar'
+} from '@/components/spatius-avatar'
 
 export function AgentAvatar({ token, url, roomName }: {
   token: string
@@ -27,8 +27,8 @@ export function AgentAvatar({ token, url, roomName }: {
 }) {
   return (
     <SpatiusAvatarProvider
-      appId={import.meta.env.VITE_SPATIALREAL_APP_ID}
-      avatarId={import.meta.env.VITE_SPATIALREAL_AVATAR_ID}
+      appId={import.meta.env.VITE_SPATIUS_APP_ID}
+      avatarId={import.meta.env.VITE_SPATIUS_AVATAR_ID}
       connection={{ token, url, roomName }}
     >
       <SpatiusAvatarFrame className="overflow-hidden">
@@ -62,7 +62,7 @@ import {
   SpatiusAvatarProvider,
   SpatiusAvatarStatus,
   useSpatiusAvatarContext,
-} from '@/components/spatialreal-avatar'
+} from '@/components/spatius-avatar'
 
 function AvatarPanel() {
   const avatar = useSpatiusAvatarContext()
@@ -122,8 +122,8 @@ export function VoiceAgentAvatar(props: {
 }) {
   return (
     <SpatiusAvatarProvider
-      appId={import.meta.env.VITE_SPATIALREAL_APP_ID}
-      avatarId={import.meta.env.VITE_SPATIALREAL_AVATAR_ID}
+      appId={import.meta.env.VITE_SPATIUS_APP_ID}
+      avatarId={import.meta.env.VITE_SPATIUS_AVATAR_ID}
       connection={props}
     >
       <AvatarPanel />
@@ -155,7 +155,7 @@ Before adding this AvatarKit UI component to your project, you can use this [gui
 
 ```bash
 npx shadcn@latest init
-npx shadcn@latest add https://ui.spatialreal.ai/r/spatialreal-avatar.json
+npx shadcn@latest add https://ui.spatius.ai/r/spatius-avatar.json
 ```
 
 ## API Reference
@@ -177,21 +177,21 @@ export {
 
 ### `SpatiusAvatarProvider`
 
-Initializes AvatarKit, connects the LiveKit-backed avatar stream, provides avatar state through React context, and renders remote room audio.
+Initializes AvatarKit, connects the LiveKit-backed avatar motion stream, provides avatar state through React context, and renders remote room audio.
 
 | Prop | Type | Description |
 | --- | --- | --- |
 | `children` | `ReactNode` | Provider contents. All AvatarKit UI primitives that read context must be rendered inside this provider. |
 | `appId` | `string` | Your AvatarKit app ID. Required. |
 | `avatarId` | `string` | The avatar identifier to load. Required. |
-| `connection` | `{ roomName: string; token: string; url: string }` | LiveKit connection details for the avatar stream. Required. |
+| `connection` | `{ roomName: string; token: string; url: string }` | LiveKit connection details for the avatar motion stream. Required. |
 | `enabled` | `boolean` | Defaults to `true`. When `false`, the provider does not initialize or connect the avatar. |
 | `publishMicrophone` | `boolean` | Defaults to `false`. When `true`, the provider starts publishing the local microphone after connection. |
 | `muted` | `boolean` | Mutes audio rendered by `RoomAudioRenderer`. |
 | `volume` | `number` | Playback volume passed to `RoomAudioRenderer`. |
 | `characterApiBaseUrl` | `string` | Optional override for the AvatarKit character API base URL. |
 | `drivingServiceMode` | `DrivingServiceMode` | AvatarKit driving mode. Defaults to `DrivingServiceMode.host`. |
-| `environment` | `Environment` | AvatarKit environment. Defaults to `Environment.intl`. |
+| `region` | `string` | AvatarKit region. Defaults to `'us-west'`. |
 | `sdkLogLevel` | `LogLevel` | AvatarKit SDK log level. |
 | `sessionToken` | `string` | Optional AvatarKit session token to inject into `AvatarSDK`. |
 | `userId` | `string` | Optional end-user identifier passed to `AvatarSDK.setUserId()`. |
@@ -297,7 +297,7 @@ const avatar = useSpatiusAvatar({
 | `connection` | `SpatiusAvatarConnection` | The current connection config passed into the hook. |
 | `containerRef` | `(node: HTMLDivElement \| null) => void` | Ref callback that must be attached to the avatar canvas element. |
 | `session` | `UseSessionReturn` | Session object from `@livekit/components-react`, with `end()` mapped to `disconnect()`. |
-| `disconnect()` | `() => Promise<void>` | Disconnects the avatar stream and resets state to idle. |
+| `disconnect()` | `() => Promise<void>` | Disconnects the avatar motion stream and resets state to idle. |
 | `reconnect()` | `() => Promise<void>` | Attempts to reconnect the existing avatar player. |
 | `startPublishingMicrophone()` | `() => Promise<void>` | Publishes the local microphone into the avatar session. |
 | `stopPublishingMicrophone()` | `() => Promise<void>` | Stops microphone publishing. |

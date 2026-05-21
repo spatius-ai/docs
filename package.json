@@ -3,8 +3,8 @@
   "private": true,
   "scripts": {
     "check": "pnpm run check:spell && pnpm run check:grammar && pnpm run check:links",
-    "check:spell": "cspell --config ./cspell.config.yaml --no-progress --show-suggestions \"**/*.{md,mdx}\" \"!docs/**\"",
-    "check:grammar": "vale sync && vale --glob='*.{md,mdx}' --glob='!docs/**' .",
+    "check:spell": "cspell --config ./cspell.config.yaml --no-progress --show-suggestions \"**/*.{md,mdx}\"",
+    "check:grammar": "vale sync && vale --glob='*.{md,mdx}' .",
     "check:links": "mint broken-links"
   },
   "devDependencies": {

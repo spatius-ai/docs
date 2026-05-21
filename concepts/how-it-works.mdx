@@ -51,9 +51,9 @@ graph LR
 
 ### AvatarKit Client SDK
 
-The client SDK covers Web, iOS, and Android. It renders the Avatar on the client and keeps the audio and digital human visuals synchronized.
+The client SDK covers Web, iOS, Android, and Flutter. It renders the Avatar on the client and keeps the audio and digital human visuals synchronized.
 
-Reference: [Web](/sdk-reference/web-sdk/reference) | [iOS](/sdk-reference/ios-sdk/api-reference) | [Android](/sdk-reference/android-sdk/api-reference)
+Reference: [Web](/sdk-reference/web-sdk/reference) | [iOS](/sdk-reference/ios-sdk/api-reference) | [Android](/sdk-reference/android-sdk/api-reference) | [Flutter](/sdk-reference/flutter-sdk/api-reference)
 
 ### Motion Server
 
@@ -67,10 +67,10 @@ Reference: [Web](/sdk-reference/web-sdk/reference) | [iOS](/sdk-reference/ios-sd
 
 Different integration modes match different development scenarios.
 
-| Mode | Description |
+| Integration | Description |
 |------|-------------|
-| **[Basic Mode](/basic-mode/overview)** | The simplest integration path. The client SDK connects directly to Motion Server, suitable for quickly integrating iOS, Android, or Web apps. |
-| **[LiveKit Plugin](/livekit-plugin/overview)** | For projects already using the LiveKit Agents framework. Integrate with only a few lines of code. |
-| **[Custom Mode](/custom-mode/overview)** | A custom integration path. You can reuse LiveKit or Agora as the transport layer, or build your own transport entirely. |
+| **[Direct Mode](/direct-mode/overview)** | The simplest integration path. The client SDK connects directly to Motion Server, suitable for quickly integrating Web, iOS, Android, or Flutter apps. |
+| **[LiveKit Agents Integration](/livekit-agents/overview)** | For projects already using the LiveKit Agents framework. Add `livekit-plugins-spatius` in a few lines. |
+| **[Backend Mode](/backend-mode/overview)** | A custom integration path. Your backend uses the Server SDK and chooses a downstream transport (your own WebSocket, LiveKit Room, or future Agora Room). |
 
 For mode selection, see [How to Integrate](/getting-started/how-to-integrate).

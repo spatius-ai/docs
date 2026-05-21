@@ -1,0 +1,117 @@
+---
+title: "RTC Adapter"
+sidebarTitle: "RTC Adapter"
+description: "Use @spatius/avatarkit-rtc as the Web transport adapter for LiveKit and future RTC providers."
+---
+
+`@spatius/avatarkit-rtc` is the Web RTC transport adapter for AvatarKit. It lets a browser app render a Spatius avatar from an RTC room by connecting to the room, playing the remote audio track through WebRTC, and feeding motion frames into `@spatius/avatarkit`.
+
+## What it is
+
+| Package | Role |
+| --- | --- |
+| `@spatius/avatarkit` | Web avatar rendering SDK. |
+| `@spatius/avatarkit-rtc` | Web transport adapter for RTC rooms. Depends on `@spatius/avatarkit`. |
+
+The RTC Adapter is **part of the Web SDK family**, not a standalone cross-platform SDK and not a diagnostic tool. iOS, Android, and Flutter clients consume avatar data through their platform AvatarKit SDKs and do not have a corresponding RTC adapter today.
+
+<Note>
+**Web only.** The RTC Adapter currently targets browser apps.
+</Note>
+
+## When to use the RTC Adapter
+
+| Scenario | Use RTC Adapter? |
+| --- | --- |
+| Direct Mode | No. Use `@spatius/avatarkit` directly. |
+| Backend Mode with your own WebSocket | Usually no. Your client manually calls `yieldAudioData()` / `yieldFramesData()`. |
+| Backend Mode with LiveKit / future Agora transport | Yes. The Web client uses the RTC Adapter. |
+| LiveKit Agents Integration | Yes. The Web client uses the RTC Adapter with `LiveKitProvider`. |
+
+The [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-room-demo) demo is the minimal LiveKit example for the RTC Adapter; it is not the full Backend Mode + RTC transport voice-agent demo. Future provider examples (e.g. Agora) would sit as siblings under `platform-integrations/` (e.g. `platform-integrations/agora-room/`).
+
+## Install
+
+<Tabs>
+<Tab title="pnpm">
+
+```bash
+pnpm add @spatius/avatarkit-rtc @spatius/avatarkit
+```
+
+</Tab>
+<Tab title="npm">
+
+```bash
+npm install @spatius/avatarkit-rtc @spatius/avatarkit
+```
+
+</Tab>
+<Tab title="yarn">
+
+```bash
+yarn add @spatius/avatarkit-rtc @spatius/avatarkit
+```
+
+</Tab>
+</Tabs>
+
+<Warning>
+**Pin `livekit-client` to `2.16.1`** if you install it directly in your app. `@spatius/avatarkit-rtc` is built against this version; other 2.x releases can introduce protocol changes that break the adapter's room wiring.
+
+```json title="package.json"
+{
+  "dependencies": {
+    "livekit-client": "2.16.1"
+  }
+}
+```
+</Warning>
+
+## How it works
+
+The RTC Adapter is a thin layer on top of `@spatius/avatarkit`:
+
+1. It initializes the underlying SDK with `DrivingServiceMode.host` so the avatar accepts externally driven motion data.
+2. A **provider** opens an RTC connection to the room. This page documents and demos `LiveKitProvider`; `AgoraProvider` is also exported by `@spatius/avatarkit-rtc` with the same `AvatarPlayer` surface.
+3. The provider publishes the local microphone track (when `startPublishing()` is called) and subscribes to the remote audio track and the motion data stream published by Motion Server.
+4. The browser plays the remote audio track through WebRTC. The RTC Adapter feeds motion frames into `@spatius/avatarkit` for local rendering.
+
+<Warning>
+**Do not call `yieldAudioData()` or `yieldFramesData()` manually when using the RTC Adapter.** The adapter owns the data flow from the room to the renderer. Manual feeds bypass the provider and corrupt playback timing.
+</Warning>
+
+## Provider abstraction
+
+```typescript
+import { AvatarPlayer, LiveKitProvider } from '@spatius/avatarkit-rtc'
+
+const provider = new LiveKitProvider()
+const player = new AvatarPlayer(provider, avatarView, options)
+```
+
+| Provider | Status |
+| --- | --- |
+| `LiveKitProvider` | Documented here. Demoed in [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-room-demo). |
+| `AgoraProvider` | Exported by `@spatius/avatarkit-rtc`. Not documented or demoed in this repo yet — API surface mirrors `LiveKitProvider`. |
+
+The same `AvatarPlayer` surface works across providers — code that talks to the player does not need to change when the provider swaps. Both providers are exported from the package root:
+
+```typescript
+import { LiveKitProvider, AgoraProvider } from '@spatius/avatarkit-rtc'
+```
+
+## API
+
+For the full `AvatarPlayer` API — constructor options, `connect`, microphone control, custom audio publishing, events, reconnect, native client access, and browser compatibility — see [LiveKit Agents Integration Client](/livekit-agents/client). The signatures are exposed by the same package; only the integration narrative on that page differs.
+
+## Related guides
+
+<CardGroup cols={2}>
+  <Card title="LiveKit Agents Client" icon="bolt" href="/livekit-agents/client">
+    Use the RTC Adapter with a LiveKit Agents worker.
+  </Card>
+  <Card title="Backend Mode with LiveKit" icon="route" href="/backend-mode/with-livekit">
+    Use the RTC Adapter as the Web transport for a Backend Mode pipeline.
+  </Card>
+</CardGroup>

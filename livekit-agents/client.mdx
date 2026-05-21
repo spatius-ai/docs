@@ -1,18 +1,26 @@
 ---
-title: "Use AvatarKit with LiveKit"
+title: "LiveKit Agents Integration Client"
 sidebarTitle: "Client"
-description: "Real-time voice communication with avatars using LiveKit"
+description: "Use the AvatarKit RTC client in a LiveKit Agents Integration."
 ---
 
 <Note>
-**Web Only:** RTC Mode is currently available for Web applications only.
+**Web Only:** The AvatarKit RTC client path is currently available for Web applications only.
 </Note>
 
+This page covers the Web client side of [LiveKit Agents Integration](/livekit-agents/overview). The client joins the LiveKit room and renders the avatar's audio and motion stream produced by the LiveKit Agents worker with `livekit-plugins-spatius`.
+
+This page uses the [RTC Adapter](/sdk-reference/web-sdk/rtc-adapter) with the LiveKit provider. LiveKit Agents is the platform integration; the RTC Adapter (`@spatius/avatarkit-rtc`) is the Web client adapter used to render the avatar stream from the LiveKit room.
+
 <Warning>
-When using Spatius with LiveKit, do not call `new Room()` from `livekit-client` yourself. `@spatialwalk/avatarkit-rtc` creates and owns the LiveKit `Room` internally so it can wire audio, avatar motion data, and lifecycle handling correctly. If you need access to the underlying Room instance for advanced LiveKit features, see [Native Client Access](#native-client-access).
+When using the AvatarKit RTC client, do not call `new Room()` from `livekit-client` yourself. `@spatius/avatarkit-rtc` creates and owns the LiveKit `Room` internally so it can wire audio, avatar motion data, and lifecycle handling correctly. If you need access to the underlying Room instance for advanced LiveKit features, see [Native Client Access](#native-client-access).
 </Warning>
 
 ## AvatarPlayer API
+
+<Note>
+Code in this section shows **type signatures**, not copy-paste examples. For runnable code, see the [Complete Example](#complete-example) at the bottom of the page.
+</Note>
 
 ### Constructor
 
@@ -24,14 +32,21 @@ new AvatarPlayer(provider: LiveKitProvider, avatarView: AvatarView, options?: Av
 
 ```typescript
 interface AvatarPlayerOptions {
-  /** Start speaking transition frames, default 5 (~200ms at 25fps) */
-  transitionStartFrameCount?: number
-
-  /** End speaking transition frames, default 40 (~1600ms at 25fps) */
-  transitionEndFrameCount?: number
-
-  /** Log level: 'info' | 'warning' | 'error' | 'none', default 'warning' */
+  /** Log level: 'info' | 'warning' | 'error' | 'none'. Default: 'warning' */
   logLevel?: LogLevel
+
+  /**
+   * Enable jitter buffer for smoother animation playback. When enabled, frames are
+   * buffered and rendered in sequence at a steady 25fps, absorbing network jitter
+   * and out-of-order delivery. Default: true.
+   */
+  enableJitterBuffer?: boolean
+
+  /**
+   * Max delay (ms) a frame can sit in the jitter buffer before being rendered.
+   * Only used when enableJitterBuffer is true. Default: 80 (2 frames @ 25fps).
+   */
+  maxBufferDelayMs?: number
 }
 ```
 
@@ -39,17 +54,17 @@ interface AvatarPlayerOptions {
 
 ```typescript
 // Connect to LiveKit server
-await player.connect(config: LiveKitConnectionConfig)
+await player.connect(config: LiveKitConnectionConfig): Promise<void>
 
 // Disconnect and clean up
-await player.disconnect()
+await player.disconnect(): Promise<void>
 
 // Reconnect using last config (useful after stalls)
-await player.reconnect()
+await player.reconnect(): Promise<void>
 
 // Check connection status
-player.isConnected  // boolean
-player.getConnectionState()  // ConnectionState
+player.isConnected           // boolean
+player.getConnectionState()  // string
 ```
 
 #### LiveKitConnectionConfig
@@ -99,7 +114,7 @@ await player.unpublishAudio()
 Access the underlying LiveKit `Room` instance for advanced features.
 
 ```typescript
-import { LiveKitRoom } from '@spatialwalk/avatarkit-rtc'
+import type { LiveKitRoom } from '@spatius/avatarkit-rtc'
 
 // Via provider (recommended — full type safety)
 const room = provider.getNativeClient()  // LiveKitRoom | null
@@ -151,16 +166,21 @@ player.on('stalled', async () => {
 ## Complete Example
 
 ```typescript
-import { AvatarPlayer, LiveKitProvider } from '@spatialwalk/avatarkit-rtc'
-import { AvatarSDK, AvatarView, AvatarManager, DrivingServiceMode, Environment } from '@spatialwalk/avatarkit'
+import { AvatarPlayer, LiveKitProvider } from '@spatius/avatarkit-rtc'
+import { AvatarSDK, AvatarView, AvatarManager, DrivingServiceMode } from '@spatius/avatarkit'
 
 async function init() {
-  // Initialize SDK in host mode
+  // Initialize AvatarKit for LiveKit transport rendering.
+  // Note: `region` requires a small type augmentation in @spatius/avatarkit@1.0.0 —
+  // see the Direct Mode Web guide for the avatarkit-region.d.ts snippet.
   await AvatarSDK.initialize('your-app-id', {
-    environment: Environment.intl,
+    region: 'us-west',
     drivingServiceMode: DrivingServiceMode.host,
   })
-  AvatarSDK.setSessionToken('your-session-token')
+
+  // `setSessionToken` is not needed on the RTC Adapter path —
+  // `DrivingServiceMode.host` does not open a Motion Server WebSocket from the client,
+  // and `AvatarManager.load()` fetches avatar metadata over an App-ID-scoped public endpoint.
 
   // Load avatar and create view
   const avatar = await AvatarManager.shared.load('character-id')
@@ -171,8 +191,8 @@ async function init() {
   const provider = new LiveKitProvider()
   const player = new AvatarPlayer(provider, avatarView, {
     logLevel: 'info',
-    transitionStartFrameCount: 5,
-    transitionEndFrameCount: 40,
+    enableJitterBuffer: true,
+    maxBufferDelayMs: 80,
   })
 
   // Listen to events

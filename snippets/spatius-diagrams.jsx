@@ -57,7 +57,7 @@ export const SpatiusArchitectureDiagram = () => {
         </text>
         <rect x="1137" y="300" width="225" height="120" rx="10" fill="var(--spatius-diagram-box)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" />
         <text x="1249" y="359" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="30" fontWeight="500">AvatarKit SDK</text>
-        <text x="1249" y="408" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="24" fontWeight="500">Web/iOS/Android</text>
+        <text x="1249" y="408" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="22" fontWeight="500">Web/iOS/Android/Flutter</text>
         <polyline points="1238,290 1238,246" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="3" strokeLinecap="round" markerEnd="url(#spatius-arch-arrow)" />
         <polyline points="1262,246 1262,290" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="3" strokeLinecap="round" markerEnd="url(#spatius-arch-arrow)" />
         <polyline points="1365,360 1488,360" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-arch-arrow)" />
@@ -71,7 +71,7 @@ export const SpatiusArchitectureDiagram = () => {
 
 export const LiveKitPluginDiagram = () => {
   return (
-    <div className="spatius-diagram not-prose" aria-label="LiveKit plugin architecture">
+    <div className="spatius-diagram not-prose" aria-label="LiveKit Agents Integration architecture">
       <svg viewBox="-83 0 1535 800" role="img">
         <defs>
           <marker id="spatius-livekit-rtc" viewBox="0 0 12 10" refX="10.5" refY="5" markerWidth="4.5" markerHeight="6" orient="auto-start-reverse">
@@ -92,7 +92,7 @@ export const LiveKitPluginDiagram = () => {
           <tspan x="440" dy="34" fill="var(--spatius-diagram-muted)" fontSize="22">ASR / LLM / TTS</tspan>
         </text>
         <rect x="285" y="276" width="310" height="82" rx="12" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" />
-        <text x="440" y="311" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="30" fontWeight="500">LiveKit Plugin</text>
+        <text x="440" y="311" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="30" fontWeight="500">Spatius Plugin</text>
         <text x="440" y="342" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="500">livekit-plugins-spatius</text>
         <polyline points="608,317 865,317" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-livekit-ink)" />
 
@@ -129,9 +129,9 @@ export const LiveKitPluginDiagram = () => {
   )
 }
 
-export const CustomModeRtcTransportDiagram = () => {
+export const HostedModeRealtimeTransportDiagram = () => {
   return (
-    <div className="spatius-diagram not-prose" aria-label="Custom mode architecture with RTC transport">
+    <div className="spatius-diagram not-prose" aria-label="Backend Mode architecture with third-party realtime transport">
       <svg viewBox="-83 0 1535 800" role="img">
         <defs>
           <marker id="spatius-custom-rtc-transport" viewBox="0 0 12 10" refX="10.5" refY="5" markerWidth="4.5" markerHeight="6" orient="auto-start-reverse">
@@ -153,7 +153,7 @@ export const CustomModeRtcTransportDiagram = () => {
         </text>
         <rect x="285" y="276" width="310" height="82" rx="12" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" />
         <text x="440" y="311" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="30" fontWeight="500">Server SDK</text>
-        <text x="440" y="342" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="500">custom mode</text>
+        <text x="440" y="342" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="500">Backend Mode</text>
         <polyline points="608,317 865,317" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-custom-rtc-ink)" />
 
         <rect x="875" y="118" width="250" height="275" rx="18" fill="var(--spatius-diagram-managed)" stroke="var(--spatius-diagram-brand)" strokeWidth="3" />
@@ -165,7 +165,7 @@ export const CustomModeRtcTransportDiagram = () => {
 
         <polyline points="440,442 440,405" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-livekit)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-custom-rtc-transport)" />
         <rect x="310" y="452" width="750" height="82" rx="12" fill="var(--spatius-diagram-livekit-surface)" stroke="var(--spatius-diagram-livekit)" strokeWidth="3" />
-        <text x="685" y="505" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="32" fontWeight="600">LiveKit transport</text>
+        <text x="685" y="505" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="32" fontWeight="600">Realtime transport</text>
 
         <rect x="535" y="615" width="300" height="130" rx="14" fill="var(--spatius-diagram-managed)" stroke="var(--spatius-diagram-brand)" strokeWidth="3" />
         <text x="685" y="680" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="32" fontWeight="500">AvatarKit SDK</text>
@@ -189,9 +189,9 @@ export const CustomModeRtcTransportDiagram = () => {
   )
 }
 
-export const CustomModeOwnTransportDiagram = () => {
+export const HostedModeOwnTransportDiagram = () => {
   return (
-    <div className="spatius-diagram not-prose" aria-label="Custom mode architecture with your own transport">
+    <div className="spatius-diagram not-prose" aria-label="Backend Mode architecture with your own transport">
       <svg viewBox="-83 0 1535 800" role="img">
         <defs>
           <marker id="spatius-custom-own-transport" viewBox="0 0 12 10" refX="10.5" refY="5" markerWidth="4.5" markerHeight="6" orient="auto-start-reverse">
@@ -213,11 +213,11 @@ export const CustomModeOwnTransportDiagram = () => {
         </text>
         <rect x="285" y="276" width="310" height="82" rx="12" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" />
         <text x="440" y="311" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="30" fontWeight="500">Server SDK</text>
-        <text x="440" y="342" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="500">custom mode</text>
+        <text x="440" y="342" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="500">Backend Mode</text>
         <polyline points="608,306 865,306" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-custom-own-ink)" />
         <polyline points="865,328 608,328" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-custom-own-ink)" />
         <text x="736" y="290" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="600">Agent Audio</text>
-        <text x="736" y="363" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="600">Animation Data</text>
+        <text x="736" y="363" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="600">Motion Data</text>
 
         <rect x="875" y="118" width="250" height="275" rx="18" fill="var(--spatius-diagram-managed)" stroke="var(--spatius-diagram-brand)" strokeWidth="3" />
         <text x="1000" y="245" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="31" fontWeight="500">
@@ -227,13 +227,13 @@ export const CustomModeOwnTransportDiagram = () => {
         <polyline points="420,442 420,405" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-red)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-custom-own-transport)" />
         <polyline points="460,405 460,442" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-red)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-custom-own-transport)" />
         <text x="376" y="428" textAnchor="end" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="600">User Audio</text>
-        <text x="490" y="428" textAnchor="start" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="600">Agent Audio + Animation Data</text>
+        <text x="490" y="428" textAnchor="start" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="600">Agent Audio + Motion Data</text>
         <rect x="310" y="452" width="750" height="82" rx="12" fill="var(--spatius-diagram-owned)" stroke="var(--spatius-diagram-red)" strokeWidth="3" />
         <text x="685" y="505" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="32" fontWeight="600">Your own transport layer</text>
 
         <rect x="535" y="615" width="300" height="130" rx="14" fill="var(--spatius-diagram-managed)" stroke="var(--spatius-diagram-brand)" strokeWidth="3" />
         <text x="685" y="680" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="32" fontWeight="500">AvatarKit SDK</text>
-        <text x="685" y="722" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="25" fontWeight="500">Web/iOS/Android</text>
+        <text x="685" y="722" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="23" fontWeight="500">Web/iOS/Android/Flutter</text>
         <polyline points="665,605 665,548" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-red)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-custom-own-transport)" />
         <polyline points="705,548 705,605" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-red)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-custom-own-transport)" />
 

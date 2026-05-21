@@ -17,19 +17,91 @@
         "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Start Here",
             "icon": "rocket",
             "pages": [
               "getting-started/introduction",
-              "getting-started/quickstart",
+              "concepts/how-it-works",
+              "getting-started/credentials",
               "getting-started/how-to-integrate"
+            ]
+          },
+          {
+            "group": "Quickstarts",
+            "icon": "bolt",
+            "pages": [
+              "quickstarts/overview",
+              "quickstarts/web-sdk",
+              "quickstarts/ios-sdk",
+              "quickstarts/android-sdk",
+              "quickstarts/flutter-sdk"
+            ]
+          },
+          {
+            "group": "Platform Integrations",
+            "icon": "tower-broadcast",
+            "pages": [
+              {
+                "group": "LiveKit Agents Integration",
+                "pages": [
+                  "livekit-agents/overview",
+                  "livekit-agents/quickstart",
+                  {
+                    "group": "SDKs",
+                    "pages": [
+                      "livekit-agents/server",
+                      "livekit-agents/client"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Standalone Integrations",
+            "icon": "code",
+            "pages": [
+              {
+                "group": "Direct Mode",
+                "pages": [
+                  "direct-mode/overview",
+                  {
+                    "group": "SDKs",
+                    "pages": [
+                      "direct-mode/web",
+                      "direct-mode/ios",
+                      "direct-mode/android",
+                      "direct-mode/flutter"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Backend Mode",
+                "pages": [
+                  "backend-mode/overview",
+                  {
+                    "group": "SDKs",
+                    "pages": [
+                      "backend-mode/server-sdk",
+                      "backend-mode/client-sdk"
+                    ]
+                  },
+                  {
+                    "group": "Transports",
+                    "pages": [
+                      "backend-mode/own-transport",
+                      "backend-mode/with-livekit"
+                    ]
+                  }
+                ]
+              }
             ]
           },
           {
             "group": "Concepts",
             "icon": "lightbulb",
             "pages": [
-              "concepts/how-it-works",
               "concepts/avatar",
               "concepts/audio",
               "concepts/lifecycle",
@@ -37,36 +109,11 @@
             ]
           },
           {
-            "group": "LiveKit Plugin",
-            "icon": "tower-broadcast",
-            "pages": [
-              "livekit-plugin/overview",
-              "livekit-plugin/client",
-              "livekit-plugin/server"
-            ]
-          },
-          {
-            "group": "Basic Mode",
-            "icon": "plug",
-            "pages": [
-              "basic-mode/overview",
-              "basic-mode/web",
-              "basic-mode/ios-android"
-            ]
-          },
-          {
-            "group": "Custom Mode",
-            "icon": "sliders",
-            "pages": [
-              "custom-mode/overview",
-              "custom-mode/livekit-transport",
-              "custom-mode/own-transport"
-            ]
-          },
-          {
-            "group": "Resources",
+            "group": "Examples & Support",
             "icon": "book",
             "pages": [
+              "resources/demo-projects",
+              "resources/faq",
               {
                 "group": "Error Codes",
                 "pages": [
@@ -74,8 +121,6 @@
                   "resources/client-error"
                 ]
               },
-              "resources/faq",
-              "resources/demo-projects",
               "resources/changelog"
             ]
           }
@@ -89,15 +134,17 @@
             "icon": "mobile",
             "pages": [
               {
-                "group": "Web SDK", 
+                "group": "Web SDK",
                 "pages": [
                   "sdk-reference/web-sdk/toolchain",
                   "sdk-reference/web-sdk/avatarkit-ui",
-                  "sdk-reference/web-sdk/reference"                 
-              ]},
+                  "sdk-reference/web-sdk/reference",
+                  "sdk-reference/web-sdk/rtc-adapter"
+                ]
+              },
               "sdk-reference/ios-sdk/api-reference",
-              "sdk-reference/android-sdk/api-reference"
-              
+              "sdk-reference/android-sdk/api-reference",
+              "sdk-reference/flutter-sdk/api-reference"
             ]
           },
           {
@@ -105,8 +152,7 @@
             "icon": "server",
             "pages": [
               "sdk-reference/python-sdk/python-sdk",
-              "sdk-reference/go-sdk/go-sdk",
-              "sdk-reference/js-sdk/js-sdk"
+              "sdk-reference/go-sdk/go-sdk"
             ]
           }
         ]
@@ -128,8 +174,8 @@
     ]
   },
   "logo": {
-    "light": "/images/SRDOC_logo_black.png",
-    "dark": "/images/SRDOC_logo_white.png"
+    "light": "/images/spatius-logo-mark-black.svg",
+    "dark": "/images/spatius-logo-mark-white.svg"
   },
   "navbar": {
     "links": [

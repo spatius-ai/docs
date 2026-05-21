@@ -1,0 +1,58 @@
+---
+title: "Direct Mode Integration for Flutter"
+sidebarTitle: "Flutter"
+description: "Use the Spatius Flutter package to connect directly to Motion Server with a Session Token."
+---
+
+Use this guide when your Flutter app already has avatar speech audio and needs AvatarKit to send that audio to Motion Server, receive motion data, and render the avatar locally on iOS or Android.
+
+<Card
+  title="Flutter Direct Mode demo"
+  icon="mobile"
+  href="https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/direct-mode/clients/flutter"
+  horizontal
+>
+  Flutter reference implementation for the Direct Mode path.
+</Card>
+
+## SDK package setup
+
+Add the package to your `pubspec.yaml`:
+
+```yaml title="pubspec.yaml"
+dependencies:
+  spatius: ^1.0.0
+```
+
+Install dependencies:
+
+```bash
+flutter pub get
+```
+
+## Integration flow
+
+<Steps>
+<Step title="Create credentials">
+Create an App ID and Avatar ID in [Spatius Studio](https://app.spatius.ai), then mint a Session Token from your backend. See [Credentials](/getting-started/credentials).
+</Step>
+
+<Step title="Initialize AvatarKit">
+Initialize the Flutter package with your App ID, Avatar ID, Session Token, and `us-west` region.
+</Step>
+
+<Step title="Send avatar speech audio">
+Send PCM16 mono avatar speech audio to AvatarKit. Motion Server returns motion data, and AvatarKit renders the avatar locally through the native platform renderer.
+</Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Flutter SDK reference" icon="book" href="/sdk-reference/flutter-sdk/api-reference">
+    Package install, initialization, and core API shape.
+  </Card>
+  <Card title="Browse all demos" icon="github" href="/resources/demo-projects">
+    Every runnable demo by platform and integration path.
+  </Card>
+</CardGroup>

@@ -1,0 +1,129 @@
+---
+title: "LiveKit Agents Integration Quickstart"
+sidebarTitle: "Quickstart"
+description: "Build a voice avatar with Spatius, LiveKit Agents, and Gemini Live in 5 minutes."
+---
+
+<Card
+  title="GitHub Repository"
+  icon="github"
+  href="https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agent-quickstart"
+  horizontal
+>
+  Source code for this quickstart.
+</Card>
+
+This quickstart targets the [LiveKit Agents Integration](/livekit-agents/overview) path. For Direct Mode first-run paths, see [Web / iOS / Android / Flutter Quickstarts](/quickstarts/overview).
+
+## Prerequisites
+
+- Node.js 18+, pnpm, Python 3.10+, uv
+- [Spatius](https://app.spatius.ai/apps) credentials: `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`. See [Credentials](/getting-started/credentials).
+- [LiveKit Cloud](https://cloud.livekit.io/projects) credentials: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`.
+- [Google AI Studio](https://aistudio.google.com/api-keys) API key with **Gemini Live API access** for the chosen model: `GOOGLE_API_KEY`. Verify access in AI Studio's "Stream Realtime" tab if unsure.
+
+## Run it
+
+<Steps>
+<Step title="Clone the repo and enter the quickstart folder">
+
+```bash
+git clone https://github.com/spatius-ai/spatius-avatarkit-demo.git
+cd spatius-avatarkit-demo/platform-integrations/livekit-agents-demo/livekit-agent-quickstart
+```
+
+</Step>
+
+<Step title="Create env files">
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+Fill `backend/.env` and `frontend/.env` with your Spatius, LiveKit, and Google AI Studio credentials.
+
+</Step>
+
+<Step title="Install dependencies">
+
+```bash
+# backend
+cd backend
+uv sync
+
+# frontend
+cd ../frontend
+pnpm install
+```
+
+The backend's `pyproject.toml` pins `livekit-agents`, `livekit-plugins-google`, and `livekit-plugins-spatius` to matching versions. Keep these pins aligned when bumping the plugin — `livekit-plugins-spatius` tracks specific `livekit-agents` releases.
+
+</Step>
+
+<Step title="Run the stack (3 terminals)">
+
+```bash
+# Terminal 1: token server
+cd spatius-avatarkit-demo/platform-integrations/livekit-agents-demo/livekit-agent-quickstart/backend
+uv run token_server.py
+```
+
+```bash
+# Terminal 2: LiveKit agent worker
+cd spatius-avatarkit-demo/platform-integrations/livekit-agents-demo/livekit-agent-quickstart/backend
+uv run agent.py dev
+```
+
+```bash
+# Terminal 3: frontend
+cd spatius-avatarkit-demo/platform-integrations/livekit-agents-demo/livekit-agent-quickstart/frontend
+pnpm dev
+```
+
+Open `http://localhost:3000`, click **Connect**, then **Enable Mic** to start speaking.
+
+</Step>
+</Steps>
+
+## What this validates
+
+| Check | What it tells you |
+| --- | --- |
+| Token server returns | LiveKit and Spatius credentials are correct. |
+| Agent worker connects | `livekit-plugins-spatius` is installed and able to reach Motion Server. |
+| Browser connects + avatar appears | AvatarKit RTC client is wired into the LiveKit room. |
+| Avatar speaks when you talk | End-to-end agent pipeline (mic → STT → LLM → TTS → Spatius → render) works. |
+
+## Troubleshooting
+
+### Agent worker exits with `TypeError ... 'avatar_identity'`
+
+`livekit-plugins-spatius` tracks specific `livekit-agents` releases. If your installed `livekit-agents` is newer than the one the plugin targets, `AvatarSession()` cannot satisfy the abstract `BaseAvatarSession.avatar_identity` method added in newer agents core.
+
+Confirm `backend/pyproject.toml` pins all three packages to matching versions (the quickstart pins them at install time), then `uv sync`:
+
+```toml title="backend/pyproject.toml"
+"livekit-agents==1.5.8",
+"livekit-plugins-google==1.5.8",
+"livekit-plugins-spatius==1.5.8",
+```
+
+### Gemini Live returns `APIError: 1008 ... denied access`
+
+The Google project behind `GOOGLE_API_KEY` cannot reach Gemini Live API for the model in `E2E_GOOGLE_MODEL`. Options, in order of effort:
+
+- **Verify Live access** in AI Studio's "Stream Realtime" tab with the same key. If the test there fails too, the project itself is denied — issue a key from a project that has Live API enabled.
+- **Switch model** — change `E2E_GOOGLE_MODEL` to a model your project is allowed to call. The quickstart defaults to `gemini-2.5-flash-native-audio-preview-12-2025`; widely-available alternatives include `gemini-2.0-flash-live-001` and `gemini-live-2.5-flash-preview`.
+- **Use a different realtime LLM** — replace `google.realtime.RealtimeModel` in `agent.py` with OpenAI / Azure / xAI Realtime. The [reference demos](https://github.com/spatius-ai/spatius-avatarkit-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agents-reference-demo) show several provider wirings.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Server" icon="server" href="/livekit-agents/server">
+    Add `livekit-plugins-spatius` to your LiveKit Agents worker.
+  </Card>
+  <Card title="Client" icon="globe" href="/livekit-agents/client">
+    Render the avatar in your Web app with `@spatius/avatarkit-rtc`.
+  </Card>
+</CardGroup>

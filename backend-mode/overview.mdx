@@ -1,0 +1,91 @@
+---
+title: "Backend Mode Integration"
+sidebarTitle: "Overview"
+description: "Your backend owns the audio pipeline and downstream transport."
+---
+
+import { HostedModeRealtimeTransportDiagram, HostedModeOwnTransportDiagram } from '/snippets/spatius-diagrams.jsx'
+
+## What is Backend Mode Integration?
+
+Backend Mode Integration is a **Standalone Integration** centered on the **Spatius Server SDK**: your backend connects to Motion Server, sends avatar speech audio, receives encoded audio and motion messages, then delivers those messages to AvatarKit clients.
+
+Use this path when your backend owns ASR, LLM, TTS, turn-taking, provider keys, and the connection to Motion Server.
+
+## Core backend flow
+
+```mermaid
+flowchart LR
+    A["Your backend<br/>(ASR / LLM / TTS)"] -->|avatar speech audio| B["Spatius Server SDK"]
+    B -->|connects to| C["Motion Server"]
+    C -->|encoded audio + motion messages| B
+    B -->|your chosen transport| D["AvatarKit client"]
+    D -->|yieldAudioData / yieldFramesData| E["Local avatar rendering"]
+```
+
+The Server SDK is the required piece in this path. The client does not connect to Motion Server directly, and it usually does not hold a Spatius Session Token. Instead, the client receives encoded messages from your backend and feeds them into AvatarKit with `yieldAudioData()` and `yieldFramesData()`.
+
+## SDK roles
+
+| SDK surface | Runs in | What it does |
+| --- | --- | --- |
+| **[Server SDK](/backend-mode/server-sdk)** | Your backend | Authenticates with Spatius, connects to Motion Server, sends avatar speech audio, and receives encoded messages. |
+| **[Client SDK](/backend-mode/client-sdk)** | Web, iOS, Android, or Flutter client | Receives encoded messages from your backend and renders them locally. |
+
+## Requirements
+
+| Requirement | Why it matters |
+| --- | --- |
+| **Spatius Server SDK** | Required. Your backend uses it to authenticate, connect to Motion Server, and generate encoded messages for clients. |
+| **API Key** | Stored only on your backend. Used by the Server SDK, never by client apps. |
+| **App ID and Avatar ID** | Identify the app and avatar your clients render. |
+| **Downstream transport** | Your backend must deliver encoded audio and motion messages to clients. This can be your own WebSocket, LiveKit, or another supported transport. |
+
+## Transport options
+
+Transport is a second decision inside Backend Mode Integration. **LiveKit is optional.**
+
+| Transport | Use when | Guide |
+| --- | --- | --- |
+| **Your own WebSocket** | You want the simplest Backend Mode shape: your backend relays encoded audio and motion messages directly to clients. This is the reference demo path. | [Your own transport](/backend-mode/own-transport) |
+| **LiveKit as downstream transport** | You already want LiveKit between your backend and clients, but you are not using LiveKit Agents as the agent framework. | [Backend Mode with LiveKit](/backend-mode/with-livekit) |
+| **Agora Room** | On the Spatius roadmap. | Not documented yet. |
+
+<Note>
+**Backend Mode does not require LiveKit.** The required integration point is the Spatius Server SDK on your backend. LiveKit is only one downstream transport option after your backend receives messages from Motion Server.
+</Note>
+
+## Architecture variants
+
+### Your own transport
+
+<Frame>
+  <HostedModeOwnTransportDiagram />
+</Frame>
+
+> Your backend receives encoded messages from the Spatius Server SDK and relays them to clients over your own WebSocket or network layer.
+
+### Third-party realtime transport
+
+<Frame>
+  <HostedModeRealtimeTransportDiagram />
+</Frame>
+
+> Your backend still uses the Spatius Server SDK. The RTC provider only carries the downstream audio and motion messages between your backend and your clients.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Server SDK role" icon="server" href="/backend-mode/server-sdk">
+    Backend SDK responsibility and language references.
+  </Card>
+  <Card title="Client SDK role" icon="monitor" href="/backend-mode/client-sdk">
+    Client-side rendering responsibility.
+  </Card>
+  <Card title="Browse all demos" icon="github" href="/resources/demo-projects">
+    Run reference implementations for Web, iOS, Android, and Flutter.
+  </Card>
+  <Card title="Your own transport" icon="route" href="/backend-mode/own-transport">
+    Direct WebSocket relay between your backend and clients.
+  </Card>
+</CardGroup>
