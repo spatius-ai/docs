@@ -8,6 +8,7 @@ The Spatius Console API runs at the host below. Most users do not need to call i
 | Region | Console API host |
 | --- | --- |
 | `us-west` (default) | `console.us-west.spatius.ai` |
+| `ap-northeast` | `console.ap-northeast.spatius.ai` |
 
 See [Regions](/api-reference/regions) for the full endpoint reference and override options.
 
@@ -19,7 +20,7 @@ Call the endpoint `POST /v1/console/session-tokens` on your console host.
 
 - **Body**
   - **appId**: string, your Spatius App ID
-  - **expire_at**: int, expiration timestamp in seconds. Range: now < expire_at < now + 24 hours
+  - **expireAt**: int, expiration timestamp in seconds. Range: now < expire_at < now + 24 hours
 - **Header**
   - **X-Api-Key**: your API key
 
@@ -31,7 +32,7 @@ curl --location --request POST 'https://console.us-west.spatius.ai/v1/console/se
   --header 'Content-Type: application/json' \
   --data-raw '{
     "appId": "<your-app-id>",
-    "expire_at": 1754824283
+    "expireAt": 1754824283
   }'
 ```
 
