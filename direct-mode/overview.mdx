@@ -19,8 +19,19 @@ flowchart LR
 ## When to use
 
 - **You already have avatar speech audio** — your own TTS, a TTS provider, or prerecorded audio.
-- **Smallest backend** — your server only needs to mint Session Tokens; ASR, LLM, and TTS run wherever you already host them.
+- **Smallest backend footprint** — your backend only mints Session Tokens; ASR, LLM, and TTS run wherever you already host them.
 - **Cross-platform** — Web, iOS, Android, and Flutter clients use the same Direct Mode model.
+
+## What the token server does
+
+Direct Mode has a small backend requirement because `SPATIUS_API_KEY` is a server-side secret. Your client asks your backend for a Session Token; your backend calls the Console API with the API Key; the client then uses that short-lived Session Token to open the Motion Server WebSocket.
+
+This token server is not part of the avatar runtime. It does not send audio, receive motion data, run ASR / LLM / TTS, or proxy the Motion Server connection.
+
+| Path | Backend responsibility | Client responsibility |
+| --- | --- | --- |
+| **Direct Mode** | Mint Session Tokens only. | Connect to Motion Server, send avatar speech audio, receive motion data, and render locally. |
+| **Backend Mode** | Run the Server SDK pipeline, connect to Motion Server, and transport encoded audio + motion messages to clients. | Receive encoded messages from your backend and render locally. |
 
 ## Requirements
 
@@ -34,10 +45,10 @@ flowchart LR
 **Authentication flow:**
 
 ```
-Your Client → Your Backend → Spatius Console API → Session Token (24 h max)
+Your Client → Your token endpoint → Spatius Console API → Session Token (24 h max)
 ```
 
-The Session Token must be set before `start()`. See the [Session token API](/api-reference/api-reference) for backend implementation.
+The Session Token must be set before `start()`. Keep `SPATIUS_API_KEY` in the token endpoint only; never ship it in Web, mobile, or Flutter client code. See the [Session token API](/api-reference/api-reference) for backend implementation.
 </Note>
 
 ## Platform comparison

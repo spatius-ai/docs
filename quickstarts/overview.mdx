@@ -1,21 +1,38 @@
 ---
 title: "Quickstarts"
 sidebarTitle: "Overview"
-description: "Platform SDK first-run quickstarts for Web, iOS, Android, and Flutter."
+description: "First-run quickstarts for Direct Mode SDKs and LiveKit Agents Integration."
 ---
 
-Quickstarts are the shortest path from credentials to a visible speaking avatar on one platform. Each one runs the Direct Mode SDK against Motion Server with a Session Token.
+Quickstarts are the shortest path from credentials to a visible speaking avatar. This section includes both Direct Mode SDK quickstarts and the LiveKit Agents Integration quickstart.
 
-For voice-agent or backend-controlled demos, see the separate [LiveKit Agents Integration quickstart](/livekit-agents/quickstart) and [Browse all demos](/resources/demo-projects).
+Use a Direct Mode quickstart when your app connects the client SDK directly to Motion Server with a Session Token. Use the LiveKit Agents quickstart when you want the fastest Web voice-agent path with LiveKit Agents, Gemini Live, `livekit-plugins-spatius`, and the Web RTC Adapter.
 
-## Platform quickstarts
+## Direct Mode and token servers
+
+Direct Mode clients connect to Motion Server themselves. They still need a short-lived **Session Token**, but that token must be issued by backend code because issuing it requires your `SPATIUS_API_KEY`.
+
+That backend code is only a **token endpoint**. It is not a Backend Mode runtime server: it does not run ASR, LLM, or TTS; it does not connect to Motion Server; and it does not relay audio or motion data. The Direct Mode demos include token-server examples only to show how to exchange your server-side API Key for a client-safe Session Token.
+
+| Server-shaped code | Used by | Responsibility |
+| --- | --- | --- |
+| **Token endpoint** | Direct Mode | Mint short-lived Session Tokens for clients. |
+| **Runtime server** | Backend Mode | Own ASR / LLM / TTS, connect to Motion Server with the Server SDK, and deliver encoded audio + motion messages to clients. |
+
+## Direct Mode SDK quickstarts
 
 | Platform | Quickstart | What it proves |
 | --- | --- | --- |
-| **Web** | [Web SDK](/quickstarts/web-sdk) | App ID, Avatar ID, Session Token, Motion Server connection, PCM audio send, and local rendering. |
+| **Web** | [Web SDK](/quickstarts/web-sdk) | App ID, Avatar ID, Session Token, sample PCM audio, optional browser realtime conversation, and local rendering. |
 | **iOS** | [iOS SDK](/quickstarts/ios-sdk) | Native iOS AvatarKit setup with runtime Session Token. |
 | **Android** | [Android SDK](/quickstarts/android-sdk) | Native Android AvatarKit setup with runtime Session Token. |
 | **Flutter** | [Flutter SDK](/quickstarts/flutter-sdk) | Flutter AvatarKit setup on iOS or Android with runtime Session Token. |
+
+## Platform integration quickstarts
+
+| Platform integration | Quickstart | What it proves |
+| --- | --- | --- |
+| **LiveKit Agents** | [LiveKit Agents](/quickstarts/livekit-agents) | LiveKit room setup, Gemini Live voice agent, `livekit-plugins-spatius`, Web RTC Adapter rendering, and microphone flow. |
 
 ## Next steps
 

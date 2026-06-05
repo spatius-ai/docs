@@ -34,7 +34,8 @@
               "quickstarts/web-sdk",
               "quickstarts/ios-sdk",
               "quickstarts/android-sdk",
-              "quickstarts/flutter-sdk"
+              "quickstarts/flutter-sdk",
+              "quickstarts/livekit-agents"
             ]
           },
           {
@@ -45,7 +46,6 @@
                 "group": "LiveKit Agents Integration",
                 "pages": [
                   "livekit-agents/overview",
-                  "livekit-agents/quickstart",
                   {
                     "group": "SDKs",
                     "pages": [

@@ -25,6 +25,10 @@ flowchart LR
 
 The Server SDK is the required piece in this path. The client does not connect to Motion Server directly, and it usually does not hold a Spatius Session Token. Instead, the client receives encoded messages from your backend and feeds them into AvatarKit with `yieldAudioData()` and `yieldFramesData()`.
 
+<Note>
+Do not confuse a Backend Mode server with a Direct Mode token endpoint. A Direct Mode token endpoint only mints short-lived Session Tokens. A Backend Mode server is part of the runtime: it owns the audio pipeline, connects to Motion Server with the Server SDK, and transports encoded audio + motion messages to clients.
+</Note>
+
 ## SDK roles
 
 | SDK surface | Runs in | What it does |

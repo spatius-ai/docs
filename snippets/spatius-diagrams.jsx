@@ -109,7 +109,7 @@ export const LiveKitPluginDiagram = () => {
         <text x="685" y="505" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="32" fontWeight="600">LiveKit room</text>
 
         <rect x="470" y="570" width="430" height="215" rx="18" fill="var(--spatius-diagram-owned)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" opacity="0.72" />
-        <rect x="500" y="590" width="370" height="78" rx="12" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-livekit)" strokeWidth="3" />
+        <rect x="500" y="590" width="370" height="78" rx="12" fill="var(--spatius-diagram-managed)" stroke="var(--spatius-diagram-brand)" strokeWidth="3" />
         <text x="685" y="624" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="30" fontWeight="500">RTC Adapter</text>
         <text x="685" y="652" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="500">LiveKit provider</text>
         <polyline points="665,580 665,548" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-livekit)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-livekit-rtc)" />

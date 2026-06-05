@@ -1,19 +1,19 @@
 ---
 title: "Web SDK Quickstart"
 sidebarTitle: "Web SDK"
-description: "Run the minimal Direct Mode demo with @spatius/avatarkit in a browser."
+description: "Run the Direct Mode Web quickstart with sample audio first, then optional realtime conversation."
 ---
 
 <Card
   title="GitHub Repository"
   icon="github"
-  href="https://github.com/spatius-ai/spatius-avatar-demo/tree/main/direct-mode/clients/web/speech-to-avatar-quickstart"
+  href="https://github.com/spatius-ai/spatius-avatar-demo/tree/main/direct-mode/clients/web/quickstart"
   horizontal
 >
-  Minimal Web Direct Mode demo. Streams prerecorded PCM audio and renders the lip-synced avatar.
+  One Web Direct Mode quickstart with two audio sources: bundled sample audio and optional realtime conversation.
 </Card>
 
-This quickstart targets the [Direct Mode](/direct-mode/overview) path. No agent backend or LiveKit setup needed — just credentials.
+This quickstart targets the [Direct Mode](/direct-mode/overview) path. It starts with bundled PCM audio so you can validate AvatarKit without any realtime provider key. After that works, switch the same UI to realtime conversation and connect a browser microphone to OpenAI Realtime or Gemini Live.
 
 ## Prerequisites
 
@@ -24,6 +24,18 @@ This quickstart targets the [Direct Mode](/direct-mode/overview) path. No agent 
   - `VITE_SPATIUS_AVATAR_ID` — from the [Avatar Library](https://app.spatius.ai/avatars/library)
   - `VITE_SPATIUS_SESSION_TOKEN` — see [Session token API](/api-reference/api-reference)
 
+Realtime conversation is optional. The quickstart includes adapters for:
+
+| Provider | When needed | Docs |
+| --- | --- | --- |
+| OpenAI Realtime | Only when you select **Realtime conversation** with `VITE_REALTIME_PROVIDER=openai`. | [OpenAI Realtime](https://developers.openai.com/api/docs/guides/realtime) |
+| Gemini Live API | Only when you select **Realtime conversation** with `VITE_REALTIME_PROVIDER=gemini`. | [Gemini Live API](https://ai.google.dev/gemini-api/docs/live-api) |
+| Azure OpenAI Realtime | Not built in; use the same adapter interface if you want Azure-hosted realtime audio. | [Azure realtime audio](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/realtime-audio-websockets) |
+
+<Warning>
+The realtime path is for local development. Do not ship a long-lived realtime provider API key in browser code. For production, mint short-lived provider tokens from your backend.
+</Warning>
+
 ## Run it
 
 <Steps>
@@ -31,7 +43,7 @@ This quickstart targets the [Direct Mode](/direct-mode/overview) path. No agent 
 
 ```bash
 git clone https://github.com/spatius-ai/spatius-avatar-demo.git
-cd spatius-avatar-demo/direct-mode/clients/web/speech-to-avatar-quickstart
+cd spatius-avatar-demo/direct-mode/clients/web/quickstart
 ```
 
 </Step>
@@ -52,6 +64,8 @@ cp .env.example .env
 
 Fill `VITE_SPATIUS_APP_ID`, `VITE_SPATIUS_AVATAR_ID`, and `VITE_SPATIUS_SESSION_TOKEN`.
 
+You can leave realtime provider values blank for the first run.
+
 </Step>
 
 <Step title="Run the dev server">
@@ -62,20 +76,34 @@ pnpm dev
 
 </Step>
 
-<Step title="Open the demo">
+<Step title="Validate sample audio first">
 
-Open `http://localhost:3000`, click **Connect Avatar**, then **Send Audio**. The avatar should load, connect to Motion Server, and play the demo audio with lip sync.
+Open `http://localhost:3000`, keep **Sample audio** selected, then click **Connect avatar** and **Send sample audio**. The avatar should load, connect to Motion Server, and play the bundled PCM audio with lip sync.
+
+</Step>
+
+<Step title="Optional: try realtime conversation">
+
+Set `VITE_REALTIME_PROVIDER` to `openai` or `gemini`, fill the matching provider values in `.env`, then restart `pnpm dev`.
+
+In the UI, select **Realtime conversation**, click **Connect all**, then hold **Hold to talk** while speaking. Release the button to send your turn.
 
 </Step>
 </Steps>
 
 ## What this validates
 
-| Check | What it tells you |
+| Mode | What it proves |
 | --- | --- |
-| Avatar loads | App ID + Avatar ID are correct, asset CDN reachable. |
-| Connect button succeeds | Session Token is valid, Motion Server connection works. |
-| Audio plays with lip sync | PCM audio format and rendering pipeline are wired up end to end. |
+| Sample audio | App ID, Avatar ID, Session Token, avatar loading, Motion Server connection, PCM audio send, and local rendering. |
+| Realtime conversation | Browser microphone capture, realtime provider connection, provider response audio, resampling into AvatarKit's audio format, and Direct Mode rendering. |
+
+## Troubleshooting
+
+- **AvatarKit fails before sample audio plays**: refresh `VITE_SPATIUS_SESSION_TOKEN`. Direct Mode Session Tokens are short-lived and must match the App ID and region used by the client.
+- **Sample audio works but realtime does not connect**: the AvatarKit path is valid. Check the selected provider key, model name, quota, and realtime access for your provider account.
+- **Gemini closes with `1008: Your project has been denied access`**: the API key is valid enough to open the WebSocket, but the Google Cloud or AI Studio project does not have Live API access for that model.
+- **The browser asks for microphone permission**: allow microphone access for the local dev origin, then click **Hold to talk** again.
 
 ## Next steps
 
@@ -84,6 +112,6 @@ Open `http://localhost:3000`, click **Connect Avatar**, then **Send Audio**. The
     Full Web SDK integration with your own audio source.
   </Card>
   <Card title="Browse all demos" icon="github" href="/resources/demo-projects">
-    Multi-framework Web references (React / Vue / Vanilla / Next.js) plus iOS, Android, and Flutter.
+    Multi-framework Web references plus iOS, Android, Flutter, Backend Mode, and LiveKit examples.
   </Card>
 </CardGroup>
