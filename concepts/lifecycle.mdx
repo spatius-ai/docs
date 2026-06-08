@@ -79,12 +79,13 @@ Authentication differs by integration path. Only Direct Mode requires the client
 |------|-----------------------------------------|------------------------|
 | **Direct Mode** | A valid **Session Token** set via `AvatarSDK.setSessionToken()` before `controller.start()`. Your backend exchanges your API Key for the Session Token via the Spatius Console API, then returns it to the client. | API Key on your backend; Session Token issued per session. |
 | **LiveKit Agents Integration** | A **LiveKit room token** to join the room. No Spatius Session Token in the client. | API Key + App ID in the agent worker (`livekit-plugins-spatius`). |
+| **Agora Convo AI Integration** | An **Agora RTC token** to join the channel. No Spatius Session Token in the client. | API Key + App ID in the Convo AI `avatar` provider block, or in the TEN graph when using `spatius_avatar_python`. |
 | **Backend Mode** | Whatever the backend's transport requires (e.g. its own auth token). No Spatius Session Token in the client. | API Key + App ID on the backend (used by the Spatius Server SDK to talk to Motion Server). |
 
 The API Key must only ever live on your backend.
 
 <Note>
-**Direct Mode reconnect:** if a `sessionTokenExpired` / `sessionTokenInvalid` error fires during reconnect, fetch a fresh Session Token from your backend and call `AvatarSDK.setSessionToken()` again before restarting the connection. RTC / LiveKit Agents / Backend Mode reconnects don't go through this flow — the Spatius client never sees a Motion Server token in those paths.
+**Direct Mode reconnect:** if a `sessionTokenExpired` / `sessionTokenInvalid` error fires during reconnect, fetch a fresh Session Token from your backend and call `AvatarSDK.setSessionToken()` again before restarting the connection. RTC / Platform Integration / Backend Mode reconnects don't go through this flow — the Spatius client never sees a Motion Server token in those paths.
 </Note>
 
 For Direct Mode session-token issuance details, see [API Reference: Direct Mode Session Token Auth](/api-reference/auth).
@@ -97,10 +98,11 @@ Use `AvatarController` to start connections, send and receive data, and control 
 |------|------------------|--------------------|
 | **Direct Mode** | Client-side AvatarKit connects directly to Motion Server. | Set the Session Token, call `controller.start()`, then call `send(audio, end)` to send audio. |
 | **LiveKit Agents Integration** | The agent worker starts `livekit-plugins-spatius`, and Motion Server pushes data into the LiveKit room. | The client joins the room, and AvatarKit automatically renders from the room. |
+| **Agora Convo AI Integration** | The Convo AI avatar provider or TEN extension starts the Spatius server session, and Motion Server pushes data into the Agora channel. | The client joins the channel, and AvatarKit automatically renders from the channel. |
 | **Backend Mode** | Backend Server SDK connects to Motion Server. | The backend starts the session and feeds encoded audio and motion messages to the client's `yield()` through your custom transport. |
 
 <Warning>
-Do not treat `controller.start()` as a universal connection step. It is only the Direct Mode connection path. In Backend Mode and LiveKit Agents integrations, the Motion Server connection is established outside the client.
+Do not treat `controller.start()` as a universal connection step. It is only the Direct Mode connection path. In Backend Mode and Platform Integrations, the Motion Server connection is established outside the client.
 </Warning>
 
 | Method | Purpose |

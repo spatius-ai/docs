@@ -27,7 +27,7 @@ If the motion data is abnormal after passing in audio, the fallback playback str
 
 <Accordion title="Session token expired or invalid">
 
-**Direct Mode only.** Session Tokens have a limited lifetime. If you receive `sessionTokenExpired` or `sessionTokenInvalid` on the Motion Server WebSocket, request a fresh Session Token from your backend and call `AvatarSDK.setSessionToken()` before reconnecting via `controller.start()`. RTC / LiveKit Agents / Backend Mode clients never see this error — they don't open that WebSocket and don't need a Session Token.
+**Direct Mode only.** Session Tokens have a limited lifetime. If you receive `sessionTokenExpired` or `sessionTokenInvalid` on the Motion Server WebSocket, request a fresh Session Token from your backend and call `AvatarSDK.setSessionToken()` before reconnecting via `controller.start()`. RTC / Platform Integration / Backend Mode clients never see this error — they don't open that WebSocket and don't need a Session Token.
 
 </Accordion>
 

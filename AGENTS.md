@@ -24,7 +24,7 @@ Top-level structure (Documentation tab):
 
 1. **Start Here** — `getting-started/introduction`, `concepts/how-it-works`, `getting-started/credentials`, `getting-started/how-to-integrate`
 2. **Quickstarts** — platform SDK first-runs only (`quickstarts/{overview,web-sdk,ios-sdk,android-sdk,flutter-sdk}`). LiveKit Agents quickstart lives under its own group, not here.
-3. **Platform Integrations** — third-party realtime/agent platforms slot in via plugins. Today contains only the `LiveKit Agents` nested group (`livekit-agents/{overview,quickstart,client,server}`). Future home for Agora when product shape lands.
+3. **Platform Integrations** — third-party realtime/agent platforms slot in via plugins. Today contains `LiveKit Agents Integration` (`livekit-agents/{overview,client,server}`) and `Agora Convo AI / TEN Framework Integration` (`agora-convoai/{overview,convo-ai-agent,ten-extension,client}`).
 4. **Standalone Integrations** — build directly with Spatius SDKs. Contains two nested groups: `Direct Mode` (`direct-mode/*`) and `Backend Mode` (`backend-mode/*` including `with-livekit` as a transport sub-page).
 5. **Concepts** — `concepts/{avatar,audio,lifecycle,state-events}` (mental model + cross-cutting warnings; `how-it-works` lives in Start Here as orientation).
 6. **Examples & Support** — `resources/demo-projects` (matrix), `faq`, Error Codes group, `changelog`.
@@ -75,8 +75,9 @@ Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "
 ### RTC Adapter naming
 
 - `@spatius/avatarkit-rtc` is the **Web SDK RTC transport adapter**. Treat it as part of the Web SDK family alongside `@spatius/avatarkit`, not as a peer of the iOS / Android / Flutter SDKs.
-- Do not describe `@spatius/avatarkit-rtc` itself as a diagnostic, smoke test, or debug helper. The demo directory `platform-integrations/livekit-room-demo` is the minimal LiveKit example exercising the adapter. Future provider examples (e.g. Agora) would sit as siblings under `platform-integrations/` (e.g. `platform-integrations/agora-room/`).
-- **LiveKit Agents** is a Platform Integration; **LiveKit Room** (and future **Agora Room**) is a transport provider; the **RTC Adapter** (`@spatius/avatarkit-rtc`) is the Web SDK adapter that renders the avatar stream from that transport.
+- Do not describe `@spatius/avatarkit-rtc` itself as a diagnostic, smoke test, or debug helper. The demo directory `platform-integrations/livekit-room-demo` is the minimal LiveKit example exercising the adapter. Agora client setup is documented under `agora-convoai/client`.
+- **LiveKit Agents** is a Platform Integration; **LiveKit Room** and **Agora Room** are transport providers; the **RTC Adapter** (`@spatius/avatarkit-rtc`) is the Web SDK adapter that renders the avatar stream from that transport.
+- Agora Convo AI client integrations support Web, iOS, and Android. Web uses `@spatius/avatarkit-rtc`; iOS uses `AvatarKitRTC`; Android uses `ai.spatius:avatarkit-rtc`.
 - Backend Mode can use an RTC transport. In that pattern the Web client uses the RTC Adapter; backend wiring still belongs to Backend Mode docs.
 
 ## Brand-asset reference
@@ -94,13 +95,13 @@ Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "
 | Android (Maven) | `ai.spatius:avatarkit` |
 | iOS | `AvatarKit.xcframework` (downloaded from `spatius-ai/avatarkit-ios-release`) |
 | Flutter | `spatius` |
-| Env vars | `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`, `SPATIUS_REGION=us-west`. Vite-built frontends use `VITE_SPATIUS_*`. |
+| Env vars | `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`, `SPATIUS_REGION` (`us-west` default, `ap-northeast` supported). Vite-built frontends use `VITE_SPATIUS_*`. |
 | Logo files | `/images/spatius-logo-mark-black.svg`, `/images/spatius-logo-mark-white.svg` (SVG, never PNG) |
 
 ## Endpoint discipline
 
-- Spatius currently operates in **one region: `us-west`**. Other historical region slugs are removed. The endpoint domain is `*.us-west.spatius.ai` only — never a `*.cloud` TLD under any historical brand.
-- Reference URLs (for advanced users): `https://console.us-west.spatius.ai/v1/console`, `wss://api.us-west.spatius.ai/v2/driveningress`.
+- Spatius currently operates in two regions: `us-west` and `ap-northeast`. Other historical region slugs are removed. Endpoint domains use `*.{region}.spatius.ai` — never a `*.cloud` TLD under any historical brand.
+- Reference URLs (for advanced users): `https://console.us-west.spatius.ai/v1/console`, `wss://api.us-west.spatius.ai/v2/driveningress`, `https://console.ap-northeast.spatius.ai/v1/console`, `wss://api.ap-northeast.spatius.ai/v2/driveningress`.
 - **Quickstarts and normal demo setup** ask users to set only `SPATIUS_REGION` (defaulting to `us-west`). Do **not** ask users to set `SPATIUS_CONSOLE_ENDPOINT` or `SPATIUS_INGRESS_ENDPOINT` in any setup flow — those exist as commented-out "Advanced override" env vars only.
 
 ## Mintlify-specific conventions used here

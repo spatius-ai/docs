@@ -5,7 +5,7 @@ description: "How a Direct Mode client gets a Spatius Session Token to open its 
 ---
 
 <Note>
-**This flow only applies to Direct Mode** (`DrivingServiceMode.sdk`), where the client opens a Motion Server WebSocket from `AvatarController.start()`. LiveKit Agents Integration, Backend Mode, and the RTC Adapter path all use `DrivingServiceMode.host` — the client never opens that WebSocket and never needs a Spatius Session Token. Those paths authenticate inside their own transport (LiveKit room token, your backend's own auth, etc.). See [Credentials](/getting-started/credentials).
+**This flow only applies to Direct Mode** (`DrivingServiceMode.sdk`), where the client opens a Motion Server WebSocket from `AvatarController.start()`. Platform Integrations, Backend Mode, and the RTC Adapter path all use `DrivingServiceMode.host` — the client never opens that WebSocket and never needs a Spatius Session Token. Those paths authenticate inside their own transport (LiveKit room token, Agora RTC token, your backend's own auth, etc.). See [Credentials](/getting-started/credentials).
 </Note>
 
 ## Before you start

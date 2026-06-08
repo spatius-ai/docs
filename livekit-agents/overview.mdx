@@ -1,7 +1,7 @@
 ---
 title: "LiveKit Agents Integration"
 sidebarTitle: "Overview"
-description: "Use LiveKit Agents and livekit-plugins-spatius to build voice avatars."
+description: "Use LiveKit Agents and Spatius to build voice avatars."
 ---
 
 import { LiveKitPluginDiagram } from '/snippets/spatius-diagrams.jsx'
@@ -170,7 +170,7 @@ If you already use [LiveKit Agents](https://docs.livekit.io/agents/), add `livek
 Required environment variables:
 
 - Spatius: `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`
-- Optional region: `SPATIUS_REGION` defaults to `us-west`
+- Optional region: `SPATIUS_REGION` defaults to `us-west`; `ap-northeast` is also supported
 - LiveKit: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`
 
 Create an `AvatarSession` and start it with your agent session and room:

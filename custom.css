@@ -43,6 +43,12 @@
   color: var(--spatius-diagram-ink);
 }
 
+.spatius-agora-diagram {
+  --spatius-diagram-agora: rgb(91, 193, 251);
+  --spatius-diagram-agora-surface: rgba(91, 193, 251, 0.12);
+  --spatius-diagram-agora-stroke: rgba(91, 193, 251, 0.54);
+}
+
 .spatius-diagram svg {
   display: block;
   width: 100%;
@@ -218,6 +224,13 @@ html.dark .spatius-diagram,
   --spatius-diagram-muted-dark: rgba(230, 230, 240, 0.5);
   --spatius-diagram-glow: rgba(147, 153, 227, 0.46);
   --spatius-diagram-edge: rgba(255, 255, 255, 0.2);
+}
+
+html.dark .spatius-agora-diagram,
+.dark .spatius-agora-diagram,
+[data-theme="dark"] .spatius-agora-diagram {
+  --spatius-diagram-agora-surface: rgba(91, 193, 251, 0.16);
+  --spatius-diagram-agora-stroke: rgba(91, 193, 251, 0.62);
 }
 
 /* Walkthrough pages: keep long code blocks in fixed-height scroll areas. */

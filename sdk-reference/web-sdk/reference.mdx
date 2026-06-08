@@ -14,7 +14,7 @@ description: "Complete API reference for @spatius/avatarkit (Web)."
 | `AvatarController` | Runtime communication and playback control | `start()`, `send()`, `pause()`, `interrupt()`, `close()` |
 
 <Note>
-**App ID** is required on every integration path and identifies your Spatius application (it scopes which avatars you can load). **Session Token** is only required for **Direct Mode** (`DrivingServiceMode.sdk`), where it authenticates the Motion Server WebSocket; RTC / LiveKit Agents / Backend Mode paths do not need it. See [Credentials](/getting-started/credentials) for the per-path breakdown.
+**App ID** is required on every integration path and identifies your Spatius application (it scopes which avatars you can load). **Session Token** is only required for **Direct Mode** (`DrivingServiceMode.sdk`), where it authenticates the Motion Server WebSocket; RTC / Platform Integration / Backend Mode paths do not need it. See [Credentials](/getting-started/credentials) for the per-path breakdown.
 </Note>
 
 For the minimum end-to-end integration walkthrough (install, build configuration, init, load, connect), see the [Direct Mode guide for Web](/direct-mode/web).
@@ -70,7 +70,7 @@ declare module '@spatius/avatarkit' {
 }
 ```
 
-A future SDK release will add `region` natively and this augmentation can be removed. Currently `'us-west'` is the only region.
+A future SDK release will add `region` natively and this augmentation can be removed. Supported regions are `'us-west'` and `'ap-northeast'`.
 </Note>
 
 #### setSessionToken(token)
@@ -337,7 +337,7 @@ controller.getVolume()                 // returns current volume
 
 ```typescript
 interface Configuration {
-  region?: string                            // Defaults to 'us-west' (currently the only region)
+  region?: string                            // Defaults to 'us-west'; 'ap-northeast' is also supported
   drivingServiceMode?: DrivingServiceMode    // Default: DrivingServiceMode.sdk
   logLevel?: LogLevel                        // Default: LogLevel.off
   audioFormat?: AudioFormat                  // Default: { channelCount: 1, sampleRate: 16000 }

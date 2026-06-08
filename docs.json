@@ -54,6 +54,26 @@
                     ]
                   }
                 ]
+              },
+              {
+                "group": "Agora Convo AI / TEN Framework Integration",
+                "tag": "Beta",
+                "pages": [
+                  "agora-convoai/overview",
+                  {
+                    "group": "Server setup",
+                    "pages": [
+                      "agora-convoai/convo-ai-agent",
+                      "agora-convoai/ten-extension"
+                    ]
+                  },
+                  {
+                    "group": "Clients",
+                    "pages": [
+                      "agora-convoai/client"
+                    ]
+                  }
+                ]
               }
             ]
           },
