@@ -24,8 +24,11 @@ ignoreRegExpList:
 words:
   - ai
   - aistudio
+  - Agora
   - api
+  - appcert
   - appId
+  - appid
   - avatarkit
   - avatarsdk
   - avatarsdkgo
@@ -35,6 +38,8 @@ words:
   - boolean
   - composable
   - config
+  - Convo
+  - convoai
   - conversationId
   - Coroutine
   - CTAs
@@ -94,6 +99,7 @@ words:
   - shadcn
   - spatius
   - toolchain
+  - tokenless
   - tts
   - ui
   - UIKit
@@ -111,3 +117,4 @@ words:
   - opuslib
   - libopus
   - PCMS16LE
+  - TEN

@@ -53,10 +53,10 @@ Transport is a second decision inside Backend Mode Integration. **LiveKit is opt
 | --- | --- | --- |
 | **Your own WebSocket** | You want the simplest Backend Mode shape: your backend relays encoded audio and motion messages directly to clients. This is the reference demo path. | [Your own transport](/backend-mode/own-transport) |
 | **LiveKit as downstream transport** | You already want LiveKit between your backend and clients, but you are not using LiveKit Agents as the agent framework. | [Backend Mode with LiveKit](/backend-mode/with-livekit) |
-| **Agora Room** | On the Spatius roadmap. | Not documented yet. |
+| **Agora as downstream transport** | You already want Agora between your backend and clients, but you are not using Agora Convo AI as the agent platform. | [Python SDK Agora Egress Mode](/sdk-reference/python-sdk/python-sdk#agora-egress-mode) |
 
 <Note>
-**Backend Mode does not require LiveKit.** The required integration point is the Spatius Server SDK on your backend. LiveKit is only one downstream transport option after your backend receives messages from Motion Server.
+**Backend Mode does not require LiveKit or Agora.** The required integration point is the Spatius Server SDK on your backend. RTC providers are downstream transport options after your backend receives messages from Motion Server.
 </Note>
 
 ## Architecture variants

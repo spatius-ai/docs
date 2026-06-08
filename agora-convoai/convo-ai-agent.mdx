@@ -1,0 +1,162 @@
+---
+title: "Agora Convo AI Agent"
+sidebarTitle: "Convo AI Agent"
+description: "Configure Spatius as an avatar provider in the Agora Convo AI start-agent request."
+---
+
+Use this page when you start an Agora Convo AI agent through the Convo AI REST API. Convo AI owns the managed ASR, LLM, TTS, and agent runtime; Spatius is configured as the avatar provider in the agent's `properties.avatar` block.
+
+If you run a TEN Framework graph directly instead of starting a managed Convo AI agent, use the [TEN Extension](/agora-convoai/ten-extension) guide.
+
+## Start-agent request
+
+Create the agent with Agora Convo AI's start-agent operation:
+
+```http
+POST /v2/projects/{agora_app_id}/join
+Authorization: agora token="{agent_rtc_token}"
+Content-Type: application/json
+```
+
+Use the Convo AI REST base URL for your Agora account. The probe project used for this integration tests against:
+
+```text
+https://api.agora.io/cn/api/conversational-ai-agent/v2
+```
+
+Agora RTC tokens are used in three places:
+
+| Token | Where it is used |
+| --- | --- |
+| Agent RTC token | HTTP `Authorization` header and `properties.token` so the Convo AI agent can join the Agora channel. |
+| Avatar RTC token | `properties.avatar.params.agora_token` so Motion Server can publish avatar output into the same channel. |
+| Client RTC token | Passed to the Web, iOS, or Android client so the user can join the same channel. |
+
+<Warning>
+Use distinct Agora UIDs for the user, the Convo AI agent, and the Spatius avatar publisher. Do not reuse the avatar publisher UID as a client UID.
+</Warning>
+
+## Spatius avatar provider
+
+Add `properties.avatar` to the start-agent payload:
+
+```json
+{
+  "name": "spatius-agent-room-a",
+  "properties": {
+    "channel": "room-a",
+    "token": "agent-rtc-token",
+    "agent_rtc_uid": "67890",
+    "remote_rtc_uids": ["12345"],
+    "enable_string_uid": false,
+    "idle_timeout": 120,
+    "asr": {
+      "language": "zh-CN",
+      "vendor": "tencent",
+      "params": {
+        "key": "${TENCENT_ASR_KEY}",
+        "app_id": "${TENCENT_APP_ID}",
+        "secret": "${TENCENT_ASR_SECRET}",
+        "engine_model_type": "16k_zh"
+      }
+    },
+    "llm": {
+      "vendor": "bytedance",
+      "url": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
+      "api_key": "${LLM_API_KEY}",
+      "params": {
+        "model": "your-model-id"
+      }
+    },
+    "tts": {
+      "vendor": "minimax",
+      "params": {
+        "key": "${MINIMAX_TTS_KEY}",
+        "group_id": "${MINIMAX_TTS_GROUP_ID}",
+        "model": "speech-01-turbo",
+        "voice_setting": {
+          "voice_id": "${MINIMAX_TTS_VOICE_ID}",
+          "speed": 1.0,
+          "vol": 1.0,
+          "pitch": 0
+        },
+        "audio_setting": {
+          "sample_rate": 16000
+        }
+      }
+    },
+    "avatar": {
+      "enable": true,
+      "vendor": "spatius",
+      "params": {
+        "spatius_api_key": "${SPATIUS_API_KEY}",
+        "spatius_app_id": "${SPATIUS_APP_ID}",
+        "spatius_avatar_id": "${SPATIUS_AVATAR_ID}",
+        "agora_uid": "77777",
+        "agora_token": "avatar-rtc-token",
+        "region": "us-west",
+        "sample_rate": 24000,
+        "session_expire_minutes": 30
+      }
+    },
+    "parameters": {
+      "enable_dump": true,
+      "dump_params": {
+        "enable_tts": true
+      }
+    }
+  }
+}
+```
+
+The ASR, LLM, and TTS sections follow Agora Convo AI's provider schema. The values above are an example combination; use the provider fields required by your own Convo AI setup.
+
+## Avatar fields
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `properties.avatar.enable` | Yes | Set to `true` to enable avatar output for the Convo AI agent. |
+| `properties.avatar.vendor` | Yes | Set to `spatius`. |
+| `properties.avatar.params.spatius_api_key` | Yes | Spatius API Key. Keep it server-side. |
+| `properties.avatar.params.spatius_app_id` | Yes | Spatius App ID. |
+| `properties.avatar.params.spatius_avatar_id` | Yes | Avatar ID to render. |
+| `properties.avatar.params.agora_uid` | Yes | Agora UID used by the avatar publisher. Must be distinct from the user and agent UIDs. |
+| `properties.avatar.params.agora_token` | Yes | RTC token for `agora_uid` in `properties.channel`. |
+| `properties.avatar.params.region` | No | Spatius region. See [Regions](/api-reference/regions). |
+| `properties.avatar.params.sample_rate` | No | Avatar speech audio sample rate. Use `24000` unless your Convo AI setup requires a different value. |
+| `properties.avatar.params.session_expire_minutes` | No | Spatius server session lifetime. |
+
+## Provider placement
+
+The `avatar` block is a sibling of the Convo AI `asr`, `llm`, and `tts` provider blocks:
+
+| Provider block | Owned by | Purpose |
+| --- | --- | --- |
+| `properties.asr` | Agora Convo AI | User speech recognition. |
+| `properties.llm` | Agora Convo AI | Agent reasoning and response generation. |
+| `properties.tts` | Agora Convo AI | Agent speech synthesis. |
+| `properties.avatar` | Spatius avatar provider | Sends agent speech audio to Motion Server and publishes avatar output into the Agora channel. |
+
+The client joins `properties.channel` with its own UID and RTC token. The client does not need a Spatius Session Token on this path.
+
+## Stop and cleanup
+
+Stop the agent with the Agora Convo AI leave operation when the session ends:
+
+```http
+POST /v2/projects/{agora_app_id}/agents/{agent_id}/leave
+Authorization: agora token="{agent_rtc_token}"
+```
+
+Agora channels are created implicitly when participants join. After the user, agent, and avatar publisher leave, the channel becomes empty.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Client" icon="globe" href="/agora-convoai/client">
+    Join the Agora channel and render avatar output with `AgoraProvider`.
+  </Card>
+  <Card title="TEN Extension" icon="blocks" href="/agora-convoai/ten-extension">
+    Use `spatius_avatar_python` when you run a TEN Framework graph directly.
+  </Card>
+</CardGroup>

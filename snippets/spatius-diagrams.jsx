@@ -104,7 +104,7 @@ export const LiveKitPluginDiagram = () => {
           <tspan x="1000" dy="44">Server</tspan>
         </text>
         <polyline points="1000,400 1000,442" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-livekit)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-livekit-rtc)" />
-        <polyline points="440,405 440,442" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-livekit)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-livekit-rtc)" />
+        <polyline points="440,442 440,405" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-livekit)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-livekit-rtc)" />
         <rect x="310" y="452" width="750" height="82" rx="12" fill="var(--spatius-diagram-livekit-surface)" stroke="var(--spatius-diagram-livekit)" strokeWidth="3" />
         <text x="685" y="505" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="32" fontWeight="600">LiveKit room</text>
 
@@ -130,6 +130,73 @@ export const LiveKitPluginDiagram = () => {
         <text x="260" y="696" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="28" fontWeight="500">user audio</text>
         <polyline points="335,630 490,630" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-livekit-ink)" />
         <polyline points="847,740 1080,740" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-livekit-ink)" />
+        <text x="1102" y="750" textAnchor="start" fill="var(--spatius-diagram-ink)" fontSize="32" fontWeight="500">Avatar</text>
+      </svg>
+    </div>
+  )
+}
+
+export const AgoraConvoAiDiagram = () => {
+  return (
+    <div className="spatius-diagram spatius-agora-diagram not-prose" aria-label="Agora Convo AI Integration architecture">
+      <svg viewBox="-83 0 1535 800" role="img">
+        <defs>
+          <marker id="spatius-agora-rtc" viewBox="0 0 12 10" refX="10.5" refY="5" markerWidth="4.5" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0 0L12 5L0 10Z" fill="var(--spatius-diagram-agora)" />
+          </marker>
+          <marker id="spatius-agora-ink" viewBox="0 0 12 10" refX="10.5" refY="5" markerWidth="4.5" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0 0L12 5L0 10Z" fill="var(--spatius-diagram-ink)" />
+          </marker>
+        </defs>
+
+        <text x="440" y="72" textAnchor="middle" fill="var(--spatius-diagram-agora)" fontSize="30" fontWeight="600">Agora Managed</text>
+        <text x="1000" y="72" textAnchor="middle" fill="var(--spatius-diagram-brand)" fontSize="30" fontWeight="600">Spatius Managed</text>
+
+        <rect x="245" y="118" width="390" height="275" rx="18" fill="var(--spatius-diagram-agora-surface)" stroke="var(--spatius-diagram-agora-stroke)" strokeWidth="3" />
+        <text x="440" y="148" textAnchor="middle" fill="var(--spatius-diagram-agora)" fontSize="21" fontWeight="600">Agora Convo AI</text>
+        <rect x="285" y="168" width="310" height="112" rx="12" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" />
+        <text x="440" y="204" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="29" fontWeight="500">
+          <tspan x="440">Convo AI agent</tspan>
+          <tspan x="440" dy="32" fill="var(--spatius-diagram-muted)" fontSize="21">ASR / LLM / TTS</tspan>
+          <tspan x="440" dy="27" fill="var(--spatius-diagram-muted)" fontSize="19">turns / tools / audio</tspan>
+        </text>
+        <rect x="285" y="302" width="310" height="72" rx="12" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" />
+        <text x="440" y="332" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="28" fontWeight="500">Spatius avatar</text>
+        <text x="440" y="360" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="19" fontWeight="500">vendor: spatius</text>
+        <polyline points="608,338 865,338" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-agora-ink)" />
+
+        <rect x="875" y="118" width="250" height="275" rx="18" fill="var(--spatius-diagram-managed)" stroke="var(--spatius-diagram-brand)" strokeWidth="3" />
+        <text x="1000" y="245" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="31" fontWeight="500">
+          <tspan x="1000">Motion</tspan>
+          <tspan x="1000" dy="44">Server</tspan>
+        </text>
+        <polyline points="1000,400 1000,442" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-agora)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-agora-rtc)" />
+        <polyline points="440,442 440,405" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-agora)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-agora-rtc)" />
+        <rect x="310" y="452" width="750" height="82" rx="12" fill="var(--spatius-diagram-agora-surface)" stroke="var(--spatius-diagram-agora)" strokeWidth="3" />
+        <text x="685" y="505" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="32" fontWeight="600">Agora channel</text>
+
+        <rect x="470" y="570" width="430" height="215" rx="18" fill="var(--spatius-diagram-owned)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" opacity="0.72" />
+        <rect x="500" y="590" width="370" height="78" rx="12" fill="var(--spatius-diagram-managed)" stroke="var(--spatius-diagram-brand)" strokeWidth="3" />
+        <text x="685" y="624" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="30" fontWeight="500">RTC Adapter</text>
+        <text x="685" y="652" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="20" fontWeight="500">Agora provider</text>
+        <polyline points="665,580 665,548" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-agora)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-agora-rtc)" />
+        <polyline points="705,548 705,580" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-agora)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-agora-rtc)" />
+
+        <rect x="535" y="705" width="300" height="70" rx="12" fill="var(--spatius-diagram-managed)" stroke="var(--spatius-diagram-brand)" strokeWidth="3" />
+        <text x="685" y="734" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="27" fontWeight="500">AvatarKit SDK</text>
+        <text x="685" y="760" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="19" fontWeight="500">client renderer</text>
+        <polyline points="685,675 685,696" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-agora-ink)" />
+
+        <g className="spatius-audio-visualizer" aria-label="user audio">
+          <rect className="spatius-audio-bar" x="220" y="602" width="8" height="54" rx="4" />
+          <rect className="spatius-audio-bar" x="238" y="588" width="8" height="82" rx="4" />
+          <rect className="spatius-audio-bar" x="256" y="610" width="8" height="38" rx="4" />
+          <rect className="spatius-audio-bar" x="274" y="582" width="8" height="94" rx="4" />
+          <rect className="spatius-audio-bar" x="292" y="598" width="8" height="62" rx="4" />
+        </g>
+        <text x="260" y="696" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="28" fontWeight="500">user audio</text>
+        <polyline points="335,630 490,630" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-agora-ink)" />
+        <polyline points="847,740 1080,740" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-agora-ink)" />
         <text x="1102" y="750" textAnchor="start" fill="var(--spatius-diagram-ink)" fontSize="32" fontWeight="500">Avatar</text>
       </svg>
     </div>

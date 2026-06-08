@@ -12,7 +12,7 @@ Spatius is an **avatar-only** service. It takes avatar speech audio and returns 
 
 Spatius integrations come in two categories.
 
-- **Platform Integrations** — you already use a third-party realtime / agent platform; Spatius slots in via a platform-specific package. Today: LiveKit Agents Integration.
+- **Platform Integrations** — you already use a third-party realtime / agent platform; Spatius slots in via a platform-specific package. Today: LiveKit Agents Integration and Agora Convo AI Integration.
 - **Standalone Integrations** — you build directly with Spatius SDKs without going through a third-party agent platform. Today: Direct Mode and Backend Mode.
 
 ## Decision matrix
@@ -20,6 +20,7 @@ Spatius integrations come in two categories.
 | Category | Path | Choose it when | What connects to Spatius |
 | --- | --- | --- | --- |
 | Platform Integrations | **[LiveKit Agents Integration](#livekit-agents-integration)** | You already use LiveKit Agents or want a turnkey voice-agent path. | LiveKit agent worker through `livekit-plugins-spatius` |
+| Platform Integrations | **[Agora Convo AI Integration](/agora-convoai/overview)** | You already use Agora Convo AI and want avatar output in an Agora channel. | Convo AI `avatar` provider or TEN extension |
 | Standalone Integrations | **[Direct Mode](#direct-mode)** | You have avatar speech audio and want the smallest client-side integration. | AvatarKit client SDK |
 | Standalone Integrations | **[Backend Mode](#backend-mode)** | Your backend owns ASR / LLM / TTS / transport. | Spatius Server SDK |
 
@@ -39,6 +40,28 @@ Use it when:
   </Card>
   <Card title="LiveKit Agents Integration quickstart" icon="radio" href="/quickstarts/livekit-agents">
     Run the React + LiveKit Agents + Gemini Live demo.
+  </Card>
+</CardGroup>
+
+## Agora Convo AI Integration
+
+Agora Convo AI Integration is the Platform Integration for Agora Convo AI. Convo AI is Agora's managed conversational AI service; Spatius is configured as the Convo AI avatar provider in the start-agent request. If you run a TEN Framework graph directly, use the `spatius_avatar_python` TEN extension instead.
+
+Use it when:
+
+- Your voice agent is built with Agora Convo AI.
+- You want the Agora channel to carry user audio and avatar output.
+- Your Web, iOS, or Android client renders avatar audio and motion from the Agora channel.
+
+<CardGroup cols={3}>
+  <Card title="Agora integration guide" icon="book" href="/agora-convoai/overview">
+    Choose the Convo AI, TEN Framework, and client setup docs.
+  </Card>
+  <Card title="Convo AI Agent setup" icon="bot" href="/agora-convoai/convo-ai-agent">
+    Add Spatius to the Convo AI start-agent payload.
+  </Card>
+  <Card title="TEN Extension setup" icon="blocks" href="/agora-convoai/ten-extension">
+    Configure Spatius and Agora fields inside a TEN graph.
   </Card>
 </CardGroup>
 
@@ -92,12 +115,17 @@ Transport options live inside an integration path, not as separate top-level cho
 | **Direct to Motion Server** | Default transport for Direct Mode. |
 | **Your own WebSocket** | Backend Mode with [your own transport](/backend-mode/own-transport). |
 | **LiveKit Room** | Two distinct uses — see below. |
-| **Agora Room** | On the Spatius roadmap. Final placement (Platform Integration vs Backend Mode transport) depends on the integration shape Agora support takes. |
+| **Agora channel** | Used by [Agora Convo AI Integration](/agora-convoai/overview). Server SDK Agora egress is also available for custom Backend Mode work. |
 
 LiveKit appears in two completely different positions and these must not be confused:
 
 - **LiveKit Agents Integration** uses LiveKit both as the agent framework (via `livekit-plugins-spatius`) and as the room transport. Choose this when you build agents on LiveKit Agents.
 - **[Backend Mode with LiveKit](/backend-mode/with-livekit)** uses your own backend with the Spatius Server SDK, and merely uses LiveKit as the downstream transport between your backend and your clients. No LiveKit Agents involved.
+
+Agora has a similar distinction:
+
+- **Agora Convo AI Integration** uses Agora Convo AI as the agent platform and an Agora channel as the transport. The Spatius integration is configured through the Convo AI `avatar` provider block, or through `spatius_avatar_python` when you run a TEN Framework graph directly.
+- **Backend Mode with Agora egress** is a custom Server SDK pattern where your backend owns the whole pipeline and uses Agora only as the downstream transport. See [Python SDK Agora Egress Mode](/sdk-reference/python-sdk/python-sdk#agora-egress-mode).
 
 ## Next steps
 

@@ -13,7 +13,7 @@ description: "Use @spatius/avatarkit-rtc as the Web transport adapter for LiveKi
 | `@spatius/avatarkit` | Web avatar rendering SDK. |
 | `@spatius/avatarkit-rtc` | Web transport adapter for RTC rooms. Depends on `@spatius/avatarkit`. |
 
-The RTC Adapter is **part of the Web SDK family**, not a standalone cross-platform SDK and not a diagnostic tool. iOS, Android, and Flutter clients consume avatar data through their platform AvatarKit SDKs and do not have a corresponding RTC adapter today.
+The RTC Adapter is **part of the Web SDK family**, not a standalone cross-platform SDK and not a diagnostic tool. Native Agora Convo AI clients use the platform RTC packages documented in [Agora Convo AI Client](/agora-convoai/client), not this npm package.
 
 <Note>
 **Web only.** The RTC Adapter currently targets browser apps.
@@ -25,10 +25,11 @@ The RTC Adapter is **part of the Web SDK family**, not a standalone cross-platfo
 | --- | --- |
 | Direct Mode | No. Use `@spatius/avatarkit` directly. |
 | Backend Mode with your own WebSocket | Usually no. Your client manually calls `yieldAudioData()` / `yieldFramesData()`. |
-| Backend Mode with LiveKit / future Agora transport | Yes. The Web client uses the RTC Adapter. |
+| Backend Mode with LiveKit / Agora egress transport | Yes. The Web client uses the RTC Adapter. |
 | LiveKit Agents Integration | Yes. The Web client uses the RTC Adapter with `LiveKitProvider`. |
+| Agora Convo AI Integration | Yes for Web. Native clients use their platform RTC packages with `AgoraProvider`. |
 
-The [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-room-demo) demo is the minimal LiveKit example for the RTC Adapter; it is not the full Backend Mode + RTC transport voice-agent demo. Future provider examples (e.g. Agora) would sit as siblings under `platform-integrations/` (e.g. `platform-integrations/agora-room/`).
+The [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-room-demo) demo is the minimal LiveKit example for the RTC Adapter; it is not the full Backend Mode + RTC transport voice-agent demo. For Agora, see [Agora Convo AI Client](/agora-convoai/client).
 
 ## Install
 
@@ -93,7 +94,7 @@ const player = new AvatarPlayer(provider, avatarView, options)
 | Provider | Status |
 | --- | --- |
 | `LiveKitProvider` | Documented here. Demoed in [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-room-demo). |
-| `AgoraProvider` | Exported by `@spatius/avatarkit-rtc`. Not documented or demoed in this repo yet — API surface mirrors `LiveKitProvider`. |
+| `AgoraProvider` | Documented in [Agora Convo AI Client](/agora-convoai/client). API surface mirrors `LiveKitProvider`; connection config uses `appId`, `channel`, optional `token`, and optional `uid`. |
 
 The same `AvatarPlayer` surface works across providers — code that talks to the player does not need to change when the provider swaps. Both providers are exported from the package root:
 
@@ -107,9 +108,12 @@ For the full `AvatarPlayer` API — constructor options, `connect`, microphone c
 
 ## Related guides
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card title="LiveKit Agents Client" icon="bolt" href="/livekit-agents/client">
     Use the RTC Adapter with a LiveKit Agents worker.
+  </Card>
+  <Card title="Agora Client" icon="tower-broadcast" href="/agora-convoai/client">
+    Use the RTC Adapter with an Agora Convo AI graph.
   </Card>
   <Card title="Backend Mode with LiveKit" icon="route" href="/backend-mode/with-livekit">
     Use the RTC Adapter as the Web transport for a Backend Mode pipeline.

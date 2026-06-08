@@ -1,0 +1,271 @@
+---
+title: "Agora Convo AI Client"
+sidebarTitle: "Client"
+description: "Use AvatarKit RTC clients with AgoraProvider."
+---
+
+This page covers the client side of [Agora Convo AI Integration](/agora-convoai/overview) for Web, iOS, and Android. The client joins the Agora channel and renders the avatar audio and motion data produced by the server-side Spatius integration and Motion Server.
+
+| Platform | Package | Provider |
+| --- | --- | --- |
+| Web | `@spatius/avatarkit-rtc` with `agora-rtc-sdk-ng` | `AgoraProvider` |
+| iOS | `AvatarKitRTC` from [`spatius-ai/avatarkit-ios-rtc`](https://github.com/spatius-ai/avatarkit-ios-rtc) | `AgoraProvider` |
+| Android | `ai.spatius:avatarkit-rtc` | `AgoraProvider` |
+
+<Warning>
+When using an AvatarKit RTC client, do not create and manage a separate Agora client for avatar playback. The platform RTC package owns the Agora client internally so it can wire audio, motion data, and lifecycle handling correctly.
+</Warning>
+
+## Install and connect
+
+<Tabs>
+<Tab title="Web">
+
+Install the AvatarKit Web SDK, the Web RTC Adapter, and the Agora Web SDK peer dependency:
+
+```bash
+pnpm add @spatius/avatarkit-rtc @spatius/avatarkit agora-rtc-sdk-ng
+```
+
+Configure your build tool to load the AvatarKit WebAssembly assets. See [Toolchain Setup](/sdk-reference/web-sdk/toolchain).
+
+```typescript
+import { AvatarPlayer, AgoraProvider } from '@spatius/avatarkit-rtc'
+import { AvatarSDK, AvatarView, AvatarManager, DrivingServiceMode } from '@spatius/avatarkit'
+
+async function init() {
+  await AvatarSDK.initialize('your-spatius-app-id', {
+    region: 'us-west',
+    drivingServiceMode: DrivingServiceMode.host,
+  })
+
+  // `setSessionToken` is not needed on the RTC Adapter path.
+  // `DrivingServiceMode.host` does not open a Motion Server WebSocket from the client.
+
+  const avatar = await AvatarManager.shared.load('your-spatius-avatar-id')
+  const container = document.getElementById('avatar-container')!
+  const avatarView = new AvatarView(avatar, container)
+
+  const provider = new AgoraProvider()
+  const player = new AvatarPlayer(provider, avatarView, {
+    logLevel: 'info',
+    enableJitterBuffer: true,
+    maxBufferDelayMs: 80,
+  })
+
+  player.on('connected', () => console.log('Connected to Agora'))
+  player.on('disconnected', () => console.log('Disconnected from Agora'))
+  player.on('error', (err) => console.error('Avatar RTC error:', err))
+  player.on('stalled', async () => {
+    console.log('Avatar stream stalled, reconnecting...')
+    await player.reconnect()
+  })
+
+  await player.connect({
+    appId: 'your-agora-app-id',
+    channel: 'your-agora-channel',
+    token: 'agora-rtc-token-for-uid-1001',
+    uid: 1001,
+  })
+
+  await player.startPublishing()
+}
+```
+
+Microphone control:
+
+```typescript
+await player.startPublishing()
+await player.stopPublishing()
+```
+
+Custom audio publishing for non-microphone sources:
+
+```typescript
+await player.publishAudio(track)
+await player.unpublishAudio()
+```
+
+| Audio source | How to obtain track |
+| --- | --- |
+| `<audio>` element | `audioElement.captureStream().getAudioTracks()[0]` |
+| Screen share audio | `getDisplayMedia({ audio: true })` |
+| Web Audio API | `audioContext.createMediaStreamDestination().stream.getAudioTracks()[0]` |
+
+<Note>
+`unpublishAudio()` does **not** stop the track. You are responsible for calling `track.stop()` to release the resource.
+</Note>
+
+Access the underlying Agora client only for advanced features:
+
+```typescript
+import type { AgoraClient } from '@spatius/avatarkit-rtc'
+
+const client = provider.getNativeClient()  // AgoraClient | null
+const sameClient = player.getNativeClient() as AgoraClient | null
+
+console.log('Agora connection state:', client?.connectionState)
+```
+
+</Tab>
+<Tab title="iOS">
+
+Install with Swift Package Manager:
+
+```swift
+.package(url: "https://github.com/spatius-ai/avatarkit-ios-rtc.git", from: "1.0.0")
+```
+
+Or install with CocoaPods:
+
+```ruby
+pod 'AvatarKitRTC', '~> 1.0'
+```
+
+`AvatarKitRTC` expects a standard AvatarKit setup with an initialized SDK, a loaded avatar, and an `AvatarView`.
+
+```swift
+import AvatarKit
+import AvatarKitRTC
+
+let view = AvatarView(avatar: avatar)
+let provider = AgoraProvider()
+let player = AvatarPlayer(provider: provider,
+                          avatarView: view,
+                          options: AvatarPlayerOptions(logLevel: .info))
+
+player.subscribe { event in
+    switch event {
+    case .connected:
+        print("connected")
+    case .disconnected:
+        print("disconnected")
+    case .error(let message):
+        print("error: \(message)")
+    case .stalled:
+        print("stream stalled")
+    case .connectionStateChanged:
+        break
+    }
+}
+
+try await player.connect(AgoraConnectionConfig(
+    appId: agoraAppID,
+    channel: channelName,
+    token: token,
+    uid: uid
+))
+
+try await player.publishAudio()
+
+await player.unpublishAudio()
+await player.disconnect()
+```
+
+`publishAudio()` captures the device microphone, so your app must include `NSMicrophoneUsageDescription` and request microphone permission.
+
+</Tab>
+<Tab title="Android">
+
+Install the Android RTC package:
+
+```kotlin
+implementation("ai.spatius:avatarkit-rtc:1.0.0")
+```
+
+The Android package expects a standard AvatarKit setup with an initialized SDK, a loaded avatar, and an `AvatarView`.
+
+```kotlin
+import ai.spatius.avatarkit.rtc.AgoraConnectionConfig
+import ai.spatius.avatarkit.rtc.AvatarPlayer
+import ai.spatius.avatarkit.rtc.AvatarPlayerEvent
+import ai.spatius.avatarkit.rtc.AvatarPlayerOptions
+import ai.spatius.avatarkit.rtc.RTCLogLevel
+import ai.spatius.avatarkit.rtc.providers.AgoraProvider
+import kotlinx.coroutines.launch
+
+val provider = AgoraProvider(context)
+val player = AvatarPlayer(
+    provider = provider,
+    avatarView = avatarView,
+    options = AvatarPlayerOptions(logLevel = RTCLogLevel.INFO),
+)
+
+player.subscribe { event ->
+    when (event) {
+        AvatarPlayerEvent.Connected -> println("connected")
+        AvatarPlayerEvent.Disconnected -> println("disconnected")
+        AvatarPlayerEvent.Stalled -> println("stream stalled")
+        is AvatarPlayerEvent.Error -> println("error: ${event.message}")
+        is AvatarPlayerEvent.ConnectionStateChanged -> Unit
+    }
+}
+
+lifecycleScope.launch {
+    player.connect(
+        AgoraConnectionConfig(
+            appId = agoraAppId,
+            channel = channelName,
+            token = token,
+            uid = uid,
+        )
+    )
+
+    player.publishAudio()
+
+    // Later:
+    player.unpublishAudio()
+    player.disconnect()
+}
+```
+
+For non-microphone audio sources, call `publishExternalPCM()` and then push 16-bit signed PCM chunks with `pushPCM(data)`.
+
+</Tab>
+</Tabs>
+
+## Connection config
+
+| Field | Description |
+| --- | --- |
+| `appId` | Agora App ID. |
+| `channel` | Agora channel name. Must match `params.agora_channel` in the TEN extension. |
+| `token` | Agora RTC token for this client participant. Optional only for testing setups that allow tokenless joins. The client SDKs do not fetch tokens. |
+| `uid` | Agora UID for this client participant. Use a unique UID that does not collide with the avatar publisher UID. |
+
+## Channel notes
+
+- The user's microphone audio is published into the Agora channel. Convo AI handles the voice agent pipeline, while the Spatius avatar provider or TEN extension handles avatar output on the server side.
+- The TEN extension uses `params.agora_uid` as the avatar publisher UID. Do not reuse that UID for Web, iOS, or Android clients.
+- Generate Agora RTC tokens on your backend and pass them to clients. Do not ship an Agora App Certificate in client code.
+- No Spatius Session Token is needed on this RTC path. The client renders with externally supplied audio and motion data.
+
+## Events
+
+The `AvatarPlayer` event surface is shared across platforms.
+
+| Event | Description |
+| --- | --- |
+| `connected` / `Connected` | Connected to RTC server. |
+| `disconnected` / `Disconnected` | Disconnected from RTC server. |
+| `error` / `Error` | An error occurred. |
+| `connectionStateChanged` / `ConnectionStateChanged` | Connection state changed. |
+| `stalled` / `Stalled` | Data stream stalled with no frames. |
+
+<Note>
+When a `stalled` event fires, the avatar automatically transitions to idle animation. Consider calling `reconnect()` to recover.
+</Note>
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Convo AI Agent" icon="bot" href="/agora-convoai/convo-ai-agent">
+    Configure Spatius in the managed Convo AI start-agent request.
+  </Card>
+  <Card title="TEN Extension" icon="blocks" href="/agora-convoai/ten-extension">
+    Configure `spatius_avatar_python` in a direct TEN Framework graph.
+  </Card>
+  <Card title="RTC Adapter reference" icon="bolt" href="/sdk-reference/web-sdk/rtc-adapter">
+    Review the Web `AvatarPlayer` provider model.
+  </Card>
+</CardGroup>
