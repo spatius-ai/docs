@@ -10,10 +10,6 @@ import { AgoraConvoAiDiagram } from '/snippets/spatius-diagrams.jsx'
 **Beta:** The Spatius integration for Agora Convo AI and TEN Framework is in beta.
 </Note>
 
-Agora Convo AI Integration is a **Platform Integration**. Use it when your voice agent runs on Agora Convo AI and you want Spatius to render synchronized avatar output in the same Agora channel. Convo AI is Agora's managed conversational AI service; the Spatius integration point is the Convo AI `avatar` provider block in the start-agent request.
-
-The server-side setup publishes avatar output into the Agora channel; the client-side AvatarKit RTC packages render that stream from the channel. Web apps use `@spatius/avatarkit-rtc`, iOS apps use `AvatarKitRTC`, and Android apps use `ai.spatius:avatarkit-rtc`. The Agora channel itself is the transport.
-
 ## Architecture
 
 <Frame>
