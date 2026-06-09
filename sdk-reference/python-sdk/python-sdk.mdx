@@ -30,11 +30,11 @@ The optional encoder uses `opuslib`, which requires a working `libopus` runtime 
 - `expire_at`
 - audio bytes in a supported input format
 
-The SDK defaults to the `us-west` region. `ap-northeast` is also supported. You only need to pass endpoint URLs when using custom infrastructure.
+The SDK defaults to the `us-west` region. See [Regions](/api-reference/regions) for the current region list.
 
-## Regions and Endpoints
+## Region configuration
 
-Pass `region` to let the SDK compose endpoint URLs:
+Passing a region is enough for normal production use:
 
 ```python
 session = new_avatar_session(
@@ -43,24 +43,6 @@ session = new_avatar_session(
     avatar_id="your-avatar-id",
     region="us-west",
     expire_at=expire_at,
-)
-```
-
-The SDK composes these URLs:
-
-- Console endpoint URL: `https://console.<region>.spatius.ai/v1/console`
-- Ingress endpoint URL: `wss://api.<region>.spatius.ai/v2/driveningress`
-
-Explicit endpoint URLs override `region`:
-
-```python
-session = new_avatar_session(
-    api_key="your-api-key",
-    app_id="your-app-id",
-    avatar_id="your-avatar-id",
-    expire_at=expire_at,
-    console_endpoint_url="https://console.example.com/v1/console",
-    ingress_endpoint_url="wss://api.example.com/v2/driveningress",
 )
 ```
 
@@ -441,7 +423,7 @@ Configuration dataclass for avatar sessions.
 - `transport_frames: Callable[[bytes, bool], None]` - frame callback
 - `on_error: Callable[[Exception], None]` - error callback
 - `on_close: Callable[[], None]` - close callback
-- `region: str` - region used to compose default endpoints
+- `region: str` - Spatius region. Defaults to `us-west`; see [Regions](/api-reference/regions).
 - `console_endpoint_url: str` - optional explicit Console API URL
 - `ingress_endpoint_url: str` - optional explicit ingress WebSocket URL
 - `livekit_egress: Optional[LiveKitEgressConfig]` - LiveKit egress configuration

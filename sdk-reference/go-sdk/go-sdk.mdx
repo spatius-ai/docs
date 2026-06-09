@@ -34,7 +34,6 @@ func main() {
 		spatius.WithAPIKey("your-api-key"),
 		spatius.WithAppID("your-app-id"),
 		spatius.WithAvatarID("your-avatar-id"),
-		spatius.WithRegion("us-west"),
 		spatius.WithExpireAt(time.Now().Add(5*time.Minute).UTC()),
 		spatius.WithTransportFrames(func(data []byte, last bool) {
 			// Handle encoded motion frame payloads.
@@ -69,26 +68,11 @@ func main() {
 
 ## Region configuration
 
-The SDK defaults to `us-west`. `ap-northeast` is also supported. Passing a region is enough for normal production use:
+The SDK defaults to `us-west` when no region is provided, or when `WithRegion` receives an empty or whitespace-only value. See [Regions](/api-reference/regions) for the current region list. To set a region:
 
 ```go
 session := spatius.NewAvatarSession(
 	spatius.WithRegion("us-west"),
-)
-```
-
-The SDK composes endpoint URLs from the region:
-
-- Console endpoint URL: `https://console.<region>.spatius.ai/v1/console`
-- Ingress endpoint URL: `wss://api.<region>.spatius.ai/v2/driveningress`
-
-Explicit endpoint URLs override `WithRegion`:
-
-```go
-session := spatius.NewAvatarSession(
-	spatius.WithRegion("us-west"),
-	spatius.WithConsoleEndpointURL("https://console.example.com/v1/console"),
-	spatius.WithIngressEndpointURL("wss://api.example.com/v2/driveningress"),
 )
 ```
 
@@ -174,7 +158,7 @@ Core options:
 - `WithAppID(appID string)` - application ID.
 - `WithAvatarID(avatarID string)` - avatar ID.
 - `WithExpireAt(expireAt time.Time)` - session token expiry.
-- `WithRegion(region string)` - region used to compose default endpoint URLs.
+- `WithRegion(region string)` - region used to select the Spatius region. Empty or whitespace-only values fall back to `us-west`.
 - `WithConsoleEndpointURL(endpointURL string)` - explicit Console API URL.
 - `WithIngressEndpointURL(endpointURL string)` - explicit ingress WebSocket URL.
 
