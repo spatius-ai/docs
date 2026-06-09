@@ -1,3 +1,21 @@
+.docs-page,
+:root {
+  --spatius-selection-background: rgba(147, 153, 227, 0.22);
+  --spatius-selection-text: #11131f;
+}
+
+html.dark,
+.dark,
+[data-theme="dark"] {
+  --spatius-selection-background: rgba(173, 175, 244, 0.28);
+  --spatius-selection-text: #ffffff;
+}
+
+::selection {
+  color: var(--spatius-selection-text);
+  background: var(--spatius-selection-background);
+}
+
 .step-container {
   margin-bottom: 0.25rem !important;
 }

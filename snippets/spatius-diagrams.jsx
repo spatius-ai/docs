@@ -56,8 +56,7 @@ export const SpatiusArchitectureDiagram = () => {
           <tspan x="1249">Motion Server</tspan>
         </text>
         <rect x="1137" y="300" width="225" height="120" rx="10" fill="var(--spatius-diagram-box)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" />
-        <text x="1249" y="359" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="30" fontWeight="500">AvatarKit SDK</text>
-        <text x="1249" y="408" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="22" fontWeight="500">Web/iOS/Android/Flutter</text>
+        <text x="1249" y="360" textAnchor="middle" dominantBaseline="middle" fill="var(--spatius-diagram-ink)" fontSize="30" fontWeight="500">AvatarKit SDK</text>
         <polyline points="1238,290 1238,246" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="3" strokeLinecap="round" markerEnd="url(#spatius-arch-arrow)" />
         <polyline points="1262,246 1262,290" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="3" strokeLinecap="round" markerEnd="url(#spatius-arch-arrow)" />
         <polyline points="1365,360 1488,360" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-arch-arrow)" />
