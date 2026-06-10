@@ -35,12 +35,8 @@ import { AvatarSDK, AvatarView, AvatarManager, DrivingServiceMode } from '@spati
 
 async function init() {
   await AvatarSDK.initialize('your-spatius-app-id', {
-    region: 'us-west',
     drivingServiceMode: DrivingServiceMode.host,
   })
-
-  // `setSessionToken` is not needed on the RTC Adapter path.
-  // `DrivingServiceMode.host` does not open a Motion Server WebSocket from the client.
 
   const avatar = await AvatarManager.shared.load('your-spatius-avatar-id')
   const container = document.getElementById('avatar-container')!
@@ -49,8 +45,6 @@ async function init() {
   const provider = new AgoraProvider()
   const player = new AvatarPlayer(provider, avatarView, {
     logLevel: 'info',
-    enableJitterBuffer: true,
-    maxBufferDelayMs: 80,
   })
 
   player.on('connected', () => console.log('Connected to Agora'))
