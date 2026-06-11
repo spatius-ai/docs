@@ -1,7 +1,7 @@
 ---
 title: "RTC Adapter"
 sidebarTitle: "RTC Adapter"
-description: "Use @spatius/avatarkit-rtc as the Web transport adapter for LiveKit and future RTC providers."
+description: "Use @spatius/avatarkit-rtc as the Web transport adapter for LiveKit and Agora RTC providers."
 ---
 
 `@spatius/avatarkit-rtc` is the Web RTC transport adapter for AvatarKit. It lets a browser app render a Spatius avatar from an RTC room by connecting to the room, playing the remote audio track through WebRTC, and feeding motion frames into `@spatius/avatarkit`.
@@ -102,9 +102,25 @@ The same `AvatarPlayer` surface works across providers — code that talks to th
 import { LiveKitProvider, AgoraProvider } from '@spatius/avatarkit-rtc'
 ```
 
+## Native client access
+
+The RTC Adapter creates and owns the low-level RTC client internally. Do not create a separate LiveKit `Room` or Agora Web SDK client for avatar playback. For advanced platform features, access the owned client through `getNativeClient()`.
+
+```typescript
+import type { LiveKitRoom, AgoraClient } from '@spatius/avatarkit-rtc'
+
+const liveKitRoom = liveKitProvider.getNativeClient()  // LiveKitRoom | null
+const agoraClient = agoraProvider.getNativeClient()    // AgoraClient | null
+
+const sameLiveKitRoom = liveKitPlayer.getNativeClient() as LiveKitRoom | null
+const sameAgoraClient = agoraPlayer.getNativeClient() as AgoraClient | null
+```
+
+Use the provider method when you still have a typed provider reference. Use the `AvatarPlayer` method when your app plumbing only has the player instance. The value is `null` until the provider has a native RTC client to return.
+
 ## API
 
-For the full `AvatarPlayer` API — constructor options, `connect`, microphone control, custom audio publishing, events, reconnect, native client access, and browser compatibility — see [LiveKit Agents Integration Client](/livekit-agents/client). The signatures are exposed by the same package; only the integration narrative on that page differs.
+For the full `AvatarPlayer` API — constructor options, `connect`, microphone control, custom audio publishing, events, reconnect, and browser compatibility — see [LiveKit Agents Integration Client](/livekit-agents/client). The signatures are exposed by the same package; only the integration narrative on that page differs.
 
 ## Related guides
 
