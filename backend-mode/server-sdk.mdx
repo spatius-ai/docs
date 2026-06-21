@@ -20,7 +20,7 @@ flowchart LR
 | --- | --- |
 | **Authenticate** | Use the backend-only API Key to create and start an avatar session. |
 | **Connect to Motion Server** | Own the WebSocket connection to Spatius. |
-| **Send avatar speech audio** | Send the TTS output or other avatar speech audio to Motion Server. |
+| **Send avatar speech audio** | Send the TTS output or other avatar speech audio to Motion Server. See [Audio](/concepts/audio). |
 | **Receive encoded messages** | Receive the audio and motion messages your clients will render. |
 | **Hand off to transport** | Deliver those encoded messages to clients over your own WebSocket, LiveKit Room, or another transport. |
 

@@ -270,6 +270,8 @@ await controller.start()
 
 Send avatar speech audio. Returns the `conversationId` for the current round.
 
+For audio source and timing guidance, see [Audio](/concepts/audio).
+
 ```typescript
 const conversationId = controller.send(
   audioData,  // PCM16, mono, ArrayBuffer

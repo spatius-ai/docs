@@ -325,3 +325,119 @@ export const HostedModeOwnTransportDiagram = () => {
     </div>
   )
 }
+
+export const AudioSendTimingDiagram = () => {
+  return (
+    <div className="spatius-diagram spatius-audio-timing-diagram not-prose" aria-label="Comparison of generated audio and paced audio for client playback buffering">
+      <svg viewBox="0 0 980 980" role="img">
+        <defs>
+          <marker id="spatius-audio-timing-good" viewBox="0 0 12 10" refX="10.5" refY="5" markerWidth="4.5" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0 0L12 5L0 10Z" fill="var(--spatius-diagram-ink)" />
+          </marker>
+          <marker id="spatius-audio-timing-bad" viewBox="0 0 12 10" refX="10.5" refY="5" markerWidth="4.5" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0 0L12 5L0 10Z" fill="var(--spatius-diagram-warning)" />
+          </marker>
+        </defs>
+
+        <text x="305" y="54" textAnchor="middle" fill="var(--spatius-diagram-red)" fontSize="24" fontWeight="600">Generated Audio Path</text>
+        <text x="770" y="54" textAnchor="middle" fill="var(--spatius-diagram-brand)" fontSize="24" fontWeight="600">Inference + Playback</text>
+
+        <rect x="40" y="100" width="530" height="340" rx="18" fill="var(--spatius-diagram-owned)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" />
+        <text x="305" y="136" textAnchor="middle" fill="var(--spatius-diagram-red)" fontSize="18" fontWeight="600">Works: send new TTS chunks immediately</text>
+
+        <rect x="80" y="180" width="170" height="102" rx="12" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" />
+        <text x="165" y="222" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="28" fontWeight="500">TTS</text>
+        <text x="165" y="254" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="18" fontWeight="500">new chunks</text>
+
+        <rect x="360" y="180" width="170" height="102" rx="12" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" />
+        <text x="445" y="220" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="25" fontWeight="500">SDK send</text>
+        <text x="445" y="252" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="18" fontWeight="500">immediate</text>
+
+        <polyline points="262,231 348,231" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-audio-timing-good)" />
+
+        <text x="85" y="334" fill="var(--spatius-diagram-muted)" fontSize="17" fontWeight="600">generation time</text>
+        <line x1="85" y1="360" x2="525" y2="360" stroke="var(--spatius-diagram-stroke)" strokeWidth="4" strokeLinecap="round" />
+        <g className="spatius-timing-fast-chunks">
+          <rect x="255" y="336" width="48" height="48" rx="8" fill="var(--spatius-diagram-managed)" stroke="var(--spatius-diagram-brand)" strokeWidth="2.5" />
+          <text x="279" y="367" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="18" fontWeight="700">1</text>
+          <rect x="318" y="336" width="48" height="48" rx="8" fill="var(--spatius-diagram-managed)" stroke="var(--spatius-diagram-brand)" strokeWidth="2.5" />
+          <text x="342" y="367" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="18" fontWeight="700">2</text>
+          <rect x="381" y="336" width="48" height="48" rx="8" fill="var(--spatius-diagram-managed)" stroke="var(--spatius-diagram-brand)" strokeWidth="2.5" />
+          <text x="405" y="367" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="18" fontWeight="700">3</text>
+        </g>
+        <text x="305" y="416" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="17" fontWeight="500">chunks arrive ahead of playback</text>
+
+        <rect x="620" y="100" width="300" height="340" rx="18" fill="var(--spatius-diagram-managed)" stroke="var(--spatius-diagram-brand)" strokeWidth="3" />
+        <rect x="670" y="158" width="200" height="120" rx="12" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-brand)" strokeWidth="3" />
+        <text x="770" y="203" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="28" fontWeight="500">
+          <tspan x="770">Motion</tspan>
+          <tspan x="770" dy="36">Server</tspan>
+        </text>
+        <g className="spatius-timing-window-pulse">
+          <rect x="682" y="318" width="52" height="46" rx="8" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-brand)" strokeWidth="2.5" />
+          <rect x="744" y="318" width="52" height="46" rx="8" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-brand)" strokeWidth="2.5" />
+          <rect x="806" y="318" width="52" height="46" rx="8" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-brand)" strokeWidth="2.5" />
+        </g>
+        <text x="770" y="396" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="17" fontWeight="500">buffer stays ahead</text>
+
+        <polyline points="540,231 658,231" className="spatius-diagram-flow" fill="none" stroke="var(--spatius-diagram-ink)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-audio-timing-good)" />
+        <circle className="spatius-timing-packet spatius-timing-packet-good" cx="550" cy="231" r="9" fill="var(--spatius-diagram-brand)" />
+        <circle className="spatius-timing-packet spatius-timing-packet-good spatius-timing-delay-1" cx="550" cy="231" r="9" fill="var(--spatius-diagram-brand)" />
+        <circle className="spatius-timing-packet spatius-timing-packet-good spatius-timing-delay-2" cx="550" cy="231" r="9" fill="var(--spatius-diagram-brand)" />
+        <text x="600" y="207" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="17" fontWeight="600">fast</text>
+
+        <text x="305" y="526" textAnchor="middle" fill="var(--spatius-diagram-warning)" fontSize="24" fontWeight="600">Paced Audio Path</text>
+        <text x="770" y="526" textAnchor="middle" fill="var(--spatius-diagram-warning)" fontSize="24" fontWeight="600">Playback Buffer</text>
+
+        <rect x="40" y="570" width="530" height="340" rx="18" fill="var(--spatius-diagram-warning-surface)" stroke="var(--spatius-diagram-warning-stroke)" strokeWidth="3" />
+        <text x="305" y="606" textAnchor="middle" fill="var(--spatius-diagram-warning)" fontSize="18" fontWeight="600">Avoid: send 1x playback-speed output</text>
+
+        <rect x="80" y="650" width="170" height="102" rx="12" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" />
+        <text x="165" y="690" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="24" fontWeight="500">Paced audio</text>
+        <text x="165" y="722" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="18" fontWeight="500">already heard</text>
+
+        <rect x="360" y="650" width="170" height="102" rx="12" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-stroke)" strokeWidth="3" />
+        <text x="445" y="690" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="25" fontWeight="500">Decode</text>
+        <text x="445" y="722" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="18" fontWeight="500">paced at 1x</text>
+
+        <polyline points="262,701 348,701" className="spatius-diagram-flow spatius-timing-flow-bad" fill="none" stroke="var(--spatius-diagram-warning)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-audio-timing-bad)" />
+
+        <text x="85" y="804" fill="var(--spatius-diagram-muted)" fontSize="17" fontWeight="600">playback time</text>
+        <line x1="85" y1="830" x2="525" y2="830" stroke="var(--spatius-diagram-stroke)" strokeWidth="4" strokeLinecap="round" />
+        <g className="spatius-timing-slow-chunks">
+          <rect x="225" y="806" width="48" height="48" rx="8" fill="var(--spatius-diagram-warning-surface)" stroke="var(--spatius-diagram-warning)" strokeWidth="2.5" />
+          <text x="249" y="837" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="18" fontWeight="700">1</text>
+          <rect x="347" y="806" width="48" height="48" rx="8" fill="var(--spatius-diagram-warning-surface)" stroke="var(--spatius-diagram-warning)" strokeWidth="2.5" />
+          <text x="371" y="837" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="18" fontWeight="700">2</text>
+          <rect x="469" y="806" width="48" height="48" rx="8" fill="var(--spatius-diagram-warning-surface)" stroke="var(--spatius-diagram-warning)" strokeWidth="2.5" />
+          <text x="493" y="837" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="18" fontWeight="700">3</text>
+        </g>
+        <text x="305" y="886" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="17" fontWeight="500">chunks arrive only when listeners hear them</text>
+
+        <rect x="620" y="570" width="300" height="340" rx="18" fill="var(--spatius-diagram-warning-surface)" stroke="var(--spatius-diagram-warning)" strokeWidth="3" />
+        <rect x="670" y="625" width="200" height="118" rx="12" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-warning)" strokeWidth="3" />
+        <text x="770" y="670" textAnchor="middle" fill="var(--spatius-diagram-ink)" fontSize="28" fontWeight="500">
+          <tspan x="770">Motion</tspan>
+          <tspan x="770" dy="36">Server</tspan>
+        </text>
+        <text x="770" y="772" textAnchor="middle" fill="var(--spatius-diagram-warning)" fontSize="20" fontWeight="700">motion returned</text>
+        <text x="770" y="884" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="18" fontWeight="500">playback can stall</text>
+
+        <polyline points="540,701 658,701" className="spatius-diagram-flow spatius-timing-flow-bad" fill="none" stroke="var(--spatius-diagram-warning)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#spatius-audio-timing-bad)" />
+        <circle className="spatius-timing-packet spatius-timing-packet-bad" cx="550" cy="701" r="9" fill="var(--spatius-diagram-warning)" />
+        <text x="600" y="677" textAnchor="middle" fill="var(--spatius-diagram-muted)" fontSize="17" fontWeight="600">1x</text>
+
+        <g className="spatius-timing-window-pulse">
+          <rect x="682" y="802" width="52" height="46" rx="8" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-warning)" strokeWidth="2.5" />
+          <rect x="744" y="802" width="52" height="46" rx="8" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-warning)" strokeWidth="2.5" />
+          <rect x="806" y="802" width="52" height="46" rx="8" fill="var(--spatius-diagram-node)" stroke="var(--spatius-diagram-warning)" strokeWidth="2.5" />
+        </g>
+        <g className="spatius-timing-blocker">
+          <line x1="742" y1="795" x2="798" y2="855" stroke="var(--spatius-diagram-warning)" strokeWidth="8" strokeLinecap="round" />
+          <line x1="798" y1="795" x2="742" y2="855" stroke="var(--spatius-diagram-warning)" strokeWidth="8" strokeLinecap="round" />
+        </g>
+
+      </svg>
+    </div>
+  )
+}

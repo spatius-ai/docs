@@ -39,7 +39,7 @@ This token server is not part of the avatar runtime. It does not send audio, rec
 |-------------|-------------|
 | **App ID** | Obtained from [Spatius Studio](https://app.spatius.ai). |
 | **Session Token** | Issued from your backend (max 24 h validity). See [Credentials](/getting-started/credentials). |
-| **Audio format** | PCM16, mono, configurable sample rate (default 16 kHz). |
+| **Audio format** | PCM16, mono, configurable sample rate (default 16 kHz). See [Audio](/concepts/audio). |
 
 <Note>
 **Authentication flow:**
@@ -70,6 +70,8 @@ If the WebSocket connection fails within 15 seconds, the SDK enters **audio-only
 ### ConversationId
 
 Every `send()` call returns a `conversationId` that identifies the current conversation round. When `end: true` is passed, it marks the end of audio input. The avatar continues playing remaining animation until finished, then automatically returns to idle (notified via `onConversationState`). Sending new audio after that starts a new round and interrupts any ongoing playback.
+
+For audio source and timing guidance, see [Audio](/concepts/audio).
 
 ## Next steps
 

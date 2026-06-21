@@ -4,6 +4,8 @@ sidebarTitle: "Audio"
 description: "The source of the Avatar's speech"
 ---
 
+import { AudioSendTimingDiagram } from '/snippets/spatius-diagrams.jsx'
+
 **Audio** is the source of the Avatar's speech - the audio that the digital human should "speak".
 
 ## Key Facts
@@ -11,6 +13,42 @@ description: "The source of the Avatar's speech"
 - **It is not user microphone audio**: In voice-agent scenarios, user speech usually goes through ASR -> LLM -> TTS. **The TTS output** is the avatar speech audio. Spatius does not consume user microphone audio by default.
 - **It is sent to Motion Server**: Avatar speech audio is the input to Motion Server. Motion Server uses it to generate synchronized motion data.
 - **Who sends it**: In [Direct Mode](/direct-mode/overview), the client sends it. In [LiveKit Agents Integration](/livekit-agents/overview), it is handled by `livekit-plugins-spatius`. In [Agora Convo AI Integration](/agora-convoai/overview), it is handled by the Spatius avatar provider or `spatius_avatar_python` for direct TEN Framework graphs. In [Backend Mode](/backend-mode/overview), the developer maintains the flow.
+- **Do not pace it like playback audio**: Send avatar speech audio when it is generated. Do not wait for real-time playback timing or feed paced playback output, such as RTC or WebSocket audio that arrives at 1x speed, back into Spatius.
+
+## Send timing
+
+Send avatar speech audio to Spatius when the speech audio is produced, not when the audio would be heard during playback.
+
+Motion Server is an audio-to-motion converter. It performs inference over buffered audio windows and can generate motion data from any valid audio you send, even if the audio arrives slowly. The problem with 1x playback-speed input happens later, when AvatarKit tries to play audio and motion data in sync.
+
+Avatar playback consumes ready audio and motion continuously. Motion Server, however, returns motion after it has enough audio buffered for the next inference window. The first inference window is optimized for fast startup, while later windows are larger. If your input arrives only at playback speed, the client may start playback from the first ready segment, then consume that segment before the next motion segment is ready. The result is a playback buffer stall.
+
+For TTS output, send chunks at **TTS generation speed**, which is usually faster than real-time playback speed. This gives Motion Server enough audio ahead of playback so AvatarKit can keep a healthy audio + motion buffer.
+
+<Warning>
+Do not pace audio sends by wall-clock playback time, and do not capture paced playback output and feed it back into AvatarKit as "new" audio. This includes RTC output and WebSocket APIs that return audio at 1x playback speed. Motion Server can still infer motion from that audio, but AvatarKit playback is likely to stall because the next synchronized audio + motion segment may not be ready before the current one is consumed.
+</Warning>
+
+Use this rule of thumb:
+
+- **Good**: TTS provider emits a PCM chunk -> send that chunk to AvatarKit or the Server SDK immediately.
+- **Good**: The final TTS chunk is sent with the SDK's end-of-input flag (`end: true`, `end=True`, or platform equivalent).
+- **Avoid**: Receiving paced audio at playback speed, decoding it, and sending it to AvatarKit as the source audio.
+- **Avoid**: Sleeping between chunks to match the chunk's audio duration.
+
+<Frame>
+  <AudioSendTimingDiagram />
+</Frame>
+
+## If you only have paced audio
+
+If your only available source is paced playback-speed audio, add a **pre-buffer** before sending it to AvatarKit or the Server SDK.
+
+Instead of forwarding each 1x chunk immediately, accumulate enough audio locally to cover Motion Server's startup window and give the next inference window time to complete. Then start sending from that local buffer while continuing to fill it from the paced source. This adds startup latency, but it gives AvatarKit a much better chance of keeping synchronized audio + motion data available during playback.
+
+Use this pre-buffer at the start of **every turn**. Do not only pre-buffer the first response in a session; each new avatar speech turn needs its own buffer before playback begins.
+
+As a practical starting point, pre-buffer **3.5 seconds** of audio before sending it. If you want a safer value, use **4 seconds**. Treat this duration as an application-level tuning value rather than a fixed SDK constant. Increase it if you still observe playback stalls, and reset it when you interrupt or start a new turn.
 
 ## Format
 

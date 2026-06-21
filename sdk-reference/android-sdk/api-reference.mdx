@@ -260,6 +260,8 @@ fun interrupt()
 <Accordion title="send(audioData, end)">
 Sends audio to the avatar driving service.
 
+For audio source and timing guidance, see [Audio](/concepts/audio).
+
 ```kotlin
 suspend fun send(audioData: ByteArray, end: Boolean = false): String
 ```
