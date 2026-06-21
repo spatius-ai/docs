@@ -54,6 +54,9 @@ html.dark,
   --spatius-diagram-muted-dark: rgba(64, 67, 86, 0.52);
   --spatius-diagram-glow: rgba(116, 120, 231, 0.28);
   --spatius-diagram-edge: rgba(255, 255, 255, 0.72);
+  --spatius-diagram-warning: #d65f66;
+  --spatius-diagram-warning-surface: rgba(214, 95, 102, 0.1);
+  --spatius-diagram-warning-stroke: rgba(214, 95, 102, 0.48);
   width: 100%;
   margin: 0;
   overflow: visible;
@@ -146,6 +149,66 @@ html.dark,
   animation: spatius-diagram-flow 1.6s linear infinite;
 }
 
+.spatius-audio-timing-diagram {
+  --spatius-timing-good-distance: 108px;
+  --spatius-timing-bad-distance: 108px;
+  --spatius-diagram-warning: #c85b63;
+  --spatius-diagram-warning-surface: rgba(200, 91, 99, 0.08);
+  --spatius-diagram-warning-stroke: rgba(200, 91, 99, 0.42);
+}
+
+.spatius-audio-timing-diagram rect:not([fill="none"]) {
+  filter: drop-shadow(0 12px 18px rgba(20, 22, 36, 0.08));
+}
+
+.spatius-timing-packet {
+  filter: drop-shadow(0 0 8px var(--spatius-diagram-glow));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.spatius-timing-packet-good {
+  animation: spatius-timing-packet-good 1.45s ease-in-out infinite;
+}
+
+.spatius-timing-packet-bad {
+  animation: spatius-timing-packet-bad 4.2s ease-in-out infinite;
+}
+
+.spatius-timing-delay-1 {
+  animation-delay: -0.48s;
+}
+
+.spatius-timing-delay-2 {
+  animation-delay: -0.96s;
+}
+
+.spatius-timing-window-pulse rect {
+  animation: spatius-timing-window-pulse 2.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.spatius-timing-window-pulse rect:nth-child(2) {
+  animation-delay: -1.45s;
+}
+
+.spatius-timing-window-pulse rect:nth-child(3) {
+  animation-delay: -0.72s;
+}
+
+.spatius-timing-blocker {
+  animation: spatius-timing-blocker 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(200, 91, 99, 0.22));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.spatius-timing-flow-bad {
+  animation-duration: 3.2s;
+  filter: drop-shadow(0 0 4px rgba(200, 91, 99, 0.18));
+}
+
 @keyframes spatius-audio-bar {
   0%,
   100% {
@@ -164,6 +227,66 @@ html.dark,
 @keyframes spatius-diagram-flow {
   to {
     stroke-dashoffset: -24;
+  }
+}
+
+@keyframes spatius-timing-packet-good {
+  0% {
+    opacity: 0;
+    transform: translateX(0) scale(0.82);
+  }
+
+  15%,
+  74% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(var(--spatius-timing-good-distance)) scale(1);
+  }
+}
+
+@keyframes spatius-timing-packet-bad {
+  0% {
+    opacity: 0;
+    transform: translateX(0) scale(0.82);
+  }
+
+  24%,
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(var(--spatius-timing-bad-distance)) scale(1);
+  }
+}
+
+@keyframes spatius-timing-window-pulse {
+  0%,
+  100% {
+    opacity: 0.52;
+    transform: scale(0.96);
+  }
+
+  45% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes spatius-timing-blocker {
+  0%,
+  100% {
+    opacity: 0.78;
+    transform: scale(0.96);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
   }
 }
 
@@ -220,6 +343,12 @@ html.dark,
     animation: none;
     opacity: 0;
   }
+
+  .spatius-timing-packet,
+  .spatius-timing-window-pulse rect,
+  .spatius-timing-blocker {
+    animation: none;
+  }
 }
 
 html.dark .spatius-diagram,
@@ -242,6 +371,9 @@ html.dark .spatius-diagram,
   --spatius-diagram-muted-dark: rgba(230, 230, 240, 0.5);
   --spatius-diagram-glow: rgba(147, 153, 227, 0.46);
   --spatius-diagram-edge: rgba(255, 255, 255, 0.2);
+  --spatius-diagram-warning: #ff8a92;
+  --spatius-diagram-warning-surface: rgba(255, 138, 146, 0.16);
+  --spatius-diagram-warning-stroke: rgba(255, 138, 146, 0.58);
 }
 
 html.dark .spatius-agora-diagram,
@@ -249,6 +381,14 @@ html.dark .spatius-agora-diagram,
 [data-theme="dark"] .spatius-agora-diagram {
   --spatius-diagram-agora-surface: rgba(91, 193, 251, 0.16);
   --spatius-diagram-agora-stroke: rgba(91, 193, 251, 0.62);
+}
+
+html.dark .spatius-audio-timing-diagram,
+.dark .spatius-audio-timing-diagram,
+[data-theme="dark"] .spatius-audio-timing-diagram {
+  --spatius-diagram-warning: #f27f88;
+  --spatius-diagram-warning-surface: rgba(242, 127, 136, 0.13);
+  --spatius-diagram-warning-stroke: rgba(242, 127, 136, 0.52);
 }
 
 /* Walkthrough pages: keep long code blocks in fixed-height scroll areas. */
