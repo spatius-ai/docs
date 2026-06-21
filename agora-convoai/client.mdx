@@ -90,7 +90,9 @@ await player.unpublishAudio()
 `unpublishAudio()` does **not** stop the track. You are responsible for calling `track.stop()` to release the resource.
 </Note>
 
-Access the underlying Agora client only for advanced features:
+### Native client access
+
+The Web adapter creates and owns the Agora Web SDK client internally. For advanced Agora features, access that owned client through `getNativeClient()` instead of creating a second client for avatar playback:
 
 ```typescript
 import type { AgoraClient } from '@spatius/avatarkit-rtc'
@@ -100,6 +102,8 @@ const sameClient = player.getNativeClient() as AgoraClient | null
 
 console.log('Agora connection state:', client?.connectionState)
 ```
+
+Use the provider method when you still have the typed `AgoraProvider`. Use the `AvatarPlayer` method when your app plumbing only has the player instance. The value is `null` until the provider has an Agora client to return.
 
 </Tab>
 <Tab title="iOS">
