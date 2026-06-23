@@ -57,22 +57,6 @@ await AvatarSDK.initialize('your-app-id', {
 })
 ```
 
-<Note>
-`region` is accepted at runtime by `@spatius/avatarkit@1.0.0`, but the published TypeScript types do not yet expose it on `Configuration`. To pass it without a type error, drop one declaration-merging file into your project:
-
-```typescript title="avatarkit-region.d.ts"
-import '@spatius/avatarkit'
-
-declare module '@spatius/avatarkit' {
-  interface Configuration {
-    readonly region?: string
-  }
-}
-```
-
-A future SDK release will add `region` natively and this augmentation can be removed. Supported regions are `'us-west'` and `'ap-northeast'`.
-</Note>
-
 #### setSessionToken(token)
 
 Set the Session Token used to authenticate the Motion Server WebSocket. **Only required in Direct Mode** (`DrivingServiceMode.sdk`); `AvatarController.start()` opens that WebSocket and authenticates with the token.
@@ -346,7 +330,7 @@ interface Configuration {
 }
 ```
 
-See [Regions](/api-reference/regions) for endpoint details and override options. See the Note in [`initialize()`](#initialize-appid-configuration) about the `region` type-augmentation pattern needed for `@spatius/avatarkit@1.0.0`.
+`region` selects the Spatius deployment region. It defaults to `'us-west'`; supported values are `'us-west'` and `'ap-northeast'`. See [Regions](/api-reference/regions) for endpoint details and override options.
 
 ### DrivingServiceMode
 
