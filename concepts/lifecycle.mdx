@@ -80,7 +80,7 @@ Authentication differs by integration path. Only Direct Mode requires the client
 | **Direct Mode** | A valid **Session Token** set via `AvatarSDK.setSessionToken()` before `controller.start()`. Your backend exchanges your API Key for the Session Token via the Spatius Console API, then returns it to the client. | API Key on your backend; Session Token issued per session. |
 | **LiveKit Agents Integration** | A **LiveKit room token** to join the room. No Spatius Session Token in the client. | API Key + App ID in the agent worker (`livekit-plugins-spatius`). |
 | **Agora Convo AI Integration** | An **Agora RTC token** to join the channel. No Spatius Session Token in the client. | API Key + App ID in the Convo AI `avatar` provider block, or in the TEN graph when using `spatius_avatar_python`. |
-| **Backend Mode** | Whatever the backend's transport requires (e.g. its own auth token). No Spatius Session Token in the client. | API Key + App ID on the backend (used by the Spatius Server SDK to talk to Motion Server). |
+| **Backend Mode** | Whatever the backend's transport requires (e.g. its own auth token). No Spatius Session Token in the client. | API Key + App ID on the backend (used by the Server SDK to talk to Motion Server). |
 
 The API Key must only ever live on your backend.
 
@@ -98,8 +98,8 @@ Use `AvatarController` to start connections, send and receive data, and control 
 |------|------------------|--------------------|
 | **Direct Mode** | Client-side AvatarKit connects directly to Motion Server. | Set the Session Token, call `controller.start()`, then call `send(audio, end)` to send audio. |
 | **LiveKit Agents Integration** | The agent worker starts `livekit-plugins-spatius`, and Motion Server pushes data into the LiveKit room. | The client joins the room, and AvatarKit automatically renders from the room. |
-| **Agora Convo AI Integration** | The Convo AI avatar provider or TEN extension starts the Spatius server session, and Motion Server pushes data into the Agora channel. | The client joins the channel, and AvatarKit automatically renders from the channel. |
-| **Backend Mode** | Backend Server SDK connects to Motion Server. | The backend starts the session and feeds encoded audio and motion messages to the client's `yield()` through your custom transport. |
+| **Agora Convo AI Integration** | The Convo AI avatar provider or TEN extension starts the Motion Server session, and Motion Server pushes data into the Agora channel. | The client joins the channel, and AvatarKit automatically renders from the channel. |
+| **Backend Mode** | Backend Server SDK connects to Motion Server. | The backend starts the session and feeds encoded audio payloads and motion data payloads to the client through your custom transport. |
 
 <Warning>
 Do not treat `controller.start()` as a universal connection step. It is only the Direct Mode connection path. In Backend Mode and Platform Integrations, the Motion Server connection is established outside the client.
@@ -109,7 +109,7 @@ Do not treat `controller.start()` as a universal connection step. It is only the
 |--------|---------|
 | `start()` | Starts the Motion Server connection in Direct Mode integrations. |
 | `send(audio, end)` | Sends avatar speech audio in Direct Mode integrations. |
-| `yieldAudioData()` / `yieldFramesData()` | Feeds encoded audio and motion messages in Backend Mode integrations. |
+| `yieldAudioData()` / `yieldFramesData()` | Feeds encoded audio payloads and motion data payloads in Backend Mode integrations. |
 | `interrupt()` | Interrupts the current response and clears buffers. |
 | `pause()` / `resume()` | Pauses or resumes while keeping buffers. |
 | `close()` | Closes the connection. |

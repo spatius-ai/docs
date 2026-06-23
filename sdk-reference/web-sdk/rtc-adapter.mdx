@@ -4,7 +4,7 @@ sidebarTitle: "RTC Adapter"
 description: "Use @spatius/avatarkit-rtc as the Web transport adapter for LiveKit and Agora RTC providers."
 ---
 
-`@spatius/avatarkit-rtc` is the Web RTC transport adapter for AvatarKit. It lets a browser app render a Spatius avatar from an RTC room by connecting to the room, playing the remote audio track through WebRTC, and feeding motion frames into `@spatius/avatarkit`.
+`@spatius/avatarkit-rtc` is the Web RTC transport adapter for AvatarKit. It lets a browser app render a Spatius avatar from an RTC room by connecting to the room, playing the remote audio track through WebRTC, and feeding motion data into `@spatius/avatarkit`.
 
 ## What it is
 
@@ -76,7 +76,7 @@ The RTC Adapter is a thin layer on top of `@spatius/avatarkit`:
 1. It initializes the underlying SDK with `DrivingServiceMode.host` so the avatar accepts externally driven motion data.
 2. A **provider** opens an RTC connection to the room. This page documents and demos `LiveKitProvider`; `AgoraProvider` is also exported by `@spatius/avatarkit-rtc` with the same `AvatarPlayer` surface.
 3. The provider publishes the local microphone track (when `startPublishing()` is called) and subscribes to the remote audio track and the motion data stream published by Motion Server.
-4. The browser plays the remote audio track through WebRTC. The RTC Adapter feeds motion frames into `@spatius/avatarkit` for local rendering.
+4. The browser plays the remote audio track through WebRTC. The RTC Adapter feeds motion data into `@spatius/avatarkit` for local rendering.
 
 <Warning>
 **Do not call `yieldAudioData()` or `yieldFramesData()` manually when using the RTC Adapter.** The adapter owns the data flow from the room to the renderer. Manual feeds bypass the provider and corrupt playback timing.

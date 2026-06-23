@@ -45,7 +45,7 @@ await AvatarSDK.initialize(
 await AvatarSDK.setSessionToken(sessionToken);
 ```
 
-Use `DrivingServiceMode.sdk` for [Direct Mode](/direct-mode/overview). Use `DrivingServiceMode.host` when your Flutter app receives audio and motion messages from a [Backend Mode](/backend-mode/overview).
+Use `DrivingServiceMode.sdk` for [Direct Mode](/direct-mode/overview). Use `DrivingServiceMode.host` when your Flutter app receives encoded audio payloads and motion data payloads from a [Backend Mode](/backend-mode/overview).
 
 ## Load an avatar
 
@@ -87,7 +87,7 @@ controller.send(audioBytes, end: isLastChunk);
 
 For audio source and timing guidance, see [Audio](/concepts/audio).
 
-For Backend Mode input, feed audio and motion messages received from your backend:
+For Backend Mode input, feed encoded audio payloads and motion data payloads received from your backend:
 
 ```dart
 final conversationId = await controller.yieldAudioData(audioBytes, end: isLastChunk);

@@ -1,16 +1,16 @@
 ---
 title: "Backend Mode Server SDK"
 sidebarTitle: "Server"
-description: "Use a Spatius Server SDK on your backend to connect to Motion Server."
+description: "Use the Server SDK on your backend to connect to Motion Server."
 ---
 
-The Server SDK is the required backend side of Backend Mode Integration. It authenticates with your Spatius API Key, opens the Motion Server connection, sends avatar speech audio, and receives encoded audio and motion messages.
+The Server SDK is the required backend side of Backend Mode Integration. It authenticates with your Spatius API Key, opens the Motion Server connection, sends avatar speech audio, and receives encoded audio payloads and motion data payloads.
 
 ```mermaid
 flowchart LR
-    A["Your backend<br/>(ASR / LLM / TTS)"] -->|avatar speech audio| B["Spatius Server SDK"]
+    A["Your backend<br/>(ASR / LLM / TTS)"] -->|avatar speech audio| B["Server SDK"]
     B -->|API Key + App ID + Avatar ID| C["Motion Server"]
-    C -->|encoded audio + motion messages| B
+    C -->|encoded audio payloads + motion data payloads| B
     B -->|your transport| D["Client SDK"]
 ```
 
@@ -21,8 +21,8 @@ flowchart LR
 | **Authenticate** | Use the backend-only API Key to create and start an avatar session. |
 | **Connect to Motion Server** | Own the WebSocket connection to Spatius. |
 | **Send avatar speech audio** | Send the TTS output or other avatar speech audio to Motion Server. See [Audio](/concepts/audio). |
-| **Receive encoded messages** | Receive the audio and motion messages your clients will render. |
-| **Hand off to transport** | Deliver those encoded messages to clients over your own WebSocket, LiveKit Room, or another transport. |
+| **Receive encoded payloads** | Receive the encoded audio payloads and motion data payloads your clients will render. |
+| **Hand off to transport** | Deliver those encoded payloads to clients over your own WebSocket, LiveKit Room, or another transport. |
 
 <Note>
 Client apps do not use your API Key. In Backend Mode Integration, your backend owns the Spatius credentials and Motion Server connection.

@@ -311,10 +311,10 @@ const conversationId = controller.yieldAudioData(audioData, false)
 
 #### yieldFramesData(frames, conversationId)
 
-Provide encoded motion frames when using `DrivingServiceMode.host`. The `conversationId` must match the one returned by the corresponding `yieldAudioData()` call.
+Provide motion data payloads when using `DrivingServiceMode.host`. The `conversationId` must match the one returned by the corresponding `yieldAudioData()` call.
 
 ```typescript
-controller.yieldFramesData(motionFrames, conversationId)
+controller.yieldFramesData(motionDataPayloads, conversationId)
 ```
 
 ### Common methods

@@ -14,6 +14,17 @@ LiveKit Agents is the platform integration; the [RTC Adapter](/sdk-reference/web
 **Web Only:** The current AvatarKit RTC client demo path targets Web. LiveKit ships iOS and Android client SDKs, but Spatius does not yet provide iOS or Android demos for this path.
 </Note>
 
+## At a glance
+
+| Dimension | LiveKit Agents Integration |
+| --- | --- |
+| **Dev effort** | 🟢 Low if you already use LiveKit Agents; 🟡 Medium if you are adopting LiveKit too. |
+| **Latency profile** | ⚡ Ultra-low; agent audio is handled in the LiveKit worker and avatar output returns through the room. |
+| **You build** | 🎙️ LiveKit Agents worker wiring, 🔌 Spatius plugin configuration, 🎟️ LiveKit token flow, and 🌐 Web RTC client. |
+| **You do not build** | 🚫 A custom Server SDK pipeline or downstream transport. |
+| **Best first demo** | 🚀 [LiveKit Agents Integration quickstart](/quickstarts/livekit-agents). |
+| **Client support** | 🌐 Web today |
+
 ## Architecture
 
 <Frame>
@@ -25,7 +36,7 @@ LiveKit Agents is the platform integration; the [RTC Adapter](/sdk-reference/web
 - **Motion Server** generates motion data from the agent audio and publishes the synchronized audio + motion stream back into the room.
 - **AvatarKit RTC client** joins the room and renders the avatar.
 
-Spatius is not a video streaming service. Even when you use LiveKit as the transport layer and LiveKit Agents as the voice agent framework, no video frames are transported through LiveKit. Spatius sends lightweight motion data; `@spatius/avatarkit` renders the avatar locally in the browser.
+Spatius is not a video streaming service. Even when you use LiveKit as the transport layer and LiveKit Agents as the voice agent framework, LiveKit transports avatar audio and motion data, not finished avatar video. `@spatius/avatarkit` renders the avatar locally in the browser.
 
 ## Frontend installation
 
@@ -170,7 +181,7 @@ If you already use [LiveKit Agents](https://docs.livekit.io/agents/), add `livek
 Required environment variables:
 
 - Spatius: `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`
-- Optional region: `SPATIUS_REGION` defaults to `us-west`; `ap-northeast` is also supported
+- Optional region: `SPATIUS_REGION` defaults to `us-west`
 - LiveKit: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`
 
 Create an `AvatarSession` and start it with your agent session and room:

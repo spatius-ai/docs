@@ -4,7 +4,7 @@ sidebarTitle: "Golang"
 description: "Using the Spatius Golang SDK"
 ---
 
-The Go SDK creates Spatius avatar sessions from backend services. It requests a short-lived session token from the Console API, opens the ingress WebSocket, sends audio, and returns encoded motion frame payloads through callbacks.
+The Go SDK creates Spatius avatar sessions from backend services. It requests a short-lived session token from the Console API, opens the ingress WebSocket, sends audio, and returns motion data payloads through callbacks.
 
 ## Install
 
@@ -36,7 +36,7 @@ func main() {
 		spatius.WithAvatarID("your-avatar-id"),
 		spatius.WithExpireAt(time.Now().Add(5*time.Minute).UTC()),
 		spatius.WithTransportFrames(func(data []byte, last bool) {
-			// Handle encoded motion frame payloads.
+			// Handle motion data payloads.
 		}),
 		spatius.WithOnError(func(err error) {
 			// Handle async session errors.
@@ -85,7 +85,7 @@ session := spatius.NewAvatarSession(
 5. Call `Interrupt()` when playback should stop.
 6. Call `Close()` when the session is done.
 
-`SendAudio` returns the request ID associated with the audio. The callback passed to `WithTransportFrames` receives encoded motion frame payloads and a `last` flag.
+`SendAudio` returns the request ID associated with the audio. The callback passed to `WithTransportFrames` receives motion data payloads and a `last` flag.
 
 For audio source and timing guidance, see [Audio](/concepts/audio).
 
@@ -173,7 +173,7 @@ Audio options:
 
 Callbacks:
 
-- `WithTransportFrames(func([]byte, bool))` - receives encoded motion frame payloads.
+- `WithTransportFrames(func([]byte, bool))` - receives motion data payloads.
 - `WithOnEncodedAudio(func(string, []byte))` - receives internally encoded audio by request ID.
 - `WithOnError(func(error))` - receives async session errors.
 - `WithOnClose(func())` - runs when the session closes.

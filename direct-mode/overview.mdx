@@ -16,6 +16,17 @@ flowchart LR
     B --> D["🖥️ Avatar Rendering"]
 ```
 
+## At a glance
+
+| Dimension | Direct Mode Integration |
+| --- | --- |
+| **Dev effort** | 🟢 Low |
+| **Latency profile** | 🕒 Moderate; the client sends avatar speech audio to Motion Server directly. |
+| **You build** | 🔑 A small Session Token endpoint and 🧩 the client AvatarKit integration. |
+| **You do not build** | 🚫 A runtime relay server, Server SDK pipeline, or RTC transport. |
+| **Best first demo** | 🌐 [Web SDK quickstart](/quickstarts/web-sdk), then native or Flutter quickstarts as needed. |
+| **Client support** | 🌐 Web / 🍎 iOS / 🤖 Android / 📱 Flutter |
+
 ## When to use
 
 - **You already have avatar speech audio** — your own TTS, a TTS provider, or prerecorded audio.
@@ -31,7 +42,7 @@ This token server is not part of the avatar runtime. It does not send audio, rec
 | Path | Backend responsibility | Client responsibility |
 | --- | --- | --- |
 | **Direct Mode** | Mint Session Tokens only. | Connect to Motion Server, send avatar speech audio, receive motion data, and render locally. |
-| **Backend Mode** | Run the Server SDK pipeline, connect to Motion Server, and transport encoded audio + motion messages to clients. | Receive encoded messages from your backend and render locally. |
+| **Backend Mode** | Run the Server SDK pipeline, connect to Motion Server, and transport encoded audio payloads + motion data payloads to clients. | Receive encoded payloads from your backend and render locally. |
 
 ## Requirements
 

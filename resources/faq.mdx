@@ -1,106 +1,361 @@
 ---
 title: "FAQ"
-description: "Frequently asked questions"
+description: "Common product and integration questions from developer Q&A."
 ---
 
-### Common Issues
+This FAQ summarizes common developer questions from Spatius Q&A records. For implementation steps, start from [Choose Your Integration Path](/getting-started/how-to-integrate).
+
+## Avatar creation
 
 <AccordionGroup>
 
-<Accordion title="Supported Audio Format">
+<Accordion title="What Avatar styles are supported?">
 
-Spatius supports mono 16-bit PCM audio at multiple sample rates:
+Spatius supports more than realistic human avatars. The Avatar creation pipeline can also support semi-realistic, stylized, and cartoon-like 3D characters.
+
+Character models can be customized through the reconstruction workflow. For an example 3D character, see the [Spatius website](https://www.spatius.ai/character/82ae4df6-337f-4484-8d68-398cc99d2fb4).
+
+</Accordion>
+
+<Accordion title="How do I create a custom Avatar? Do I need an image or a video?">
+
+Use **Create Avatar** in [Spatius Studio](https://app.spatius.ai). The current creation flow supports creating an Avatar from a single portrait image.
+
+The detailed photo requirements are shown in Studio during the creation flow.
+
+</Accordion>
+
+<Accordion title="How long does custom Avatar generation take?">
+
+Typical custom Avatar generation takes about **3-5 hours**. The generated result is a 3D Avatar model that can be used by AvatarKit.
+
+</Accordion>
+
+<Accordion title="Can I use half-body or full-body Avatars and customize the scene?">
+
+Yes. Spatius can support half-body and full-body Avatar usage.
+
+Avatar position, foreground scale, scene framing, and composition are controlled by your client experience. Rendering a full 16:9 model at high quality depends on the end user's device GPU.
+
+</Accordion>
+
+<Accordion title="Does the Avatar include a background? Can I add my own scene?">
+
+No. The generated Avatar does not include a fixed background or scene.
+
+Treat AvatarKit as the foreground Avatar rendering layer. Your application owns the scene composition around it: place an image, video, WebGL scene, or native view behind the Avatar render surface, then control layout through your own canvas, DOM stacking, or native view hierarchy.
+
+This background layer is not sent to Motion Server. Motion Server only receives avatar speech audio and returns motion data; AvatarKit renders the Avatar locally, and your app composites the final visual scene.
+
+</Accordion>
+
+<Accordion title="How many public Avatars are available? Can I use them without creating my own?">
+
+After registering in [Spatius Studio](https://app.spatius.ai), public Avatars shown in Studio can be used directly.
+
+</Accordion>
+
+<Accordion title="Can I modify an Avatar after it has been created?">
+
+No. Updating appearance, clothing, hairstyle, or similar visual attributes after creation is not currently supported.
+
+</Accordion>
+
+</AccordionGroup>
+
+## Audio and lip sync
+
+<AccordionGroup>
+
+<Accordion title="Does Spatius accept text input to generate mouth movement?">
+
+No. Spatius requires an audio stream, because motion data is generated from avatar speech audio.
+
+If your application starts from text, convert that text to speech first, then send the generated avatar speech audio to Spatius.
+
+</Accordion>
+
+<Accordion title="What audio formats are supported?">
+
+Spatius supports common realtime audio inputs, including PCM, Opus, and WebRTC audio tracks.
+
+For PCM input, use mono 16-bit PCM. Supported PCM sample rates are:
+
 `8000`, `16000`, `22050`, `24000`, `32000`, `44100`, and `48000` Hz.
 
-See [Audio](/concepts/audio) for configuration details.
+For Opus input, supported sample rates are:
+
+`8000`, `12000`, `16000`, `24000`, and `48000` Hz.
 
 </Accordion>
 
-<Accordion title="Avatar Playback Fallback Strategy">
+<Accordion title="Is English lip sync worse than Chinese, Japanese, or Korean?">
 
-If the motion data is abnormal after passing in audio, the fallback playback strategy will be triggered:
-
-- Audio plays normally
-- Avatar remains in idle breathing state, or motion playback stops
+English lip sync quality is expected to be strong. In normal viewing, the difference from Chinese, Japanese, or Korean should not be obvious with clear audio.
 
 </Accordion>
 
-<Accordion title="Session token expired or invalid">
+<Accordion title="How can I evaluate lip-sync accuracy?">
 
-**Direct Mode only.** Session Tokens have a limited lifetime. If you receive `sessionTokenExpired` or `sessionTokenInvalid` on the Motion Server WebSocket, request a fresh Session Token from your backend and call `AvatarSDK.setSessionToken()` before reconnecting via `controller.start()`. RTC / Platform Integration / Backend Mode clients never see this error — they don't open that WebSocket and don't need a Session Token.
+Use a lip-sync benchmark such as SyncNet for quantitative evaluation. Spatius also provides SDKs and examples that can be used to generate test clips for your own review.
 
 </Accordion>
 
-<Accordion title="Avatar assets fail to download">
+<Accordion title="What usually causes lip sync to look wrong?">
 
-Check your network connectivity and ensure the avatar ID is correct. If the issue persists, clear the local cache with `AvatarManager.clearAll()` and retry. On iOS, Android, or Flutter, verify that your app has network permissions.
+Under normal setup, lip sync should not visibly drift. If you see no lip sync or obvious mismatch, check:
+
+- Integration method: Direct Mode Integration, Platform Integration, embedded playground, or Backend Mode Integration.
+- Deployment and test region: your backend, realtime provider, Motion Server region, and end-user location.
+- Audio format and sample rate.
+- Whether avatar speech audio is sent promptly as it is generated.
+
+Public playground demos may involve multiple cloud regions and realtime-provider edge nodes, so they are not always representative of your production region setup.
+
+</Accordion>
+
+<Accordion title="How should audio be sent to Motion Server? WebSocket, WebRTC, or REST?">
+
+Use a realtime path. WebSocket and WebRTC are supported integration shapes; REST is not recommended for realtime avatar speech.
+
+For low-latency realtime agents, use a WebRTC-based integration such as [LiveKit Agents Integration](/livekit-agents/overview) or [Agora Convo AI Integration](/agora-convoai/overview) when that matches your stack.
 
 </Accordion>
 
 </AccordionGroup>
 
-### Platform-Specific
+## Performance and limits
 
 <AccordionGroup>
 
-<Accordion title="Web: WASM module fails to load">
+<Accordion title="What is the typical first response latency?">
 
-AvatarKit Web uses WebAssembly for rendering. Your build tool must be configured to handle `.wasm` files:
-
-- **Vite**: Use the AvatarKit Vite plugin.
-- **Next.js**: Use the AvatarKit Next.js wrapper component.
-
-See the [Web SDK guide](/direct-mode/web) for setup instructions.
+Typical time to first motion data is about **700-1200 ms**. It is mainly affected by network conditions and how quickly avatar speech audio is sent to Motion Server.
 
 </Accordion>
 
-<Accordion title="Web: WebGL not supported">
+<Accordion title="What rendering FPS should I expect?">
 
-AvatarKit requires WebGL 2.0. Ensure the browser supports it and hardware acceleration is enabled. Most modern browsers support WebGL 2.0 by default.
-
-</Accordion>
-
-<Accordion title="iOS: Metal rendering requirements">
-
-AvatarKit iOS uses Metal for GPU rendering. Metal is available on all devices running iOS 16+. The simulator does not support Metal — test on a physical device.
+The typical Avatar rendering target is **25 FPS**.
 
 </Accordion>
 
-<Accordion title="Android: Vulkan rendering requirements">
+<Accordion title="Can I request a higher-resolution or higher-FPS version?">
 
-AvatarKit Android uses Vulkan for GPU rendering. Ensure the target device supports Vulkan 1.1+ (API 24+). Most devices from 2018 onwards support Vulkan.
+The current standard target is around **1K / 25 FPS**. Higher custom versions are not self-serve today.
 
 </Accordion>
 
-<Accordion title="LiveKit RTC client: version compatibility">
+<Accordion title="How long does the mouth take to return after interruption or stop?">
 
-The AvatarKit RTC client path requires `livekit-client` at exactly version `2.16.1`. Other versions may cause connection or audio routing issues.
+Typical mouth-return delay after interruption or stop is about **1.6 seconds**.
+
+This parameter can be tuned, but lower delay trades off against mouth-shape completeness and playback continuity.
+
+</Accordion>
+
+<Accordion title="How does concurrency affect performance?">
+
+Concurrency mainly means how many conversations can run at the same time. It does not inherently reduce the quality of one session, but it determines how many simultaneous conversations your plan and deployment can support.
+
+</Accordion>
+
+<Accordion title="How much does client GPU performance affect the experience?">
+
+Client GPU performance mainly affects rendering FPS and smoothness, not the generated avatar identity. Common modern devices should run the Avatar smoothly.
 
 </Accordion>
 
 </AccordionGroup>
 
-
-## Performance Issues
+## Expression and motion control
 
 <AccordionGroup>
 
-<Accordion title="Avatar Rendering Resolution Support">
+<Accordion title="Can I trigger facial expressions such as smile, happy, sad, or surprised?">
 
-Our avatar models don't use the concept of resolution.
+Not today. Beyond lip sync, explicit facial-expression control is not currently supported in the public SDK surface.
 
-We can reconstruct 4K resolution 3D avatar models, but this depends on the model's point count.
-
-Fewer points result in less detail restoration, but all models can be rendered to the corresponding resolution on the client side.
-
-Metrics such as PSNR and LPIPS are typically used to measure the quality of detail restoration.
+The current runtime states are focused on idle, interruption, and speaking.
 
 </Accordion>
 
-<Accordion title="Can the SDK dynamically switch between different models based on device performance?">
+<Accordion title="Can I trigger body motions such as listening, thinking, head movement, or custom gestures?">
 
-Not currently supported. Developers need to implement their own strategy for switching between different models based on device performance.
+Not today. The current public SDK surface does not expose API control for custom body motion or gesture states.
+
+The current runtime states are focused on idle, interruption, and speaking.
+
+</Accordion>
+
+<Accordion title="Can I control gaze or eye movement?">
+
+User-triggered gaze or eye-movement control is not currently supported. Eye focus can be adjusted through Avatar model tuning, but it is not exposed as a runtime user setting.
+
+</Accordion>
+
+<Accordion title="Are expressions and actions manually controlled or automatically generated?">
+
+Expressions and actions are currently inferred from audio and the Avatar model. They are not controlled through a public runtime API.
 
 </Accordion>
 
 </AccordionGroup>
+
+## Integration and architecture
+
+<AccordionGroup>
+
+<Accordion title="Which client platforms are supported?">
+
+Spatius provides client SDKs for **Web**, **Flutter**, **iOS**, and **Android**.
+
+Third-party realtime integrations use an RTC SDK path for LiveKit and Agora.
+
+</Accordion>
+
+<Accordion title="How does WebRTC integration work?">
+
+In a WebRTC integration, the RTC path carries avatar audio and motion data to the client. The client renders the Avatar locally with AvatarKit.
+
+</Accordion>
+
+<Accordion title="Is there a runnable LiveKit demo?">
+
+Yes. The public demo repository includes a LiveKit path:
+
+[https://github.com/spatius-ai/spatius-avatar-demo](https://github.com/spatius-ai/spatius-avatar-demo)
+
+The docs also include a [LiveKit Agents quickstart](/quickstarts/livekit-agents).
+
+</Accordion>
+
+<Accordion title="How do I connect Spatius to my LLM and TTS pipeline?">
+
+Whether you use Direct Mode Integration or Backend Mode Integration, your application owns ASR, LLM, and TTS.
+
+This can become complex. For a packaged realtime-agent workflow, start with [LiveKit Agents Integration](/livekit-agents/overview).
+
+</Accordion>
+
+<Accordion title="How is work split between cloud and client?">
+
+Motion Server receives avatar speech audio and generates motion data. The client prepares and plays audio, receives motion data, and renders the Avatar locally.
+
+</Accordion>
+
+</AccordionGroup>
+
+## Deployment and data
+
+<AccordionGroup>
+
+<Accordion title="Where is Spatius deployed?">
+
+Public docs and examples default to `us-west`. Demo behavior can also depend on the realtime provider used by that demo, such as LiveKit Cloud edge routing.
+
+If your product needs a specific deployment region, confirm the target region with the Spatius team before production launch.
+
+</Accordion>
+
+<Accordion title="Is private deployment or on-prem deployment supported?">
+
+Private or on-prem deployment of Motion Server is not self-serve today. The current public integration model uses Spatius-hosted Motion Server plus client-side AvatarKit rendering.
+
+For strict private deployment or dedicated-region requirements, contact the Spatius team.
+
+</Accordion>
+
+<Accordion title="How should I evaluate network latency across regions?">
+
+Evaluate the full path your product uses: your agent backend, TTS provider, Motion Server, realtime provider, client region, and end-user network.
+
+For low-latency production setups, keep the agent runtime, TTS provider, realtime provider, and Motion Server region as close as your deployment constraints allow.
+
+</Accordion>
+
+</AccordionGroup>
+
+## Meeting and video-stream use cases
+
+<AccordionGroup>
+
+<Accordion title="Can I use a Spatius Avatar inside Zoom, Google Meet, or Microsoft Teams?">
+
+It is possible, but the solution is complex. Spatius does not push finished avatar video by default, so meeting-app output requires an additional layer that renders the Avatar and then sends video into the meeting app.
+
+This adds technical complexity and latency.
+
+</Accordion>
+
+<Accordion title="What meeting integration approach is recommended?">
+
+Use a self-developed client whenever possible, with AvatarKit rendering inside your own client app.
+
+</Accordion>
+
+<Accordion title="What are the limitations of a headless-browser streaming approach?">
+
+A headless-browser streaming approach must send audio, receive motion data, render the Avatar, and then push rendered video into another system.
+
+This adds operational complexity and latency compared with rendering directly in your own client.
+
+</Accordion>
+
+<Accordion title="Is there an out-of-the-box virtual camera output?">
+
+No. There is no out-of-the-box virtual-camera output today.
+
+</Accordion>
+
+</AccordionGroup>
+
+## Billing and support
+
+<AccordionGroup>
+
+<Accordion title="Where can I see pricing and plan limits?">
+
+Use the [Spatius pricing page](https://www.spatius.ai/pricing/) for current pricing and plan limits.
+
+Concurrency limits are hard limits in the plan. If you need higher concurrency, contact the Spatius team for a commercial quote.
+
+</Accordion>
+
+<Accordion title="How do free trial credits work?">
+
+Free credits may be available for evaluation. The Q&A record notes a monthly free-credit allowance and different grant plans for developers and enterprise users.
+
+Contact the Spatius team to confirm the current credit policy for your account.
+
+</Accordion>
+
+<Accordion title="What payment methods are supported?">
+
+The Q&A record notes USD or EUR payment through Stripe for billing. If billing is not enabled for your account yet, payment and concurrency can be set manually by the team before launch.
+
+</Accordion>
+
+<Accordion title="How do I get technical support?">
+
+Use the [Spatius Discord](https://discord.com/invite/9HGhZfHZh9) for developer support. Screen recordings help the engineering team debug visual or integration issues.
+
+For deeper debugging, coordinate with the Spatius team for a real-time engineering support session.
+
+</Accordion>
+
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Choose your integration path" icon="route" href="/getting-started/how-to-integrate">
+    Compare Direct Mode, Platform Integrations, and Backend Mode.
+  </Card>
+  <Card title="Demo projects" icon="github" href="/resources/demo-projects">
+    Run the public demos before building your own integration.
+  </Card>
+  <Card title="Audio concept" icon="audio-lines" href="/concepts/audio">
+    Understand audio input, send timing, and lip-sync behavior.
+  </Card>
+</CardGroup>

@@ -10,6 +10,17 @@ import { AgoraConvoAiDiagram } from '/snippets/spatius-diagrams.jsx'
 **Beta:** The Spatius integration for Agora Convo AI and TEN Framework is in beta.
 </Note>
 
+## At a glance
+
+| Dimension | Agora Convo AI Integration |
+| --- | --- |
+| **Dev effort** | 🟡 Medium |
+| **Latency profile** | ⚡ Ultra-low; Spatius publishes avatar output into the Agora channel. |
+| **You build** | 🧠 Convo AI avatar provider config or TEN extension config, 🎟️ Agora RTC credentials, and 📡 RTC client setup. |
+| **You do not build** | 🚫 A custom Server SDK runtime unless you are running a direct TEN Framework graph. |
+| **Best first setup** | 🧭 [Convo AI Agent](/agora-convoai/convo-ai-agent), then [Agora Convo AI Client](/agora-convoai/client). |
+| **Client support** | 🌐 Web / 🍎 iOS / 🤖 Android |
+
 ## Architecture
 
 <Frame>
@@ -18,11 +29,11 @@ import { AgoraConvoAiDiagram } from '/snippets/spatius-diagrams.jsx'
 
 1. The user joins an Agora channel and speaks to the Convo AI agent.
 2. The Convo AI agent runs the ASR, LLM, and TTS pipeline.
-3. The Spatius avatar provider opens a Spatius server session with Agora egress.
+3. The Spatius avatar provider opens a Motion Server session with Agora egress.
 4. Motion Server generates motion data from the agent audio and publishes synchronized audio + motion data to the Agora channel.
 5. The client joins the same Agora channel with `AgoraProvider` and renders the avatar locally.
 
-Spatius is not a video streaming service. Even when you use Agora as the transport layer and Convo AI as the voice agent platform, no avatar video frames are transported through Agora. Spatius sends lightweight motion data; AvatarKit renders the avatar locally on the client.
+Spatius is not a video streaming service. Even when you use Agora as the transport layer and Convo AI as the voice agent platform, Agora transports avatar audio and motion data, not finished avatar video. AvatarKit renders the avatar locally on the client.
 
 ## Client setup
 

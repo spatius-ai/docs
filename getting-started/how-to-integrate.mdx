@@ -12,17 +12,74 @@ Spatius is an **avatar-only** service. It takes avatar speech audio and returns 
 
 Spatius integrations come in two categories.
 
-- **Platform Integrations** — you already use a third-party realtime / agent platform; Spatius slots in via a platform-specific package. Today: LiveKit Agents Integration and Agora Convo AI Integration.
-- **Standalone Integrations** — you build directly with Spatius SDKs without going through a third-party agent platform. Today: Direct Mode and Backend Mode.
+<CardGroup cols={2}>
+  <Card title="Platform Integrations" icon="tower-broadcast" href="#livekit-agents-integration">
+    You already use a third-party realtime / agent platform. Spatius slots in through LiveKit Agents or Agora Convo AI.
+  </Card>
+  <Card title="Standalone Integrations" icon="code" href="#direct-mode">
+    You build directly with Spatius SDKs. Start with Direct Mode, or use Backend Mode when your backend owns the runtime.
+  </Card>
+</CardGroup>
 
 ## Decision matrix
 
 | Category | Path | Choose it when | What connects to Spatius |
 | --- | --- | --- | --- |
-| Platform Integrations | **[LiveKit Agents Integration](#livekit-agents-integration)** | You already use LiveKit Agents or want a turnkey voice-agent path. | LiveKit agent worker through `livekit-plugins-spatius` |
-| Platform Integrations | **[Agora Convo AI Integration](/agora-convoai/overview)** | You already use Agora Convo AI and want avatar output in an Agora channel. | Convo AI `avatar` provider or TEN extension |
-| Standalone Integrations | **[Direct Mode](#direct-mode)** | You have avatar speech audio and want the smallest client-side integration. | AvatarKit client SDK |
-| Standalone Integrations | **[Backend Mode](#backend-mode)** | Your backend owns ASR / LLM / TTS / transport. | Spatius Server SDK |
+| 🧩 Platform Integrations | **[LiveKit Agents Integration](#livekit-agents-integration)** | You already use LiveKit Agents or want a turnkey voice-agent path. | 🎙️ LiveKit agent worker through `livekit-plugins-spatius` |
+| 🧩 Platform Integrations | **[Agora Convo AI Integration](/agora-convoai/overview)** | You already use Agora Convo AI and want avatar output in an Agora channel. | 🧠 Convo AI `avatar` provider or TEN extension |
+| 🧱 Standalone Integrations | **[Direct Mode](#direct-mode)** | You have avatar speech audio and want the smallest client-side integration. | 🧩 AvatarKit client SDK |
+| 🧱 Standalone Integrations | **[Backend Mode](#backend-mode)** | Your backend owns ASR / LLM / TTS / transport. | 🖥️ Server SDK |
+
+## Path snapshots
+
+<CardGroup cols={2}>
+  <Card title="Direct Mode" icon="bolt" href="#direct-mode">
+    Lowest integration surface. Your backend mints Session Tokens; the client connects to Motion Server and renders locally.
+  </Card>
+  <Card title="LiveKit Agents" icon="radio" href="#livekit-agents-integration">
+    Fastest packaged Web voice-agent path if your stack already uses LiveKit Agents.
+  </Card>
+  <Card title="Agora Convo AI" icon="tower-broadcast" href="#agora-convo-ai-integration">
+    Best when Agora Convo AI or TEN Framework already owns your voice-agent runtime.
+  </Card>
+  <Card title="Backend Mode" icon="server" href="#backend-mode">
+    Highest control and highest ownership. Your backend runs the pipeline and chooses the downstream transport.
+  </Card>
+</CardGroup>
+
+## Compare integration effort
+
+Use this table before opening an SDK guide. **Dev effort** includes the runtime pieces your team must own in production: conversation pipeline, credentials, token/session handling, transport, reconnect, interruption, and client rendering.
+
+| Path | Best fit | Latency | Dev effort | What you build | Client support |
+| --- | --- | --- | --- | --- | --- |
+| **[Direct Mode](#direct-mode)** | You already have avatar speech audio and want the smallest integration. | 🕒 **Moderate**<br />Client sends audio to Motion Server directly. | 🟢 **Low** | 🔑 Token endpoint<br />🧩 AvatarKit client integration | 🌐 Web<br />🍎 iOS<br />🤖 Android<br />📱 Flutter |
+| **[LiveKit Agents Integration](#livekit-agents-integration)** | You already use LiveKit Agents, or you want the fastest packaged Web voice-agent path. | ⚡ **Ultra-low**<br />Agent audio flows from the LiveKit worker and output returns through the room. | 🟢 **Low** if LiveKit Agents is already in your stack<br />🟡 **Medium** if you are adopting LiveKit too | 🎙️ LiveKit Agents worker<br />🔌 `livekit-plugins-spatius`<br />🎟️ LiveKit token flow<br />🌐 Web RTC client | 🌐 Web today |
+| **[Agora Convo AI Integration](#agora-convo-ai-integration)** | You already use Agora Convo AI or TEN Framework. | ⚡ **Ultra-low**<br />Spatius publishes avatar output into the Agora channel. | 🟡 **Medium** | 🧠 Convo AI avatar config or TEN extension<br />🎟️ Agora RTC credentials<br />📡 RTC client setup | 🌐 Web<br />🍎 iOS<br />🤖 Android |
+| **[Backend Mode](#backend-mode), own transport** | Your backend owns ASR / LLM / TTS and you want full transport control. | ⚙️ **Low / tunable**<br />Your backend controls chunking, buffering, and delivery. | 🔴 **High** | 🖥️ Server SDK session<br />🎙️ Audio pipeline<br />🔀 WebSocket / transport<br />🧩 Client message feed | 🌐 Web<br />🍎 iOS<br />🤖 Android<br />📱 Flutter |
+| **[Backend Mode](#backend-mode), RTC transport** | Your backend owns the pipeline, but you want LiveKit or Agora as the downstream transport. | ⚙️ **Low / tunable**<br />RTC transport behavior sits in the middle. | 🔴 **High** | 🖥️ Server SDK session<br />📡 RTC egress / room setup<br />🎟️ RTC credentials<br />🧩 Client RTC rendering path | 📡 Depends on provider and AvatarKit RTC client support |
+
+## How to read the effort score
+
+The score is not package-install time. It is the amount of production surface your team owns.
+
+<CardGroup cols={2}>
+  <Card title="Conversation pipeline" icon="bot">
+    Lower effort when a platform owns ASR / LLM / TTS / turn-taking, or when you already have avatar speech audio. Higher effort when your backend must build and operate the whole pipeline.
+  </Card>
+  <Card title="Motion Server connection" icon="plug">
+    Lower effort when AvatarKit or a platform package owns the connection. Higher effort when your backend opens, recovers, and observes the Server SDK session.
+  </Card>
+  <Card title="Transport" icon="route">
+    Lower effort when transport is built into the path. Higher effort when you design WebSocket, RTC egress, room/channel tokens, reconnect, and buffering.
+  </Card>
+  <Card title="Client integration" icon="monitor">
+    Lower effort when one client package and a quickstart prove the path. Higher effort when multiple platforms or custom rendering/transport glue are required.
+  </Card>
+  <Card title="Production hardening" icon="shield-check">
+    Lower effort means fewer recovery paths and credentials. Higher effort means provider credentials, backend state, room/channel auth, retries, and observability.
+  </Card>
+</CardGroup>
 
 ## LiveKit Agents Integration
 
@@ -89,7 +146,7 @@ Use it when:
 
 ## Backend Mode
 
-Backend Mode is the Standalone Integration for teams that need full control over the audio pipeline and downstream transport. Your backend uses a Spatius Server SDK to connect to Motion Server, then delivers encoded audio and motion messages to AvatarKit clients over a transport you choose.
+Backend Mode is the Standalone Integration for teams that need full control over the audio pipeline and downstream transport. Your backend uses the Server SDK to connect to Motion Server, then delivers encoded audio payloads and motion data payloads to AvatarKit clients over a transport you choose.
 
 Use it when:
 
@@ -110,17 +167,25 @@ Use it when:
 
 Transport options live inside an integration path, not as separate top-level choices:
 
-| Transport | Where it belongs |
-| --- | --- |
-| **Direct to Motion Server** | Default transport for Direct Mode. |
-| **Your own WebSocket** | Backend Mode with [your own transport](/backend-mode/own-transport). |
-| **LiveKit Room** | Two distinct uses — see below. |
-| **Agora channel** | Used by [Agora Convo AI Integration](/agora-convoai/overview). Server SDK Agora egress is also available for custom Backend Mode work. |
+<CardGroup cols={2}>
+  <Card title="Direct to Motion Server" icon="bolt" href="/direct-mode/overview">
+    Default transport for Direct Mode.
+  </Card>
+  <Card title="Your own WebSocket" icon="route" href="/backend-mode/own-transport">
+    Backend Mode when your backend relays encoded audio payloads and motion data payloads directly to clients.
+  </Card>
+  <Card title="LiveKit Room" icon="radio" href="/backend-mode/with-livekit">
+    Appears in two distinct shapes: LiveKit Agents Integration, or Backend Mode with LiveKit as downstream transport.
+  </Card>
+  <Card title="Agora channel" icon="tower-broadcast" href="/agora-convoai/overview">
+    Used by Agora Convo AI Integration. Server SDK Agora egress is also available for custom Backend Mode work.
+  </Card>
+</CardGroup>
 
 LiveKit appears in two completely different positions and these must not be confused:
 
 - **LiveKit Agents Integration** uses LiveKit both as the agent framework (via `livekit-plugins-spatius`) and as the room transport. Choose this when you build agents on LiveKit Agents.
-- **[Backend Mode with LiveKit](/backend-mode/with-livekit)** uses your own backend with the Spatius Server SDK, and merely uses LiveKit as the downstream transport between your backend and your clients. No LiveKit Agents involved.
+- **[Backend Mode with LiveKit](/backend-mode/with-livekit)** uses your own backend with the Server SDK, and merely uses LiveKit as the downstream transport between your backend and your clients. No LiveKit Agents involved.
 
 Agora has a similar distinction:
 

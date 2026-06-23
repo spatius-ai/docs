@@ -4,7 +4,7 @@ sidebarTitle: "With LiveKit"
 description: "Use a LiveKit room as the RTC transport between a Backend Mode pipeline and a Web client."
 ---
 
-This page describes the **Backend Mode + RTC transport** pattern. Your backend owns the conversation pipeline (ASR, LLM, TTS, and the Spatius Server SDK that talks to Motion Server). A LiveKit room transports the avatar's audio and motion data to the browser. The Web client uses the [RTC Adapter](/sdk-reference/web-sdk/rtc-adapter) (`@spatius/avatarkit-rtc`) to join the room and render the avatar.
+This page describes the **Backend Mode + RTC transport** pattern. Your backend owns the conversation pipeline (ASR, LLM, TTS, and the Server SDK that talks to Motion Server). A LiveKit room transports the avatar's audio and motion data to the browser. The Web client uses the [RTC Adapter](/sdk-reference/web-sdk/rtc-adapter) (`@spatius/avatarkit-rtc`) to join the room and render the avatar.
 
 It is not the same as [LiveKit Agents Integration](/livekit-agents/overview), which is a Platform Integration built around the LiveKit Agents framework.
 
@@ -13,25 +13,25 @@ It is not the same as [LiveKit Agents Integration](/livekit-agents/overview), wh
 | | LiveKit Agents Integration | Backend Mode with LiveKit |
 | --- | --- | --- |
 | **Category** | Platform Integration | Standalone Integration |
-| **Your backend runs** | A LiveKit Agents worker using `livekit-plugins-spatius` | Your own service using the Spatius Server SDK |
+| **Your backend runs** | A LiveKit Agents worker using `livekit-plugins-spatius` | Your own service using the Server SDK |
 | **Role of LiveKit** | Both the agent framework and the room transport | Only the downstream room transport between your backend and your clients |
 | **Web client** | RTC Adapter with `LiveKitProvider` | RTC Adapter with `LiveKitProvider` |
-| **Choose when** | You already build voice agents in LiveKit Agents | You want full control of the audio pipeline with the Spatius Server SDK, but reuse LiveKit as the downstream transport |
+| **Choose when** | You already build voice agents in LiveKit Agents | You want full control of the audio pipeline with the Server SDK, but reuse LiveKit as the downstream transport |
 | **Guide** | [LiveKit Agents Integration](/livekit-agents/overview) | This page |
 
 ## How this pattern works
 
-1. Your backend runs ASR, LLM, TTS, and uses the Spatius Server SDK to receive encoded audio and motion messages from Motion Server.
-2. Your backend publishes those encoded audio and motion messages into a LiveKit room (Spatius Server SDK supports a LiveKit egress mode that does this for you).
+1. Your backend runs ASR, LLM, TTS, and uses the Server SDK to receive encoded audio payloads and motion data payloads from Motion Server.
+2. Your backend publishes those encoded audio payloads and motion data payloads into a LiveKit room (the Server SDK supports a LiveKit egress mode that does this for you).
 3. The Web client joins the same LiveKit room with `@spatius/avatarkit-rtc` and renders the avatar locally. The client does not call `yieldAudioData()` or `yieldFramesData()` manually — the RTC Adapter owns the data flow.
 
 ## Demos
 
-- [Backend Mode demo](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/backend-mode) — the backend half (ASR/LLM/TTS + Spatius Server SDK). It ships with its own WebSocket transport; swap in LiveKit egress to match this pattern.
+- [Backend Mode demo](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/backend-mode) — the backend half (ASR/LLM/TTS + Server SDK). It ships with its own WebSocket transport; swap in LiveKit egress to match this pattern.
 - [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-room-demo) — validates the RTC Adapter's LiveKit wiring (token, room connect, adapter init, avatar load, mic publish). Remote audio playback and motion rendering only happen when a publisher (e.g. a Backend Mode service or LiveKit Agents worker) is in the room — this example alone has no producer. Not the full Backend Mode + RTC transport voice-agent demo.
 
 <Note>
-The full end-to-end demo of this pattern — a service that, given a character / avatar identifier, both mints LiveKit tokens *and* drives the corresponding ASR / LLM / TTS pipeline through the Spatius Server SDK into the same LiveKit room — is not packaged in this repository yet. The two halves above are runnable today; assemble them by switching the Backend Mode backend to LiveKit egress and pointing the Web client at the same room.
+The full end-to-end demo of this pattern — a service that, given a character / avatar identifier, both mints LiveKit tokens *and* drives the corresponding ASR / LLM / TTS pipeline through the Server SDK into the same LiveKit room — is not packaged in this repository yet. The two halves above are runnable today; assemble them by switching the Backend Mode backend to LiveKit egress and pointing the Web client at the same room.
 
 If you want an end-to-end voice-agent experience you can run locally without writing that glue, use the [LiveKit Agents Integration Quickstart](/quickstarts/livekit-agents). It delivers the same on-screen behavior (mic in → avatar speaks back) by hosting the pipeline inside a LiveKit Agents worker instead of a standalone backend.
 </Note>

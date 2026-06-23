@@ -4,7 +4,7 @@ sidebarTitle: "Python"
 description: "Using the Spatius Python Server SDK"
 ---
 
-The Spatius Python SDK creates server-side avatar sessions over WebSocket. It handles session-token creation, WebSocket authentication, audio upload, motion frame payload callbacks, and optional egress to LiveKit or Agora.
+The Spatius Python SDK creates server-side avatar sessions over WebSocket. It handles session-token creation, WebSocket authentication, audio upload, motion data payload callbacks, and optional egress to LiveKit or Agora.
 
 ## Repository
 
@@ -61,8 +61,8 @@ async def main():
         app_id="your-app-id",
         avatar_id="your-avatar-id",
         expire_at=datetime.now(timezone.utc) + timedelta(minutes=5),
-        transport_frames=lambda frame, last: print(
-            f"Received frame: {len(frame)} bytes, last={last}"
+        transport_frames=lambda payload, last: print(
+            f"Received payload: {len(payload)} bytes, last={last}"
         ),
         on_error=lambda err: print(f"Session error: {err}"),
         on_close=lambda: print("Session closed"),
@@ -123,7 +123,7 @@ connection_id = await session.start()
 # 3. Send audio data
 request_id = await session.send_audio(audio_bytes, end=True)
 
-# 4. Receive encoded motion frame payloads through transport_frames
+# 4. Receive motion data payloads through transport_frames
 
 # 5. Close the session
 await session.close()
@@ -293,13 +293,13 @@ The interrupt uses the most recent request ID, even after `end=True` has been se
 
 ### `transport_frames`
 
-Receives encoded motion frame payloads from the server:
+Receives motion data payloads from the server:
 
 ```python
-def on_frame_received(frame_data: bytes, is_last: bool):
-    print(f"Received frame: {len(frame_data)} bytes")
+def on_frame_received(payload: bytes, is_last: bool):
+    print(f"Received payload: {len(payload)} bytes")
     if is_last:
-        print("This is the last frame")
+        print("This is the last payload")
 ```
 
 ### `on_error`
