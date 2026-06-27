@@ -4,7 +4,7 @@ Repository guidance for any AI coding agent (Claude Code, Codex, Cursor, Copilot
 
 ## What this repo is
 
-Mintlify documentation site for **Spatius** (audio-driven real-time avatar platform). Pure content repo — no build step, no test suite, no `package.json`, no lint. Production deploy is automatic on push to `main` via the Mintlify GitHub app.
+Mintlify documentation site for **Spatius** (audio-driven real-time avatar platform). Pure content repo — no app build step and no test suite. Production deploy is automatic on push to `main` via the Mintlify GitHub app.
 
 ## Local preview
 
@@ -15,6 +15,20 @@ mint update     # bump CLI when dev fails or shows "update available"
 ```
 
 A `dockerfile` exists for parity (`node:22-alpine` running `mint dev` on port 3000); host-level `mint` is the daily driver.
+
+## Checks
+
+Install dependencies before running the repository checks:
+
+```bash
+pnpm install
+```
+
+Run all checks before opening or updating a PR:
+
+```bash
+pnpm check
+```
 
 ## Navigation: `docs.json` is the single source of truth
 
