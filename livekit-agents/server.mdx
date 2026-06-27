@@ -58,6 +58,20 @@ For normal production use, set only `SPATIUS_REGION` and the plugin composes the
 | `SPATIUS_INGRESS_ENDPOINT` | Override ingress WebSocket URL (default: `wss://api.<region>.spatius.ai/v2/driveningress`) |
 </Accordion>
 
+<Accordion title="Advanced: LiveKit egress room">
+By default, Motion Server publishes the avatar into the same LiveKit room as the agent. For specialized routing setups, pass `livekit_room_name` to publish the avatar into a different room:
+
+```python
+await avatar.start(
+    session,
+    room=ctx.room,
+    livekit_room_name="avatar-output-room",
+)
+```
+
+Use this only when your LiveKit routing intentionally separates the agent room from the room where clients receive avatar audio and motion data. In the default LiveKit Agents Integration flow, leave `livekit_room_name` unset and connect the client to the same room as the agent.
+</Accordion>
+
 **Use in your agent**
 
 Create an `AvatarSession` and start it with your agent session and room. `livekit-plugins-spatius` attaches to the pipeline and sends avatar speech audio to Spatius; Motion Server publishes the avatar's audio and motion stream to the room.
