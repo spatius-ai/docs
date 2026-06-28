@@ -122,6 +122,7 @@
             "icon": "lightbulb",
             "pages": [
               "concepts/avatar",
+              "concepts/avatar-background",
               "concepts/audio",
               "concepts/lifecycle",
               "concepts/state-events"
