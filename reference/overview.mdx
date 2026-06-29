@@ -1,0 +1,68 @@
+---
+title: "Reference Overview"
+sidebarTitle: "Overview"
+description: "A lookup map for Spatius Client SDKs, Server SDKs, Session Token API pages, regions, endpoints, and error codes."
+---
+
+Use the Reference tab when you need exact names: classes, methods, enums, request fields, endpoint regions, and error codes. Use Guides when you need an integration path or a step-by-step setup.
+
+## Reference sections
+
+| Section | What it contains | Use it when |
+| --- | --- | --- |
+| Client SDKs | Web, iOS, Android, Flutter, Web RTC Adapter, and React UI reference pages. | You need AvatarKit classes, methods, callbacks, enums, rendering APIs, or client lifecycle details. |
+| Server SDKs | Python and Go SDK references. | Your backend connects to Motion Server in Backend Mode or a platform integration backend. |
+| Session Token API | Console API pages for Session Token creation and Direct Mode auth flow. | Your backend mints short-lived Session Tokens for Direct Mode clients. |
+| Regions & Endpoints | Supported region names and composed Console API / Motion Server endpoints. | Any integration path needs a deployment region or endpoint reference. |
+| Error Codes | Client and server error codes with recovery guidance. | You are debugging failed sessions, asset loading, WebSocket connection, or Server SDK errors. |
+
+## Client SDK lookup
+
+| Platform or package | Reference page | Main use |
+| --- | --- | --- |
+| Web `@spatius/avatarkit` | [AvatarKit Web SDK Reference](/sdk-reference/web-sdk/reference) | Web AvatarKit initialization, loading, rendering, Direct Mode, Backend Mode client feed, state, enums, and errors. |
+| Web toolchain | [Toolchain Setup](/sdk-reference/web-sdk/toolchain) | Configure bundlers to serve AvatarKit WebAssembly assets correctly. |
+| Web RTC Adapter `@spatius/avatarkit-rtc` | [RTC Adapter](/sdk-reference/web-sdk/rtc-adapter) | Render avatar output from LiveKit or Agora RTC providers on Web. |
+| React UI components | [AvatarKit UI](/sdk-reference/web-sdk/avatarkit-ui) | Use packaged React components for RTC avatar rendering. |
+| iOS AvatarKit | [iOS SDK Reference](/sdk-reference/ios-sdk/api-reference) | Native iOS AvatarKit methods, enums, callbacks, and rendering controls. |
+| Android AvatarKit | [Android SDK Reference](/sdk-reference/android-sdk/api-reference) | Native Android AvatarKit methods, enums, callbacks, and rendering controls. |
+| Flutter `spatius` | [Flutter SDK Reference](/sdk-reference/flutter-sdk/api-reference) | Flutter setup, Direct Mode, Backend Mode client feed, state callbacks, and demos. |
+
+## Server lookup
+
+| Surface | Reference page | Main use |
+| --- | --- | --- |
+| Python Server SDK | [Python SDK](/sdk-reference/python-sdk/python-sdk) | Backend Mode sessions, audio input, callbacks, LiveKit egress, Agora egress, interruption, and errors. |
+| Go Server SDK | [Golang SDK](/sdk-reference/go-sdk/go-sdk) | Go Backend Mode sessions, audio input, callbacks, LiveKit egress, options, and errors. |
+| Session Token API | [Session Token API](/api-reference/api-reference) | Mint Direct Mode Session Tokens from your backend. |
+| Auth Flow | [Session Token Auth Flow](/api-reference/auth) | Understand how a Direct Mode client obtains and uses a Session Token. |
+
+## Shared lookup
+
+| Need | Page |
+| --- | --- |
+| Which SDK supports which feature | [SDK Capability Matrix](/reference/sdk-capabilities) |
+| Region names and endpoint composition | [Regions](/api-reference/regions) |
+| Client error codes | [Client Error Codes](/resources/client-error) |
+| Server SDK error codes | [Server Error Codes](/resources/server-error) |
+| Demo repo by integration path | [Demo Matrix](/resources/demo-projects) |
+
+## Common confusion
+
+| Confusion | Correct interpretation |
+| --- | --- |
+| "API Reference" vs "SDK Reference" | Client SDKs and Server SDKs are API references too. The Session Token API section is specifically for the Console API pages used to mint Direct Mode Session Tokens. |
+| "Region is server-only" | Region is shared. Direct Mode clients, Server SDKs, LiveKit Agents Integration, and Agora Convo AI Integration all need to resolve the correct Spatius region. |
+| "LiveKit page means one thing" | LiveKit Agents Integration is a Platform Integration. Backend Mode with LiveKit is a Standalone Integration that uses LiveKit only as downstream transport. |
+| "`@spatius/avatarkit-rtc` is a platform SDK" | It is the Web SDK RTC transport adapter. Native Agora clients use their own AvatarKit RTC packages documented under Agora client setup. |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="SDK Capability Matrix" icon="table" href="/reference/sdk-capabilities">
+    Compare documented SDK features across Web, iOS, Android, Flutter, Python, and Go.
+  </Card>
+  <Card title="Developer Docs Map" icon="map" href="/getting-started/docs-map">
+    See the full docs map for humans and AI agents.
+  </Card>
+</CardGroup>

@@ -20,6 +20,7 @@
             "group": "Start Here",
             "icon": "rocket",
             "pages": [
+              "getting-started/docs-map",
               "getting-started/introduction",
               "concepts/how-it-works",
               "getting-started/credentials",
@@ -142,6 +143,14 @@
         "tab": "Reference",
         "groups": [
           {
+            "group": "Reference Overview",
+            "icon": "book-open",
+            "pages": [
+              "reference/overview",
+              "reference/sdk-capabilities"
+            ]
+          },
+          {
             "group": "Client SDKs",
             "icon": "mobile",
             "pages": [
@@ -168,8 +177,8 @@
             ]
           },
           {
-            "group": "Server API",
-            "icon": "code",
+            "group": "Session Token API",
+            "icon": "key",
             "pages": [
               "api-reference/api-reference",
               "api-reference/auth"

@@ -1,0 +1,102 @@
+---
+title: "SDK Capability Matrix"
+sidebarTitle: "SDK Capabilities"
+description: "Documented Spatius SDK capability matrix across Web, iOS, Android, Flutter, Python Server SDK, and Go Server SDK."
+---
+
+This matrix shows capabilities that are documented in the public reference pages. It is a lookup aid, not a replacement for the platform reference pages.
+
+If a cell says **Not documented**, the current docs do not expose a public reference for that capability on that SDK. It does not prove the runtime cannot support it.
+
+## Client SDK capabilities
+
+| Capability | Web | iOS | Android | Flutter |
+| --- | --- | --- | --- | --- |
+| Direct Mode Integration | Documented | Documented | Documented | Documented |
+| Backend Mode client feed | `yieldAudioData()` / `yieldFramesData()` | `yield(_:end:audioFormat:)` / `yield(_:conversationID:)` | `yield(audioData,end,audioFormat)` / `yield(animations,reqId)` | `yieldAudioData()` / `yieldAnimations()` |
+| RTC Adapter path | `@spatius/avatarkit-rtc` | See Agora client setup | See Agora client setup | Not documented |
+| Region config | `region` in `AvatarSDK.initialize()` | `region` in `Configuration` | `region` in `Configuration` | `region` in `Configuration` |
+| Driving mode enum | `DrivingServiceMode.direct` / `DrivingServiceMode.backend` | `.direct` / `.backend` | `DIRECT` / `BACKEND` | `direct` / `backend` |
+| Render quality | `RenderQuality` and `setRenderQuality()` | `RenderQuality` and `setRenderQuality(_:)` | `RenderQuality` and `setRenderQuality()` | Not documented |
+| Render resolution cap | `setRenderResolutionCap()` | `setRenderResolutionCap(enabled:maxHeight:)` | `setRenderResolutionCap(enabled,maxHeight)` | Not documented |
+| Device capability check | `isDeviceSupported()` / `deviceScore()` | `isDeviceSupported()` / `deviceScore()` | `isDeviceSupported()` / `benchmark()` | Not documented |
+| Frame starvation behavior | `FrameStarvationMode` | `FrameStarvationMode` | `FrameStarvationMode` | Not documented |
+| Strict sync mode | `FrameStarvationMode.strictSync` | `FrameStarvationMode` enum | `STRICT_SYNC` enum value | Not documented |
+| Avatar bitmap export | `AvatarView.exportBitmap()` | Not documented | Not documented | Not documented |
+| Avatar transform / bounds | `avatarTransform`, `getBoundingRect()` | Not documented | Not documented | Not documented |
+| `ConnectionState` callback | Direct Mode only | Documented | Documented | Documented |
+| `ConversationState` callback | Documented | Documented | Documented | Documented |
+| Interrupt playback | `interrupt()` | `interrupt()` | `interrupt()` | Not documented |
+| Pause / resume rendering | `pause()` / `resume()` | `pauseRendering()` / `resumeRendering()` | `pauseRendering()` / `resumeRendering()` | Not documented |
+| Cache management | `AvatarManager` cache methods | `AvatarManager` cache methods | `AvatarManager` cache methods | Not documented |
+
+## Web package split
+
+| Package | What it does | Reference |
+| --- | --- | --- |
+| `@spatius/avatarkit` | Core Web AvatarKit SDK for loading, rendering, Direct Mode, and Backend Mode client feed. | [Web SDK Reference](/sdk-reference/web-sdk/reference) |
+| `@spatius/avatarkit-rtc` | Web RTC transport adapter for LiveKit and Agora providers. | [RTC Adapter](/sdk-reference/web-sdk/rtc-adapter) |
+| `@spatius/avatarkit-ui` | React components for avatar UI surfaces. | [AvatarKit UI](/sdk-reference/web-sdk/avatarkit-ui) |
+
+## Server SDK capabilities
+
+| Capability | Python Server SDK | Go Server SDK |
+| --- | --- | --- |
+| Backend Mode session | Documented | Documented |
+| Region config | `region` option | `WithRegion(region)` |
+| Console endpoint override | `console_endpoint_url` | `WithConsoleEndpointURL()` |
+| Ingress endpoint override | `ingress_endpoint_url` | `WithIngressEndpointURL()` |
+| Audio input | Documented | Documented |
+| Motion data callback | Documented | Documented |
+| Encoded audio callback | Documented | Documented |
+| LiveKit egress | Documented | Documented |
+| Agora egress | Documented | Not documented |
+| Interrupt | `interrupt()` for egress mode | Not documented |
+| Structured SDK errors | `AvatarSDKError` fields | Documented error handling |
+
+## Integration path support
+
+| Integration path | Web | iOS | Android | Flutter | Python Server SDK | Go Server SDK |
+| --- | --- | --- | --- | --- | --- | --- |
+| Direct Mode Integration | Yes | Yes | Yes | Yes | No | No |
+| LiveKit Agents Integration | Web RTC client | Not documented | Not documented | Not documented | `livekit-plugins-spatius` | No |
+| Agora Convo AI Integration | Web RTC client | AvatarKit RTC client setup | AvatarKit RTC client setup | Not documented | TEN extension / provider setup | Not documented |
+| Backend Mode with own transport | Client feed | Client feed | Client feed | Client feed | Yes | Yes |
+| Backend Mode with LiveKit transport | Web RTC client | Not documented | Not documented | Not documented | LiveKit egress | LiveKit egress |
+| Backend Mode with Agora transport | Web RTC client | AvatarKit RTC client setup | AvatarKit RTC client setup | Not documented | Agora egress | Not documented |
+
+## Region support
+
+All documented SDKs and integrations use the same region names:
+
+| Region | Status |
+| --- | --- |
+| `us-west` | Default |
+| `ap-northeast` | Supported |
+| `cn-beijing` | Supported |
+
+See [Regions](/api-reference/regions) for endpoint composition and advanced override notes.
+
+## Reading guidance
+
+Use this page to decide where to look next. Use the SDK reference pages for exact signatures and code examples:
+
+| Need | Page |
+| --- | --- |
+| Web exact APIs | [Web SDK Reference](/sdk-reference/web-sdk/reference) |
+| iOS exact APIs | [iOS SDK Reference](/sdk-reference/ios-sdk/api-reference) |
+| Android exact APIs | [Android SDK Reference](/sdk-reference/android-sdk/api-reference) |
+| Flutter exact APIs | [Flutter SDK Reference](/sdk-reference/flutter-sdk/api-reference) |
+| Python exact APIs | [Python SDK](/sdk-reference/python-sdk/python-sdk) |
+| Go exact APIs | [Golang SDK](/sdk-reference/go-sdk/go-sdk) |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Reference Overview" icon="book-open" href="/reference/overview">
+    Understand which Reference section owns each kind of API lookup.
+  </Card>
+  <Card title="Choose your integration path" icon="route" href="/getting-started/how-to-integrate">
+    Decide between Direct Mode, platform integrations, and Backend Mode.
+  </Card>
+</CardGroup>
