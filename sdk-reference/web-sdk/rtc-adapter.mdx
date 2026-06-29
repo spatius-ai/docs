@@ -73,7 +73,7 @@ yarn add @spatius/avatarkit-rtc @spatius/avatarkit
 
 The RTC Adapter is a thin layer on top of `@spatius/avatarkit`:
 
-1. It initializes the underlying SDK with `DrivingServiceMode.host` so the avatar accepts externally driven motion data.
+1. It initializes the underlying SDK with `DrivingServiceMode.backend` so the avatar accepts externally driven motion data.
 2. A **provider** opens an RTC connection to the room. This page documents and demos `LiveKitProvider`; `AgoraProvider` is also exported by `@spatius/avatarkit-rtc` with the same `AvatarPlayer` surface.
 3. The provider publishes the local microphone track (when `startPublishing()` is called) and subscribes to the remote audio track and the motion data stream published by Motion Server.
 4. The browser plays the remote audio track through WebRTC. The RTC Adapter feeds motion data into `@spatius/avatarkit` for local rendering.

@@ -48,7 +48,19 @@ controller.onError = (error) {
 | `concurrentLimitExceeded` | Concurrent connection limit exceeded. | Close other active sessions before starting a new one. |
 | `avatarIDUnrecognized` | Avatar ID not found. | Check the avatar ID exists and is published. |
 | `failedToFetchAvatarMetadata` | Failed to fetch avatar metadata. | Check network connectivity and retry. |
+| `invalidAvatarMetadata` | Avatar metadata is invalid. | Verify the avatar asset version or contact Spatius support. |
 | `failedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
+| `websocketError` | WebSocket handshake or network error. | Check network connectivity, region, and proxy settings. |
+| `websocketClosedAbnormally` | WebSocket closed with code `1006`. | Reconnect and inspect network stability. |
+| `websocketClosedUnexpected` | WebSocket closed with an unexpected close code. | Check the close reason and server logs. |
+| `connectionInProgress` | A connection is already being established. | Wait for the current `start()` call to complete. |
+| `networkLayerNotAvailable` | Direct Mode network layer is not available. | Ensure the SDK is initialized with `DrivingServiceMode.direct` before calling Direct Mode methods. |
+| `playbackStartFailed` | Failed to start playback. | Make sure `initializeAudioContext()` was called inside a user gesture. |
+| `playbackInitFailed` | Playback initialization failed. | Retry initialization from a user gesture and inspect browser audio permissions. |
+| `audioOnlyInitFailed` | Audio-only fallback initialization failed. | Retry or prompt the user to refresh the page. |
+| `noAudio` | No audio data is available for playback. | Check that your audio chunks are non-empty. |
+| `audioContextNotInitialized` | AudioContext has not been initialized. | Call `initializeAudioContext()` inside a user gesture before sending audio. |
+| `animationPlayerNotInitialized` | Animation player has not been initialized. | Reload the avatar and recreate the `AvatarView`. |
 | `serverError` | Server-side error. | Check the error message for details. |
 
 ## iOS — AvatarError
@@ -64,7 +76,10 @@ controller.onError = (error) {
 | `avatarIDUnrecognized` | Avatar ID not found. | Check the avatar ID exists and is published. |
 | `avatarAssetMissing` | Avatar asset is missing locally. | Re-download with `AvatarManager.load()`. |
 | `failedToFetchAvatarMetadata` | Failed to fetch avatar metadata. | Check network connectivity and retry. |
+| `invalidAvatarMetadata` | Avatar metadata is invalid. | Verify the avatar asset version or contact Spatius support. |
+| `incompatibleAvatarAsset` | Avatar asset is incompatible with the SDK. | Upgrade the SDK or regenerate the avatar assets. |
 | `failedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
+| `invalidAnimationData` | Motion data payload is invalid. | Verify your Backend Mode or RTC data path. |
 | `serverError(code, message)` | Server-side error. | Check the error message for details. |
 
 ## Android — AvatarError
@@ -78,9 +93,11 @@ controller.onError = (error) {
 | `SessionTimeout` | Session timed out. | Reconnect by calling `start()` again. |
 | `ConcurrentLimitExceeded` | Concurrent connection limit exceeded. | Close other active sessions before starting a new one. |
 | `AvatarIDUnrecognized` | Avatar ID not found. | Check the avatar ID exists and is published. |
-| `AvatarAssetMissing` | Avatar asset is missing locally. | Re-download with `AvatarManager.load()`. |
 | `FailedToFetchAvatarMetadata` | Failed to fetch avatar metadata. | Check network connectivity and retry. |
+| `InvalidAvatarMetadata` | Avatar metadata is invalid. | Verify the avatar asset version or contact Spatius support. |
+| `IncompatibleAvatarAsset` | Avatar asset is incompatible with the SDK. | Upgrade the SDK or regenerate the avatar assets. |
 | `FailedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
+| `InvalidAnimationData` | Motion data payload is invalid. | Verify your Backend Mode or RTC data path. |
 | `ServerError(message, code)` | Server-side error. | Check the error message for details. |
 
 ## Flutter — AvatarError
@@ -96,7 +113,7 @@ Flutter surfaces `AvatarError` through `AvatarController.onError`. Error names m
 
 For platform-specific API details, see:
 
-- [Web SDK API reference](/sdk-reference/web-sdk/reference)
-- [iOS SDK API reference](/sdk-reference/ios-sdk/api-reference)
-- [Android SDK API reference](/sdk-reference/android-sdk/api-reference)
-- [Flutter SDK API reference](/sdk-reference/flutter-sdk/api-reference)
+- [Web SDK reference](/sdk-reference/web-sdk/reference)
+- [iOS SDK reference](/sdk-reference/ios-sdk/api-reference)
+- [Android SDK reference](/sdk-reference/android-sdk/api-reference)
+- [Flutter SDK reference](/sdk-reference/flutter-sdk/api-reference)

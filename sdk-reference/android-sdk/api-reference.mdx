@@ -1,14 +1,14 @@
 ---
-title: "API Reference"
+title: "Android SDK Reference"
 sidebarTitle: "Android"
-description: "Browse the complete API reference"
+description: "Browse the Android AvatarKit SDK API reference."
 ---
 
 ## Installation
 
 ```kotlin title="build.gradle.kts"
 dependencies {
-    implementation("ai.spatius:avatarkit:1.+")
+    implementation("ai.spatius:avatarkit:1.2.0")
 }
 ```
 
@@ -65,11 +65,27 @@ fun initialize(
 - `configuration`: The configuration for AvatarKit
 </Accordion>
 
-<Accordion title="supportsCurrentDevice()">
+<Accordion title="isDeviceSupported()">
 Returns a Boolean value that indicates whether AvatarKit supports the current device.
 
 ```kotlin
-fun supportsCurrentDevice(): Boolean
+suspend fun isDeviceSupported(): Boolean
+```
+</Accordion>
+
+<Accordion title="setRenderQuality(quality)">
+Update the global rendering quality tier.
+
+```kotlin
+fun setRenderQuality(quality: RenderQuality)
+```
+</Accordion>
+
+<Accordion title="setRenderResolutionCap(enabled, maxHeight)">
+Cap render backing-buffer height while preserving view layout size.
+
+```kotlin
+fun setRenderResolutionCap(enabled: Boolean, maxHeight: Int = 1440)
 ```
 </Accordion>
 
@@ -386,16 +402,18 @@ Creates a new configuration with the specified parameters.
 data class Configuration(
     val region: String,
     val audioFormat: AudioFormat = AudioFormat(16000),
-    val drivingServiceMode: DrivingServiceMode = DrivingServiceMode.SDK,
-    val logLevel: LogLevel = LogLevel.INFO
+    val drivingServiceMode: DrivingServiceMode = DrivingServiceMode.DIRECT,
+    val logLevel: LogLevel = LogLevel.INFO,
+    val renderQuality: RenderQuality = RenderQuality.ULTRA
 )
 ```
 
 **Parameters:**
-- `region`: The region to connect to (`"us-west"` or `"ap-northeast"`)
+- `region`: The region to connect to (`"us-west"`, `"ap-northeast"`, or `"cn-beijing"`)
 - `audioFormat`: The audio format configuration
 - `drivingServiceMode`: The driving service mode
 - `logLevel`: The log level
+- `renderQuality`: Render quality tier
 </Accordion>
 
 ### AudioFormat
@@ -429,8 +447,35 @@ enum class DrivingServiceMode
 
 | Case | Description |
 |------|-------------|
-| `SDK` | The SDK handles driving service internally. |
-| `HOST` | The host application handles driving service. |
+| `DIRECT` | The SDK handles the Motion Server connection directly. |
+| `BACKEND` | The host application provides encoded audio and motion data payloads. |
+
+### RenderQuality
+
+Render quality tiers for AvatarKit.
+
+```kotlin
+enum class RenderQuality
+```
+
+| Case | Description |
+|------|-------------|
+| `STANDARD` | Lower rendering cost. |
+| `HIGH` | Balanced quality and rendering cost. |
+| `ULTRA` | Highest quality. Default. |
+
+### FrameStarvationMode
+
+Controls playback behavior when motion data cannot keep up with the audio clock.
+
+```kotlin
+enum class FrameStarvationMode
+```
+
+| Case | Description |
+|------|-------------|
+| `AUDIO_INDEPENDENT` | Audio keeps playing while motion data catches up. Default. |
+| `STRICT_SYNC` | Audio pauses when motion data runs out and resumes when new motion data arrives. |
 
 ### LogLevel
 

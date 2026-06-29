@@ -14,7 +14,7 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Documentation",
+        "tab": "Guides",
         "groups": [
           {
             "group": "Start Here",
@@ -34,8 +34,7 @@
               "quickstarts/web-sdk",
               "quickstarts/ios-sdk",
               "quickstarts/android-sdk",
-              "quickstarts/flutter-sdk",
-              "quickstarts/livekit-agents"
+              "quickstarts/flutter-sdk"
             ]
           },
           {
@@ -46,8 +45,9 @@
                 "group": "LiveKit Agents Integration",
                 "pages": [
                   "livekit-agents/overview",
+                  "quickstarts/livekit-agents",
                   {
-                    "group": "SDKs",
+                    "group": "Implementation guides",
                     "pages": [
                       "livekit-agents/server",
                       "livekit-agents/client"
@@ -60,7 +60,7 @@
                 "pages": [
                   "agora-convoai/overview",
                   {
-                    "group": "Server setup",
+                    "group": "Agent setup",
                     "pages": [
                       "agora-convoai/convo-ai-agent",
                       "agora-convoai/ten-extension"
@@ -85,7 +85,7 @@
                 "pages": [
                   "direct-mode/overview",
                   {
-                    "group": "SDKs",
+                    "group": "Client guides",
                     "pages": [
                       "direct-mode/web",
                       "direct-mode/ios",
@@ -100,7 +100,7 @@
                 "pages": [
                   "backend-mode/overview",
                   {
-                    "group": "SDKs",
+                    "group": "Runtime roles",
                     "pages": [
                       "backend-mode/server-sdk",
                       "backend-mode/client-sdk"
@@ -133,32 +133,25 @@
             "icon": "book",
             "pages": [
               "resources/demo-projects",
-              "resources/faq",
-              {
-                "group": "Error Codes",
-                "pages": [
-                  "resources/server-error",
-                  "resources/client-error"
-                ]
-              }
+              "resources/faq"
             ]
           }
         ]
       },
       {
-        "tab": "SDK Reference",
+        "tab": "Reference",
         "groups": [
           {
-            "group": "Client SDK",
+            "group": "Client SDKs",
             "icon": "mobile",
             "pages": [
               {
                 "group": "Web SDK",
                 "pages": [
-                  "sdk-reference/web-sdk/toolchain",
-                  "sdk-reference/web-sdk/avatarkit-ui",
                   "sdk-reference/web-sdk/reference",
-                  "sdk-reference/web-sdk/rtc-adapter"
+                  "sdk-reference/web-sdk/toolchain",
+                  "sdk-reference/web-sdk/rtc-adapter",
+                  "sdk-reference/web-sdk/avatarkit-ui"
                 ]
               },
               "sdk-reference/ios-sdk/api-reference",
@@ -167,25 +160,34 @@
             ]
           },
           {
-            "group": "Server SDK",
+            "group": "Server SDKs",
             "icon": "server",
             "pages": [
               "sdk-reference/python-sdk/python-sdk",
               "sdk-reference/go-sdk/go-sdk"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
+          },
           {
             "group": "Server API",
             "icon": "code",
             "pages": [
               "api-reference/api-reference",
-              "api-reference/auth",
+              "api-reference/auth"
+            ]
+          },
+          {
+            "group": "Regions & Endpoints",
+            "icon": "globe",
+            "pages": [
               "api-reference/regions"
+            ]
+          },
+          {
+            "group": "Error Codes",
+            "icon": "triangle-alert",
+            "pages": [
+              "resources/client-error",
+              "resources/server-error"
             ]
           }
         ]
@@ -193,8 +195,8 @@
     ]
   },
   "logo": {
-    "light": "/images/spatius-logo-mark-black.svg",
-    "dark": "/images/spatius-logo-mark-white.svg"
+    "light": "/images/spatius-logo-wordmark-black.png",
+    "dark": "/images/spatius-logo-wordmark-white.png"
   },
   "navbar": {
     "links": [

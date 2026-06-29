@@ -88,7 +88,7 @@ The API Key must only ever live on your backend.
 **Direct Mode reconnect:** if a `sessionTokenExpired` / `sessionTokenInvalid` error fires during reconnect, fetch a fresh Session Token from your backend and call `AvatarSDK.setSessionToken()` again before restarting the connection. RTC / Platform Integration / Backend Mode reconnects don't go through this flow — the Spatius client never sees a Motion Server token in those paths.
 </Note>
 
-For Direct Mode session-token issuance details, see [API Reference: Direct Mode Session Token Auth](/api-reference/auth).
+For Direct Mode session-token issuance details, see [Server API: Session Token Auth Flow](/api-reference/auth).
 
 ## Stage 5: Connect & Interact
 

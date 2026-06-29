@@ -1,7 +1,7 @@
 ---
-title: "API Reference"
+title: "iOS SDK Reference"
 sidebarTitle: "iOS"
-description: "Browse the complete API reference"
+description: "Browse the iOS AvatarKit SDK API reference."
 ---
 
 ## Installation
@@ -50,14 +50,6 @@ static var userID: String
 ```
 </Accordion>
 
-<Accordion title="supportsCurrentDevice">
-Returns a Boolean value that indicates whether AvatarKit supports the current device.
-
-```swift
-static var supportsCurrentDevice: Bool { get }
-```
-</Accordion>
-
 <Accordion title="version">
 Returns the version of AvatarKit.
 
@@ -80,14 +72,36 @@ static func initialize(appID: String, configuration: Configuration)
 - `configuration`: The configuration for AvatarKit
 </Accordion>
 
-<Accordion title="benchmark()">
+<Accordion title="setRenderQuality(_:)">
+Update the global rendering quality tier.
+
+```swift
+static func setRenderQuality(_ quality: RenderQuality)
+```
+</Accordion>
+
+<Accordion title="setRenderResolutionCap(enabled:maxHeight:)">
+Cap render backing-buffer height while preserving the view's CSS/layout size.
+
+```swift
+static func setRenderResolutionCap(enabled: Bool, maxHeight: Int = 1440)
+```
+</Accordion>
+
+<Accordion title="isDeviceSupported()">
+Check whether the current device can run AvatarKit.
+
+```swift
+static func isDeviceSupported() async -> Bool
+```
+</Accordion>
+
+<Accordion title="deviceScore()">
 Measures the device's computational performance for avatar rendering.
 
 ```swift
-static func benchmark() async -> Int
+static func deviceScore() async -> AvatarSDK.DeviceScore
 ```
-
-**Returns:** A performance score indicating the device's capability.
 </Accordion>
 
 ### AvatarManager
@@ -443,31 +457,34 @@ struct Configuration
 
 ##### Initializers
 
-<Accordion title="init(region:audioFormat:drivingServiceMode:logLevel:)">
+<Accordion title="init(region:audioFormat:drivingServiceMode:logLevel:renderQuality:)">
 Creates a new configuration with the specified parameters.
 
 ```swift
 init(
-    region: String,
-    audioFormat: AudioFormat,
-    drivingServiceMode: DrivingServiceMode,
-    logLevel: LogLevel
+    region: String = DEFAULT_REGION,
+    audioFormat: AudioFormat = .init(),
+    drivingServiceMode: DrivingServiceMode = .direct,
+    logLevel: LogLevel = .off,
+    renderQuality: RenderQuality = .ultra
 )
 ```
 
 **Parameters:**
-- `region`: The region to connect to (`"us-west"` or `"ap-northeast"`)
+- `region`: The region to connect to (`"us-west"`, `"ap-northeast"`, or `"cn-beijing"`)
 - `audioFormat`: The audio format configuration
 - `drivingServiceMode`: The driving service mode
 - `logLevel`: The log level
+- `renderQuality`: Render quality tier
 </Accordion>
 
 | Instance Property | Type | Description |
 |----------|------|-------------|
-| `region` | `String` | The region the SDK connects to (`"us-west"` or `"ap-northeast"`). |
+| `region` | `String` | The region the SDK connects to (`"us-west"`, `"ap-northeast"`, or `"cn-beijing"`). |
 | `audioFormat` | `AudioFormat` | Audio format for AvatarKit. |
 | `drivingServiceMode` | `DrivingServiceMode` | Driving service mode for AvatarKit. |
 | `logLevel` | `LogLevel` | Log level for AvatarKit. |
+| `renderQuality` | `RenderQuality` | Render quality tier for AvatarKit. |
 
 ### AudioFormat
 
@@ -505,8 +522,35 @@ enum DrivingServiceMode
 
 | Case | Description |
 |------|-------------|
-| `sdk` | The SDK handles driving service internally. |
-| `host` | The host application handles driving service. |
+| `direct` | The SDK handles the Motion Server connection directly. |
+| `backend` | The host application provides encoded audio and motion data payloads. |
+
+### RenderQuality
+
+Render quality tiers for AvatarKit.
+
+```swift
+enum RenderQuality
+```
+
+| Case | Description |
+|------|-------------|
+| `standard` | Lower rendering cost. |
+| `high` | Balanced quality and rendering cost. |
+| `ultra` | Highest quality. Default. |
+
+### FrameStarvationMode
+
+Controls playback behavior when motion data cannot keep up with the audio clock.
+
+```swift
+enum FrameStarvationMode
+```
+
+| Case | Description |
+|------|-------------|
+| `audioIndependent` | Audio keeps playing while motion data catches up. Default. |
+| `strictSync` | Audio pauses when motion data runs out and resumes when new motion data arrives. |
 
 ### LogLevel
 

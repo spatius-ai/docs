@@ -44,13 +44,13 @@ pip install livekit-plugins-spatius
 | `SPATIUS_API_KEY` | Yes | Your Spatius API key |
 | `SPATIUS_APP_ID` | Yes | Your Spatius app ID |
 | `SPATIUS_AVATAR_ID` | Yes | Avatar to use |
-| `SPATIUS_REGION` | No | Region used to compose endpoints. Defaults to `us-west`; `ap-northeast` is also supported. |
+| `SPATIUS_REGION` | No | Region used to compose endpoints. Defaults to `us-west`; `ap-northeast` and `cn-beijing` are also supported. |
 | `LIVEKIT_URL` | Yes | Your LiveKit server URL |
 | `LIVEKIT_API_KEY` | Yes | LiveKit API key |
 | `LIVEKIT_API_SECRET` | Yes | LiveKit API secret |
 
 <Accordion title="Advanced: endpoint overrides">
-For normal production use, set only `SPATIUS_REGION` and the plugin composes the endpoints automatically. Leave it unset for `us-west`, or set `SPATIUS_REGION=ap-northeast` for the Asia Pacific Northeast region. Set endpoint overrides only when proxying or testing against a staging environment.
+For normal production use, set only `SPATIUS_REGION` and the plugin composes the endpoints automatically. Leave it unset for `us-west`, or set it to `ap-northeast` or `cn-beijing` for another supported region. Set endpoint overrides only when proxying or testing against a staging environment.
 
 | Variable | Description |
 | --- | --- |

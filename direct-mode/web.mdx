@@ -178,27 +178,11 @@ import { AvatarSDK, DrivingServiceMode } from '@spatius/avatarkit'
 
 await AvatarSDK.initialize('your-app-id', {
   region: 'us-west',
-  drivingServiceMode: DrivingServiceMode.sdk, // default
+  drivingServiceMode: DrivingServiceMode.direct, // default
 })
 
 AvatarSDK.setSessionToken('your-session-token')
 ```
-
-<Accordion title="TypeScript: declare `region` (required for @spatius/avatarkit@1.0.0)">
-The runtime accepts `region`, but the published types in `@spatius/avatarkit@1.0.0` do not yet expose it. Add a single declaration-merging file to your project so TypeScript stops complaining:
-
-```typescript title="avatarkit-region.d.ts"
-import '@spatius/avatarkit'
-
-declare module '@spatius/avatarkit' {
-  interface Configuration {
-    readonly region?: string
-  }
-}
-```
-
-A future SDK release will add `region` natively and this file can be deleted.
-</Accordion>
 
 </Step>
 

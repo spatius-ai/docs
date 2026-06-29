@@ -158,7 +158,7 @@ npx shadcn@latest init
 npx shadcn@latest add https://ui.spatius.ai/r/spatius-avatar.json
 ```
 
-## API Reference
+## Component Reference
 
 ### Exports
 
@@ -189,8 +189,8 @@ Initializes AvatarKit, connects the LiveKit-backed avatar motion stream, provide
 | `publishMicrophone` | `boolean` | Defaults to `false`. When `true`, the provider starts publishing the local microphone after connection. |
 | `muted` | `boolean` | Mutes audio rendered by `RoomAudioRenderer`. |
 | `volume` | `number` | Playback volume passed to `RoomAudioRenderer`. |
-| `characterApiBaseUrl` | `string` | Optional override for the AvatarKit character API base URL. |
-| `drivingServiceMode` | `DrivingServiceMode` | AvatarKit driving mode. Defaults to `DrivingServiceMode.host`. |
+| `customEndpoint` | `string` | Advanced override for the AvatarKit API endpoint. Leave unset for normal regional routing. |
+| `drivingServiceMode` | `DrivingServiceMode` | AvatarKit driving mode. Defaults to `DrivingServiceMode.backend`. |
 | `region` | `string` | AvatarKit region. Defaults to `'us-west'`. |
 | `sdkLogLevel` | `LogLevel` | AvatarKit SDK log level. |
 | `sessionToken` | `string` | Optional AvatarKit session token to inject into `AvatarSDK`. |

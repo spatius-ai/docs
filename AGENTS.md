@@ -34,25 +34,24 @@ pnpm check
 
 Mintlify reads `docs.json` and serves only what is referenced from `navigation.tabs[*].groups[*].pages`. Files on disk that are not referenced exist but are unreachable through the sidebar. If you add a new `.mdx` and it doesn't appear in the sidebar, the most likely cause is a missing `docs.json` entry. Always check `docs.json` before assuming a page is reachable.
 
-Top-level structure (Documentation tab):
+Top-level structure (Guides tab):
 
 1. **Start Here** — `getting-started/introduction`, `concepts/how-it-works`, `getting-started/credentials`, `getting-started/how-to-integrate`
 2. **Quickstarts** — platform SDK first-runs only (`quickstarts/{overview,web-sdk,ios-sdk,android-sdk,flutter-sdk}`). LiveKit Agents quickstart lives under its own group, not here.
-3. **Platform Integrations** — third-party realtime/agent platforms slot in via plugins. Today contains `LiveKit Agents Integration` (`livekit-agents/{overview,client,server}`) and `Agora Convo AI / TEN Framework Integration` (`agora-convoai/{overview,convo-ai-agent,ten-extension,client}`).
+3. **Platform Integrations** — third-party realtime/agent platforms slot in via plugins. Today contains `LiveKit Agents Integration` (`livekit-agents/{overview,client,server}` plus `quickstarts/livekit-agents`) and `Agora Convo AI / TEN Framework Integration` (`agora-convoai/{overview,convo-ai-agent,ten-extension,client}`).
 4. **Standalone Integrations** — build directly with Spatius SDKs. Contains two nested groups: `Direct Mode` (`direct-mode/*`) and `Backend Mode` (`backend-mode/*` including `with-livekit` as a transport sub-page).
-5. **Concepts** — `concepts/{avatar,audio,lifecycle,state-events}` (mental model + cross-cutting warnings; `how-it-works` lives in Start Here as orientation).
-6. **Examples & Support** — `resources/demo-projects` (matrix), `faq`, Error Codes group, `changelog`.
+5. **Concepts** — `concepts/{avatar,avatar-background,audio,lifecycle,state-events}` (mental model + cross-cutting warnings; `how-it-works` lives in Start Here as orientation).
+6. **Examples & Support** — `resources/demo-projects` (matrix) and `faq`.
 
 Other tabs:
 
-- **SDK Reference** → `sdk-reference/{web,ios,android,flutter,python,go}-sdk/` (no JS SDK in nav — not implemented yet)
-- **API Reference** → `api-reference/` (Server REST API)
+- **Reference** → all API/reference material: client SDKs, server SDKs, Server API pages, shared Regions & Endpoints, and Error Codes. This tab is the single place to look up exact classes, methods, enums, request fields, endpoint regions, and error codes.
 
 **Key IA boundary:** `backend-mode/with-livekit` lives under Standalone Integrations > Backend Mode even though it mentions LiveKit. It is a transport option for Backend Mode, not a Platform Integration. LiveKit Agents (Platform Integration) and Backend Mode with LiveKit Room transport (Standalone) must never be conflated. The phrase "Server-Side Integrations" was a previous interim grouping and is no longer used anywhere user-facing.
 
 When you rename or move a page, also add an entry to `docs.json > redirects` so existing inbound links keep resolving (`{ "source": "/old/path", "destination": "/new/path" }`). Pure deletions don't need a redirect — only renames do.
 
-## IA convention: Concepts vs SDK Reference (hybrid)
+## IA convention: Concepts vs Reference (hybrid)
 
 `concepts/` pages are **mental model + cross-cutting warnings** for the avatar pipeline. They are **not** API exhaustion. The four pages are:
 
@@ -80,8 +79,8 @@ Use these names verbatim everywhere — including running prose, headings, code 
 | **AvatarKit** | The client-side core SDK that handles rendering and playback. |
 | **`@spatius/avatarkit-rtc`** | The RTC adapter package. Always lowercase, hyphenated, fully scoped. |
 | **LiveKit Agents Integration** | The public name for the **Platform Integration** that uses `livekit-plugins-spatius`. The user-facing name in nav is "LiveKit Agents Integration"; do not call the integration path "LiveKit Integration" or "LiveKit Plugin". |
-| **Direct Mode Integration** | The public name for the path that maps to `DrivingServiceMode.sdk` in SDK code. |
-| **Backend Mode Integration** | The public name for the path that maps to `DrivingServiceMode.host` in SDK code. |
+| **Direct Mode Integration** | The public name for the path that maps to `DrivingServiceMode.direct` in SDK code. |
+| **Backend Mode Integration** | The public name for the path that maps to `DrivingServiceMode.backend` in SDK code. |
 | **`ConnectionState`** / **`ConversationState`** | The two state enum types. Always in code style with this exact casing. |
 
 Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "Spatius Server", "renderer SDK", "RTC plugin"). If you find an existing page using a different term, either fix it in the same change or flag it explicitly — silent drift is the failure mode this section exists to prevent.
@@ -109,13 +108,13 @@ Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "
 | Android (Maven) | `ai.spatius:avatarkit` |
 | iOS | `AvatarKit.xcframework` (downloaded from `spatius-ai/avatarkit-ios-release`) |
 | Flutter | `spatius` |
-| Env vars | `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`, `SPATIUS_REGION` (`us-west` default, `ap-northeast` supported). Vite-built frontends use `VITE_SPATIUS_*`. |
-| Logo files | `/images/spatius-logo-mark-black.svg`, `/images/spatius-logo-mark-white.svg` (SVG, never PNG) |
+| Env vars | `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`, `SPATIUS_REGION` (`us-west` default; `ap-northeast` and `cn-beijing` supported). Vite-built frontends use `VITE_SPATIUS_*`. |
+| Logo files | Favicon uses `/images/spatius-logo-mark-black.svg` and `/images/spatius-logo-mark-white.svg`. Navbar logo uses the original wordmark PNGs: `/images/spatius-logo-wordmark-black.png` and `/images/spatius-logo-wordmark-white.png`. |
 
 ## Endpoint discipline
 
-- Spatius currently operates in two regions: `us-west` and `ap-northeast`. Other historical region slugs are removed. Endpoint domains use `*.{region}.spatius.ai` — never a `*.cloud` TLD under any historical brand.
-- Reference URLs (for advanced users): `https://console.us-west.spatius.ai/v1/console`, `wss://api.us-west.spatius.ai/v2/driveningress`, `https://console.ap-northeast.spatius.ai/v1/console`, `wss://api.ap-northeast.spatius.ai/v2/driveningress`.
+- Spatius currently operates in three regions: `us-west`, `ap-northeast`, and `cn-beijing`. Other historical region slugs are removed. Endpoint domains use `*.{region}.spatius.ai` — never a `*.cloud` TLD under any historical brand.
+- Reference URLs (for advanced users): `https://console.us-west.spatius.ai/v1/console`, `wss://api.us-west.spatius.ai/v2/driveningress`, `https://console.ap-northeast.spatius.ai/v1/console`, `wss://api.ap-northeast.spatius.ai/v2/driveningress`, `https://console.cn-beijing.spatius.ai/v1/console`, `wss://api.cn-beijing.spatius.ai/v2/driveningress`.
 - **Quickstarts and normal demo setup** ask users to set only `SPATIUS_REGION` (defaulting to `us-west`). Do **not** ask users to set `SPATIUS_CONSOLE_ENDPOINT` or `SPATIUS_INGRESS_ENDPOINT` in any setup flow — those exist as commented-out "Advanced override" env vars only.
 
 ## Mintlify-specific conventions used here

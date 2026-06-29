@@ -1,6 +1,7 @@
 ---
-title: "Server API Reference"
-description: "Server-side API for issuing Spatius Session Tokens."
+title: "Session Token API"
+sidebarTitle: "Session Tokens"
+description: "Console API endpoint for issuing Spatius Session Tokens."
 ---
 
 The Spatius Console API runs at the host below. Most users do not need to call it directly — the SDKs and `livekit-plugins-spatius` compose endpoint URLs from `SPATIUS_REGION` automatically. Call this API from your backend when you need to mint short-lived Session Tokens for Direct Mode clients.
@@ -9,6 +10,7 @@ The Spatius Console API runs at the host below. Most users do not need to call i
 | --- | --- |
 | `us-west` (default) | `console.us-west.spatius.ai` |
 | `ap-northeast` | `console.ap-northeast.spatius.ai` |
+| `cn-beijing` | `console.cn-beijing.spatius.ai` |
 
 See [Regions](/api-reference/regions) for the full endpoint reference and override options.
 

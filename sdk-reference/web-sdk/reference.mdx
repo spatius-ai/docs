@@ -8,13 +8,13 @@ description: "Complete API reference for @spatius/avatarkit (Web)."
 
 | Class | Purpose | Key methods |
 |-------|---------|-------------|
-| `AvatarSDK` | SDK initialization and global configuration | `initialize()`, `setSessionToken()` |
-| `AvatarManager` | Avatar asset loading and caching | `load()`, `clearAll()` |
-| `AvatarView` | 3D rendering view | constructor, `dispose()`, `onFirstRendering` |
-| `AvatarController` | Runtime communication and playback control | `start()`, `send()`, `pause()`, `interrupt()`, `close()` |
+| `AvatarSDK` | SDK initialization and global configuration | `initialize()`, `setSessionToken()`, `setRenderQuality()`, `deviceScore()` |
+| `AvatarManager` | Avatar asset loading and caching | `load()`, `cancelLoad()`, `retrieve()`, `clear()`, `clearAll()` |
+| `AvatarView` | 3D rendering view | constructor, `dispose()`, `exportBitmap()`, `avatarTransform`, `getBoundingRect()` |
+| `AvatarController` | Runtime communication and playback control | `start()`, `send()`, `yieldAudioData()`, `yieldFramesData()`, `pause()`, `resume()`, `interrupt()` |
 
 <Note>
-**App ID** is required on every integration path and identifies your Spatius application (it scopes which avatars you can load). **Session Token** is only required for **Direct Mode** (`DrivingServiceMode.sdk`), where it authenticates the Motion Server WebSocket; RTC / Platform Integration / Backend Mode paths do not need it. See [Credentials](/getting-started/credentials) for the per-path breakdown.
+**App ID** is required on every integration path and identifies your Spatius application (it scopes which avatars you can load). **Session Token** is only required for **Direct Mode** (`DrivingServiceMode.direct`), where it authenticates the Motion Server WebSocket; RTC / Platform Integration / Backend Mode paths do not need it. See [Credentials](/getting-started/credentials) for the per-path breakdown.
 </Note>
 
 For the minimum end-to-end integration walkthrough (install, build configuration, init, load, connect), see the [Direct Mode guide for Web](/direct-mode/web).
@@ -38,6 +38,8 @@ import { AvatarSDK } from '@spatius/avatarkit'
 | `sessionToken` | `string \| null` | Current Session Token |
 | `userId` | `string \| null` | Current user ID (telemetry) |
 | `version` | `string` | SDK version |
+| `renderResolutionCapEnabled` | `boolean` | Whether render output resolution capping is enabled |
+| `renderResolutionMaxHeight` | `number` | Maximum backing-buffer height used when capping is enabled |
 
 ### Static methods
 
@@ -48,9 +50,10 @@ Initialize the SDK. Must be called before any other operation.
 ```typescript
 await AvatarSDK.initialize('your-app-id', {
   region: 'us-west',
-  drivingServiceMode: DrivingServiceMode.sdk,    // optional, default: sdk
-  logLevel: LogLevel.warning,                    // optional, default: off
-  audioFormat: {                                  // optional
+  drivingServiceMode: DrivingServiceMode.direct,    // optional, default: direct
+  logLevel: LogLevel.warning,                       // optional, default: off
+  renderQuality: RenderQuality.ultra,               // optional, default: ultra
+  audioFormat: {                                    // optional
     channelCount: 1,
     sampleRate: 16000,
   },
@@ -59,14 +62,14 @@ await AvatarSDK.initialize('your-app-id', {
 
 #### setSessionToken(token)
 
-Set the Session Token used to authenticate the Motion Server WebSocket. **Only required in Direct Mode** (`DrivingServiceMode.sdk`); `AvatarController.start()` opens that WebSocket and authenticates with the token.
+Set the Session Token used to authenticate the Motion Server WebSocket. **Only required in Direct Mode** (`DrivingServiceMode.direct`); `AvatarController.start()` opens that WebSocket and authenticates with the token.
 
 ```typescript
 AvatarSDK.setSessionToken('your-session-token')
 ```
 
-- Required for `DrivingServiceMode.sdk` before calling `AvatarController.start()`.
-- **Not required** for `DrivingServiceMode.host` (LiveKit Agents Integration, RTC Adapter path, Backend Mode). Those paths receive audio + motion through their own transport and do not open a Motion Server WebSocket from the client; `AvatarManager.load()` fetches avatar metadata over an App-ID-scoped public endpoint.
+- Required for `DrivingServiceMode.direct` before calling `AvatarController.start()`.
+- **Not required** for `DrivingServiceMode.backend` (LiveKit Agents Integration, RTC Adapter path, Backend Mode). Those paths receive audio and motion data through their own transport and do not open a Motion Server WebSocket from the client; `AvatarManager.load()` fetches avatar metadata over an App-ID-scoped public endpoint.
 - The token must be obtained from your backend (see [Session token API](/api-reference/api-reference)).
 - Maximum 24-hour validity.
 - Token must be paired with the App ID used in `initialize()`.
@@ -81,6 +84,38 @@ Set a user identifier for logging and telemetry.
 
 ```typescript
 AvatarSDK.setUserId('user-123')
+```
+
+#### setRenderQuality(quality)
+
+Update the global rendering quality tier. The change takes effect on the next rendered frame across active `AvatarView` instances.
+
+```typescript
+AvatarSDK.setRenderQuality(RenderQuality.high)
+```
+
+#### setRenderResolutionCap(enabled, maxHeight?)
+
+Cap the render backing-buffer height while keeping the same CSS size. This is useful on high-DPI displays where rendering above the source avatar asset resolution adds cost without visible benefit.
+
+```typescript
+AvatarSDK.setRenderResolutionCap(true, 1080)
+```
+
+#### deviceScore()
+
+Run a short CPU/GPU benchmark and return device scores.
+
+```typescript
+const { cpuScore, gpuScore } = await AvatarSDK.deviceScore()
+```
+
+#### isDeviceSupported()
+
+Check whether the current device can run AvatarKit. In `1.2.0`, this runs the same benchmark path used by `deviceScore()`.
+
+```typescript
+const supported = await AvatarSDK.isDeviceSupported()
 ```
 
 #### cleanup()
@@ -109,7 +144,7 @@ import { AvatarManager } from '@spatius/avatarkit'
 
 ### Instance methods
 
-#### load(id, onProgress?)
+#### load(id, onProgress?, useCompressedModel?)
 
 Load an avatar by ID. Downloads and caches the avatar's assets.
 
@@ -136,8 +171,33 @@ const avatar = await AvatarManager.shared.load('avatar-id', (progress) => {
 |-----------|------|-------------|
 | `id` | `string` | Avatar ID |
 | `onProgress` | `(progress: LoadProgressInfo) => void` | Optional progress callback |
+| `useCompressedModel` | `boolean` | Optional. Loads a smaller compressed model asset with minor quality tradeoff. Defaults to `false`. |
 
-**Returns:** `Promise<Avatar | null>`
+**Returns:** `Promise<Avatar>`
+
+#### cancelLoad(id)
+
+Cancel a pending or running avatar load task.
+
+```typescript
+const cancelled = AvatarManager.shared.cancelLoad('avatar-id')
+```
+
+#### retrieve(id)
+
+Return a cached avatar instance, if available.
+
+```typescript
+const cachedAvatar = AvatarManager.shared.retrieve('avatar-id')
+```
+
+#### clear(id)
+
+Clear a specific avatar from cache.
+
+```typescript
+AvatarManager.shared.clear('avatar-id')
+```
 
 #### clearAll()
 
@@ -177,7 +237,8 @@ const avatarView = new AvatarView(avatar, container)
 | Property | Type | Description |
 |----------|------|-------------|
 | `controller` | `AvatarController` | Communication controller (read-only) |
-| `transform` | `{ x, y, scale }` | Avatar position and scale (see below) |
+| `avatarTransform` | `{ x, y, scale }` | Avatar position and scale (see below) |
+| `renderSize` | `{ width, height }` | Current canvas backing-buffer size in pixels |
 | `onFirstRendering` | `() => void` | Callback fired when the first frame renders |
 
 **Transform coordinates**
@@ -196,6 +257,59 @@ Release all view resources. Call when the view is no longer needed (see [Lifecyc
 
 ```typescript
 avatarView.dispose()
+```
+
+#### exportBitmap()
+
+Capture the current rendered avatar frame as a PNG `Blob`. Returns `null` if the canvas is not initialized or not currently rendering.
+
+```typescript
+const png = await avatarView.exportBitmap()
+if (png) {
+  // Use the Blob for download, upload, or preview.
+}
+```
+
+#### getCameraConfig() / updateCameraConfig(cameraConfig)
+
+Read or update the camera used by the renderer.
+
+```typescript
+const camera = avatarView.getCameraConfig()
+if (camera) {
+  avatarView.updateCameraConfig({
+    ...camera,
+    fov: 35,
+  })
+}
+```
+
+#### pauseRendering() / resumeRendering()
+
+Pause or resume GPU/canvas rendering without stopping audio playback.
+
+```typescript
+avatarView.pauseRendering()
+avatarView.resumeRendering()
+```
+
+#### isRenderingEnabled()
+
+Check whether the render loop is currently active.
+
+```typescript
+const rendering = avatarView.isRenderingEnabled()
+```
+
+#### getBoundingRect()
+
+Return the approximate avatar bounds in CSS pixels, or `null` if the view is not ready. Recalculate after container size or `avatarTransform` changes.
+
+```typescript
+const rect = avatarView.getBoundingRect()
+if (rect) {
+  console.log(rect.x, rect.y, rect.width, rect.height)
+}
 ```
 
 ---
@@ -226,11 +340,29 @@ controller.onConversationState = (state: ConversationState) => {
 controller.onError = (error: AvatarError) => {
   console.error('Error:', error.code, error.message)
 }
+
+// Animation type changes
+controller.onAnimationState = (type: AnimationType) => {
+  // 'idle' | 'mono'
+}
+
+// Only fires when frameStarvationMode is FrameStarvationMode.strictSync
+controller.onPlaybackStall = (stalled: boolean) => {
+  console.log('Playback stalled:', stalled)
+}
 ```
 
-### `DrivingServiceMode.sdk` methods
+### Instance properties
 
-Available when `drivingServiceMode` is `DrivingServiceMode.sdk` (the Direct Mode path).
+| Property | Type | Description |
+| --- | --- | --- |
+| `frameStarvationMode` | `FrameStarvationMode` | Controls what happens when motion data cannot keep up with the audio clock. Defaults to `FrameStarvationMode.audioIndependent`. |
+| `onFrameRateInfo` | `(info: FrameRateInfo) => void` | Optional callback for aggregated frame-rate metrics. |
+| `frameRateMonitorEnabled` | `boolean` | Enables frame-rate monitoring. Defaults to `false`. |
+
+### `DrivingServiceMode.direct` methods
+
+Available when `drivingServiceMode` is `DrivingServiceMode.direct` (the Direct Mode path).
 
 #### initializeAudioContext()
 
@@ -281,11 +413,11 @@ Close the Motion Server connection.
 controller.close()
 ```
 
-### `DrivingServiceMode.host` methods
+### `DrivingServiceMode.backend` methods
 
-Available when `drivingServiceMode` is `DrivingServiceMode.host` (the Backend Mode path).
+Available when `drivingServiceMode` is `DrivingServiceMode.backend` (the Backend Mode path).
 
-#### yieldAudioData(audioData, end)
+#### yieldAudioData(audioData, end?)
 
 Provide audio data when your backend owns the Motion Server connection.
 
@@ -293,22 +425,37 @@ Provide audio data when your backend owns the Motion Server connection.
 const conversationId = controller.yieldAudioData(audioData, false)
 ```
 
-#### yieldFramesData(frames, conversationId)
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `audioData` | `Uint8Array` | Encoded audio payload from your backend transport |
+| `end` | `boolean` | Optional. Whether this is the final audio payload for the current round. |
 
-Provide motion data payloads when using `DrivingServiceMode.host`. The `conversationId` must match the one returned by the corresponding `yieldAudioData()` call.
+**Returns:** `string | null` — conversation ID for this audio round, or `null` if audio playback could not start.
+
+#### yieldFramesData(motionDataPayloads, conversationId)
+
+Provide motion data payloads when using `DrivingServiceMode.backend`. The `conversationId` must match the one returned by the corresponding `yieldAudioData()` call.
 
 ```typescript
-controller.yieldFramesData(motionDataPayloads, conversationId)
+const ended = controller.yieldFramesData(motionDataPayloads, conversationId)
 ```
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `motionDataPayloads` | `(Uint8Array \| ArrayBuffer)[]` | Motion data payloads from your backend transport |
+| `conversationId` | `string` | Conversation ID returned by `yieldAudioData()` |
+
+**Returns:** `boolean` — `true` when the final motion data payload for that conversation has been received, otherwise `false`.
 
 ### Common methods
 
-Available in both `DrivingServiceMode.sdk` and `DrivingServiceMode.host`.
+Available in both `DrivingServiceMode.direct` and `DrivingServiceMode.backend`.
 
 ```typescript
 controller.pause()                     // Pause audio + animation
-controller.resume()                    // Resume playback
+await controller.resume()              // Resume playback
 controller.interrupt()                 // Stop current playback
+controller.getAudioTime()              // Current audio playback time in seconds
 
 // Volume control (avatar audio only, not system volume)
 controller.setVolume(0.5)              // 0.0 to 1.0
@@ -323,21 +470,53 @@ controller.getVolume()                 // returns current volume
 
 ```typescript
 interface Configuration {
-  region?: string                            // Defaults to 'us-west'; 'ap-northeast' is also supported
-  drivingServiceMode?: DrivingServiceMode    // Default: DrivingServiceMode.sdk
+  region?: string                            // Defaults to 'us-west'
+  drivingServiceMode?: DrivingServiceMode    // Default: DrivingServiceMode.direct
   logLevel?: LogLevel                        // Default: LogLevel.off
   audioFormat?: AudioFormat                  // Default: { channelCount: 1, sampleRate: 16000 }
+  customEndpoint?: string                    // Advanced override
+  renderQuality?: RenderQuality              // Default: RenderQuality.ultra
 }
 ```
 
-`region` selects the Spatius deployment region. It defaults to `'us-west'`; supported values are `'us-west'` and `'ap-northeast'`. See [Regions](/api-reference/regions) for endpoint details and override options.
+`region` selects the Spatius deployment region. It defaults to `'us-west'`; supported values are `'us-west'`, `'ap-northeast'`, and `'cn-beijing'`. See [Regions](/api-reference/regions) for endpoint details and override options.
 
 ### DrivingServiceMode
 
 ```typescript
 enum DrivingServiceMode {
-  sdk = 'sdk',    // Client SDK handles the Motion Server connection (Direct Mode)
-  host = 'host',  // Your backend handles the Motion Server connection (Backend Mode)
+  direct = 'direct',    // Client SDK handles the Motion Server connection (Direct Mode)
+  backend = 'backend',  // Your backend handles the Motion Server connection (Backend Mode)
+}
+```
+
+### RenderQuality
+
+```typescript
+enum RenderQuality {
+  standard = 'standard',
+  high = 'high',
+  ultra = 'ultra',
+}
+```
+
+### FrameStarvationMode
+
+```typescript
+enum FrameStarvationMode {
+  audioIndependent = 'audioIndependent',
+  strictSync = 'strictSync',
+}
+```
+
+`audioIndependent` keeps audio playing while motion data catches up. `strictSync` pauses audio when motion data runs out and resumes when new motion data arrives; use `onPlaybackStall` to observe those transitions.
+
+### AnimationType
+
+```typescript
+enum AnimationType {
+  idle = 'idle',
+  mono = 'mono',
 }
 ```
 
@@ -354,7 +533,7 @@ enum LogLevel {
 
 ### ConnectionState
 
-Reported via `onConnectionState`. Only emitted when `drivingServiceMode` is `DrivingServiceMode.sdk`.
+Reported via `onConnectionState`. Only emitted when `drivingServiceMode` is `DrivingServiceMode.direct`.
 
 ```typescript
 enum ConnectionState {
@@ -476,19 +655,38 @@ avatarView.controller.onError = (error: AvatarError) => {
 }
 ```
 
-### Error codes
+### ErrorCode
 
-| Code | Name | Description | Solution |
-|------|------|-------------|----------|
-| 1001 | `sdkNotVerified` | SDK not verified | Check SDK initialization. |
-| 1002 | `avatarIdWrong` | Invalid avatar ID | Verify the Avatar ID. |
-| 1003 | `avatarAssetsMissing` | Missing avatar assets | Check avatar resources. |
-| 1004 | `avatarCameraSettingsWrong` | Invalid camera settings | Check camera config. |
-| 1005 | `serviceError` | Server error | Check server status. |
-| 1008 | `sendDataWrong` | Invalid audio data | Verify PCM16 format. |
-| 1009 | `requestTimeout` | Request timeout | Check network. |
+`AvatarError.code` is one of the SDK string enum values below.
 
-See [Error Codes](/resources/server-error) for the full server-side error reference.
+```typescript
+enum ErrorCode {
+  appIDUnrecognized = 'appIDUnrecognized',
+  sessionTokenInvalid = 'sessionTokenInvalid',
+  sessionTokenExpired = 'sessionTokenExpired',
+  insufficientBalance = 'insufficientBalance',
+  concurrentLimitExceeded = 'concurrentLimitExceeded',
+  avatarIDUnrecognized = 'avatarIDUnrecognized',
+  failedToFetchAvatarMetadata = 'failedToFetchAvatarMetadata',
+  invalidAvatarMetadata = 'invalidAvatarMetadata',
+  failedToDownloadAvatarAssets = 'failedToDownloadAvatarAssets',
+  websocketError = 'websocketError',
+  websocketClosedAbnormally = 'websocketClosedAbnormally',
+  websocketClosedUnexpected = 'websocketClosedUnexpected',
+  sessionTimeout = 'sessionTimeout',
+  connectionInProgress = 'connectionInProgress',
+  networkLayerNotAvailable = 'networkLayerNotAvailable',
+  playbackStartFailed = 'playbackStartFailed',
+  playbackInitFailed = 'playbackInitFailed',
+  audioOnlyInitFailed = 'audioOnlyInitFailed',
+  noAudio = 'noAudio',
+  audioContextNotInitialized = 'audioContextNotInitialized',
+  animationPlayerNotInitialized = 'animationPlayerNotInitialized',
+  serverError = 'serverError',
+}
+```
+
+See [Client Error Codes](/resources/client-error) for recovery guidance and [Server Error Codes](/resources/server-error) for Console API and Motion Server errors.
 
 ---
 

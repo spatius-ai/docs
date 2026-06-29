@@ -171,15 +171,13 @@ import { AvatarSDK, AvatarView, AvatarManager, DrivingServiceMode } from '@spati
 
 async function init() {
   // Initialize AvatarKit for LiveKit transport rendering.
-  // Note: `region` requires a small type augmentation in @spatius/avatarkit@1.0.0 —
-  // see the Direct Mode Web guide for the avatarkit-region.d.ts snippet.
   await AvatarSDK.initialize('your-app-id', {
     region: 'us-west',
-    drivingServiceMode: DrivingServiceMode.host,
+    drivingServiceMode: DrivingServiceMode.backend,
   })
 
   // `setSessionToken` is not needed on the RTC Adapter path —
-  // `DrivingServiceMode.host` does not open a Motion Server WebSocket from the client,
+  // `DrivingServiceMode.backend` does not open a Motion Server WebSocket from the client,
   // and `AvatarManager.load()` fetches avatar metadata over an App-ID-scoped public endpoint.
 
   // Load avatar and create view
