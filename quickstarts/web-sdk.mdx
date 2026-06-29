@@ -13,7 +13,7 @@ description: "Run the Direct Mode Web quickstart with sample audio first, then o
   One Web Direct Mode quickstart with two audio sources: bundled sample audio and optional realtime conversation.
 </Card>
 
-This quickstart targets the [Direct Mode](/direct-mode/overview) path. It starts with bundled PCM audio so you can validate AvatarKit without any realtime provider key. After that works, switch the same UI to realtime conversation and connect a browser microphone to OpenAI Realtime or Gemini Live.
+This quickstart targets the [Direct Mode](/direct-mode/overview) path. It starts with bundled PCM audio so you can validate AvatarKit without any realtime provider key. After that works, switch the same UI to realtime conversation and connect a browser microphone to OpenAI Realtime, Gemini Live, or Doubao E2E.
 
 ## Prerequisites
 
@@ -30,10 +30,11 @@ Realtime conversation is optional. The quickstart includes adapters for:
 | --- | --- | --- |
 | OpenAI Realtime | Only when you select **Realtime conversation** with `VITE_REALTIME_PROVIDER=openai`. | [OpenAI Realtime](https://developers.openai.com/api/docs/guides/realtime) |
 | Gemini Live API | Only when you select **Realtime conversation** with `VITE_REALTIME_PROVIDER=gemini`. | [Gemini Live API](https://ai.google.dev/gemini-api/docs/live-api) |
+| Doubao E2E RealtimeAPI | Only when you select **Realtime conversation** with `VITE_REALTIME_PROVIDER=doubao`. | [Doubao E2E RealtimeAPI](https://www.volcengine.com/docs/6561/1594356) |
 | Azure OpenAI Realtime | Not built in; use the same adapter interface if you want Azure-hosted realtime audio. | [Azure realtime audio](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/realtime-audio-websockets) |
 
 <Warning>
-The realtime path is for local development. Do not ship a long-lived realtime provider API key in browser code. For production, mint short-lived provider tokens from your backend.
+The realtime path is for local development. Do not ship a long-lived realtime provider API key in browser code. For production, mint short-lived provider tokens from your backend or proxy provider sessions through your backend.
 </Warning>
 
 ## Run it
@@ -84,7 +85,9 @@ Open `http://localhost:3000`, keep **Sample audio** selected, then click **Conne
 
 <Step title="Optional: try realtime conversation">
 
-Set `VITE_REALTIME_PROVIDER` to `openai` or `gemini`, fill the matching provider values in `.env`, then restart `pnpm dev`.
+Set `VITE_REALTIME_PROVIDER` to `openai`, `gemini`, or `doubao`, fill the matching provider values in `.env`, then restart `pnpm dev`.
+
+For Doubao, fill `DOUBAO_E2E_APP_ID` and `DOUBAO_E2E_ACCESS_TOKEN` without the `VITE_` prefix. The quickstart's local Vite proxy reads those values server-side because the browser cannot set Doubao's required WebSocket headers safely.
 
 In the UI, select **Realtime conversation**, click **Connect all**, then hold **Hold to talk** while speaking. Release the button to send your turn.
 
@@ -103,6 +106,7 @@ In the UI, select **Realtime conversation**, click **Connect all**, then hold **
 - **AvatarKit fails before sample audio plays**: refresh `VITE_SPATIUS_SESSION_TOKEN`. Direct Mode Session Tokens are short-lived and must match the App ID and region used by the client.
 - **Sample audio works but realtime does not connect**: the AvatarKit path is valid. Check the selected provider key, model name, quota, and realtime access for your provider account.
 - **Gemini closes with `1008: Your project has been denied access`**: the API key is valid enough to open the WebSocket, but the Google Cloud or AI Studio project does not have Live API access for that model.
+- **Doubao fails before the realtime session is ready**: confirm `DOUBAO_E2E_APP_ID` and `DOUBAO_E2E_ACCESS_TOKEN` are available to the local dev server. They should not use the `VITE_` prefix because the browser should never receive the Access Token.
 - **The browser asks for microphone permission**: allow microphone access for the local dev origin, then click **Hold to talk** again.
 
 ## Next steps
