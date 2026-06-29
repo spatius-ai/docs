@@ -184,7 +184,7 @@
           },
           {
             "group": "Error Codes",
-            "icon": "triangle-alert",
+            "icon": "triangle-exclamation",
             "pages": [
               "resources/client-error",
               "resources/server-error"
