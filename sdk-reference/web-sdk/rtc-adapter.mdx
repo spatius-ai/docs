@@ -69,6 +69,10 @@ yarn add @spatius/avatarkit-rtc @spatius/avatarkit
 ```
 </Warning>
 
+<Note>
+`@spatius/avatarkit-rtc@1.1.0` requires `@spatius/avatarkit@1.2.0` or newer.
+</Note>
+
 ## How it works
 
 The RTC Adapter is a thin layer on top of `@spatius/avatarkit`:
@@ -90,6 +94,27 @@ import { AvatarPlayer, LiveKitProvider } from '@spatius/avatarkit-rtc'
 const provider = new LiveKitProvider()
 const player = new AvatarPlayer(provider, avatarView, options)
 ```
+
+### LiveKitProviderOptions
+
+Most LiveKit integrations use the default provider constructor. If your LiveKit transport publishes the motion data track under a custom publication name, pass a `LiveKitProviderOptions` object.
+
+```typescript
+import { LiveKitProvider, type LiveKitProviderOptions } from '@spatius/avatarkit-rtc'
+
+const providerOptions: LiveKitProviderOptions = {
+  animationTrackName: 'custom-motion-track',
+  // Or match a family of track names:
+  // animationTrackNamePattern: /^spatius-motion-/,
+}
+
+const provider = new LiveKitProvider(providerOptions)
+```
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `animationTrackName` | `string` | Exact LiveKit publication track name to treat as the motion data track. |
+| `animationTrackNamePattern` | `RegExp` | Pattern for LiveKit publication track names to treat as motion data tracks. |
 
 | Provider | Status |
 | --- | --- |
@@ -121,6 +146,8 @@ Use the provider method when you still have a typed provider reference. Use the 
 ## API
 
 For the full `AvatarPlayer` API — constructor options, `connect`, microphone control, custom audio publishing, events, reconnect, and browser compatibility — see [LiveKit Agents Integration Client](/livekit-agents/client). The signatures are exposed by the same package; only the integration narrative on that page differs.
+
+`AvatarPlayer` also exposes `sessionSummary`, a read-only diagnostics snapshot for the current player lifetime. Use it to inspect cumulative RTC playback health, such as ordering, loss recovery, skipped playback, and stalled playback behavior. Treat the object shape as SDK-owned diagnostics data rather than application state.
 
 ## Related guides
 

@@ -28,6 +28,24 @@ Code in this section shows **type signatures**, not copy-paste examples. For run
 new AvatarPlayer(provider: LiveKitProvider, avatarView: AvatarView, options?: AvatarPlayerOptions)
 ```
 
+### LiveKitProviderOptions
+
+```typescript
+interface LiveKitProviderOptions {
+  /** Exact LiveKit publication track name to treat as the motion data track. */
+  animationTrackName?: string
+
+  /** Pattern for LiveKit publication track names to treat as motion data tracks. */
+  animationTrackNamePattern?: RegExp
+}
+
+const provider = new LiveKitProvider({
+  animationTrackName: 'custom-motion-track',
+})
+```
+
+Most integrations use `new LiveKitProvider()` without options. Set these only when your LiveKit transport publishes motion data under custom publication names.
+
 ### AvatarPlayerOptions
 
 ```typescript
@@ -65,6 +83,9 @@ await player.reconnect(): Promise<void>
 // Check connection status
 player.isConnected           // boolean
 player.getConnectionState()  // string
+
+// Read cumulative RTC playback diagnostics for this player lifetime
+player.sessionSummary
 ```
 
 #### LiveKitConnectionConfig
@@ -149,6 +170,14 @@ player.off(event: string, handler: Function)
 <Note>
 When a `stalled` event fires, the avatar automatically transitions to idle animation. Consider calling `player.reconnect()` to recover.
 </Note>
+
+### Session diagnostics
+
+```typescript
+const summary = player.sessionSummary
+```
+
+`sessionSummary` is a read-only diagnostics snapshot for the current `AvatarPlayer` lifetime. Use it when investigating RTC playback health, including packet ordering, recovery, skipped playback, and stalled playback behavior. The object shape is SDK-owned diagnostics data, so avoid depending on individual fields for core application state.
 
 **Stall recovery example:**
 
