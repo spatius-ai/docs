@@ -113,8 +113,8 @@ Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "
 
 ## Endpoint discipline
 
-- Spatius currently operates in three regions: `us-west`, `ap-northeast`, and `cn-beijing`. Other historical region slugs are removed. Endpoint domains use `*.{region}.spatius.ai` — never a `*.cloud` TLD under any historical brand.
-- Reference URLs (for advanced users): `https://console.us-west.spatius.ai/v1/console`, `wss://api.us-west.spatius.ai/v2/driveningress`, `https://console.ap-northeast.spatius.ai/v1/console`, `wss://api.ap-northeast.spatius.ai/v2/driveningress`, `https://console.cn-beijing.spatius.ai/v1/console`, `wss://api.cn-beijing.spatius.ai/v2/driveningress`.
+- Spatius currently operates in three regions: `us-west`, `ap-northeast`, and `cn-beijing`. Other historical region slugs are removed. Endpoint domains use `*.{region}.spatius.ai` except for the `cn-beijing` Console API host, which is `console.cn-beijing.spatialwalk.top`. Never use a `*.cloud` TLD under any historical brand.
+- Reference URLs (for advanced users): `https://console.us-west.spatius.ai/v1/console`, `wss://api.us-west.spatius.ai/v2/driveningress`, `https://console.ap-northeast.spatius.ai/v1/console`, `wss://api.ap-northeast.spatius.ai/v2/driveningress`, `https://console.cn-beijing.spatialwalk.top/v1/console`, `wss://api.cn-beijing.spatius.ai/v2/driveningress`.
 - **Quickstarts and normal demo setup** ask users to set only `SPATIUS_REGION` (defaulting to `us-west`). Do **not** ask users to set `SPATIUS_CONSOLE_ENDPOINT` or `SPATIUS_INGRESS_ENDPOINT` in any setup flow — those exist as commented-out "Advanced override" env vars only.
 
 ## Mintlify-specific conventions used here
