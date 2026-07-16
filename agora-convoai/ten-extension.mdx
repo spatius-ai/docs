@@ -73,7 +73,7 @@ For avatar speech audio source and timing guidance, see [Audio](/concepts/audio)
 | --- | --- | --- |
 | `params.region` | SDK default | Spatius region. See [Regions](/api-reference/regions). |
 | `params.sample_rate` | `24000` | Audio sample rate expected by the extension. Audio frames with other sample rates are rejected by the base extension. |
-| `params.session_expire_minutes` | `30` | Lifetime for the Motion Server session and generated Agora token privilege window. |
+| `params.session_expire_minutes` | `30` | Spatius session token TTL. |
 | `dump` | `false` | Write inbound audio to disk for debugging. |
 | `dump_path` | Empty | Directory for audio dumps when `dump` is enabled. |
 | `channel` | Empty | Alias used by the extension to populate `params.agora_channel` when present. |
