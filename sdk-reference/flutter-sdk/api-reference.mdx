@@ -78,6 +78,41 @@ void onAvatarViewCreated(AvatarController controller) {
 }
 ```
 
+### Render over an Avatar Background
+
+Download the optional 16:9 background from Spatius Studio, add it to your Flutter assets, and declare it in `pubspec.yaml`.
+
+```yaml
+flutter:
+  assets:
+    - assets/avatar-background.webp
+```
+
+Place the background and `AvatarWidget` in the same `Stack`, with the image first.
+
+```dart
+AspectRatio(
+  aspectRatio: 16 / 9,
+  child: ClipRect(
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/avatar-background.webp',
+          fit: BoxFit.cover,
+        ),
+        AvatarWidget(
+          avatar: avatar,
+          onPlatformViewCreated: onAvatarViewCreated,
+        ),
+      ],
+    ),
+  ),
+)
+```
+
+For square or portrait display windows, center this 16:9 stage inside a clipped outer widget. See [Avatar Background](/concepts/avatar-background) for the shared cropping rules.
+
 For Direct Mode audio input, start the connection and send PCM chunks:
 
 ```dart

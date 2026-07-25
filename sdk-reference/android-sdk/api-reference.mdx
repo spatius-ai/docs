@@ -370,6 +370,44 @@ fun cleanup()
 ```
 </Accordion>
 
+#### Render over an Avatar Background
+
+Download the optional 16:9 background from Spatius Studio and add it as a drawable resource. In Compose, place the background `Image` and transparent `AvatarView` in the same `Box`.
+
+```kotlin
+@Composable
+fun AvatarStage(
+    avatar: Avatar,
+    scope: CoroutineScope,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f)
+            .clipToBounds(),
+    ) {
+        Image(
+            painter = painterResource(R.drawable.avatar_background),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        AndroidView(
+            factory = { context ->
+                AvatarView(context).also { avatarView ->
+                    avatarView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                    avatarView.init(avatar, scope)
+                }
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+```
+
+For square or portrait display windows, center this 16:9 stage inside a clipped outer container. See [Avatar Background](/concepts/avatar-background) for the shared cropping rules.
+
 ---
 
 ### Avatar
