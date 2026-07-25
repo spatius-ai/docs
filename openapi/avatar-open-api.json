@@ -7,16 +7,8 @@
   },
   "servers": [
     {
-      "url": "https://console.us-west.spatius.ai/v1/open",
-      "description": "US West (default region)"
-    },
-    {
-      "url": "https://console.ap-northeast.spatius.ai/v1/open",
-      "description": "AP Northeast"
-    },
-    {
-      "url": "https://console.cn-beijing.spatialwalk.top/v1/open",
-      "description": "CN Beijing"
+      "url": "https://console.spatius.ai/v1/open",
+      "description": "Spatius Console API (global)"
     }
   ],
   "security": [
