@@ -140,7 +140,7 @@
         ]
       },
       {
-        "tab": "Reference",
+        "tab": "SDK Reference",
         "groups": [
           {
             "group": "Reference Overview",
@@ -202,7 +202,7 @@
         ]
       },
       {
-        "tab": "Open API",
+        "tab": "API Reference",
         "groups": [
           {
             "group": "Start Here",
