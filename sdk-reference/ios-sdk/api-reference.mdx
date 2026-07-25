@@ -424,13 +424,39 @@ var contentTransform: Transform
 ```
 </Accordion>
 
-<Accordion title="isOpaque">
-Whether the view is opaque.
+#### Render over an Avatar Background
+
+Download the optional 16:9 background from Spatius Studio and add it to the Asset Catalog. Place the image and `AvatarView` in the same `ZStack`, with the image first. `AvatarView` is transparent by default, so the background shows through.
 
 ```swift
-var isOpaque: Bool
+struct AvatarLayer: UIViewRepresentable {
+    let avatar: Avatar
+
+    func makeUIView(context: Context) -> AvatarView {
+        AvatarView(avatar: avatar)
+    }
+
+    func updateUIView(_ avatarView: AvatarView, context: Context) {}
+}
+
+struct AvatarStage: View {
+    let avatar: Avatar
+
+    var body: some View {
+        ZStack {
+            Image("AvatarBackground")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+
+            AvatarLayer(avatar: avatar)
+        }
+        .aspectRatio(16 / 9, contentMode: .fit)
+        .clipped()
+    }
+}
 ```
-</Accordion>
+
+For square or portrait display windows, center this 16:9 stage inside a clipped outer view. See [Avatar Background](/concepts/avatar-background) for the shared cropping rules.
 
 ---
 

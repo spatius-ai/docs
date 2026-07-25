@@ -232,6 +232,32 @@ const avatarView = new AvatarView(avatar, container)
 **Container requirement:** the container element must have non-zero `width` and `height`. The canvas fills the container and auto-resizes via `ResizeObserver`.
 </Warning>
 
+### Render over an Avatar Background
+
+Download the optional 16:9 background from Spatius Studio and store it as an application asset. Set it on the same stage element that you pass to `AvatarView`; the SDK-created canvas has a transparent background.
+
+```html
+<div id="avatar-stage"></div>
+```
+
+```css
+#avatar-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: url('/backgrounds/my-avatar.webp') center / cover no-repeat;
+}
+```
+
+```typescript
+const stage = document.querySelector<HTMLDivElement>('#avatar-stage')!
+const avatar = await AvatarManager.shared.load('avatar-id')
+const avatarView = new AvatarView(avatar, stage)
+```
+
+For square or portrait display windows, keep this inner stage at 16:9, center it, and clip it with an outer container. See [Avatar Background](/concepts/avatar-background) for the shared cropping rules.
+
 ### Instance properties
 
 | Property | Type | Description |
