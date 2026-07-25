@@ -1,12 +1,12 @@
 ---
-title: "Open API Errors and Limits"
+title: "Spatius API Errors and Limits"
 sidebarTitle: "Errors and Limits"
-description: "Open API error envelope, HTTP status mapping, Avatar job failure codes, and per-account rate limits."
+description: "Spatius API error envelope, HTTP status mapping, avatar job failure codes, and per-account rate limits."
 ---
 
 ## Error envelope
 
-Every Open API error returns the same JSON envelope, regardless of which endpoint failed:
+Every Spatius API error returns the same JSON envelope, regardless of which endpoint failed:
 
 ```json
 {
@@ -26,11 +26,11 @@ Every Open API error returns the same JSON envelope, regardless of which endpoin
 
 | HTTP status | `code` | Meaning |
 | --- | --- | --- |
-| `400` | `invalid_request` | Malformed request: missing `imageUrl`, invalid ID in the path, or no active Avatar pipeline is configured. |
-| `401` | `unauthorized` | Missing or mismatched `X-App-ID` / `X-API-Key` pair. See [Authentication](/open-api/authentication). |
+| `400` | `invalid_request` | Malformed request: missing `imageUrl`, an invalid ID in the path, an invalid page token, or no active avatar pipeline configured. |
+| `401` | `unauthorized` | Missing or mismatched `X-App-ID` / `X-API-Key` pair. See [Authentication](/api-reference/authentication). |
 | `402` | `insufficient_avatar_units` | The account has no Avatar Creations left. View your balance at [app.spatius.ai/avatars/creations](https://app.spatius.ai/avatars/creations). |
-| `403` | `forbidden` | Open API access is not configured, or Avatar creation is disabled for the account. |
-| `404` | `not_found` | The Avatar or job does not exist, or belongs to another account. |
+| `403` | `forbidden` | API access is not configured (`Open API access is not configured`), or avatar creation is disabled for the account (`API Avatar creation is disabled`). |
+| `404` | `not_found` | The avatar or job does not exist, or belongs to another account. |
 | `429` | `rate_limit_exceeded` | A rate limit or the rolling 24-hour creation quota was exceeded. |
 | `429` | `concurrency_limit_exceeded` | Too many jobs are queued or processing at once. Wait for an active job to finish. |
 | `500` | `internal_error` | An unexpected server error. Retry with backoff; quote `request_id` if it persists. |
@@ -39,24 +39,22 @@ Every Open API error returns the same JSON envelope, regardless of which endpoin
 
 ## Job failure codes
 
-When a creation job reaches `failed`, the job's `error` object carries one of these stable codes. The `retryable` flag tells you whether resubmitting the same request may succeed.
+When a creation job reaches `failed`, the job's `error` object carries one of these codes:
 
-| Code | Meaning | Typical action |
+| Code | Message | Meaning |
 | --- | --- | --- |
-| `source_download_failed` | The image URL could not be fetched within the timeout. | Host the image on fast, reliable storage and resubmit. |
-| `invalid_image` | The file is not a valid JPEG or PNG, exceeds 5 MiB, is smaller than 340 px on its shorter side, or is a non-opaque PNG. | Fix the image and resubmit. |
-| `face_not_detected` | No face was found in the image. | Use an image with one clearly visible face. |
-| `multiple_faces_detected` | More than one face was found. | Crop to a single face and resubmit. |
-| `image_quality_rejected` | The image passed validation but was rejected by quality checks. | Use a sharper, well-lit portrait. |
-| `preprocess_failed` | Preprocessing failed after download. | Retry; contact support if it persists. |
-| `avatar_generation_failed` | Avatar generation failed. | Retry; contact support if it persists. |
-| `avatar_generation_timed_out` | Generation did not finish in time. | Retry the job. |
-| `avatar_generation_cancelled` | The job was cancelled. | Resubmit if still needed. |
-| `internal_error` | An unexpected failure. | Retry; quote the job ID when contacting support. |
+| `source_download_failed` | `The source image could not be downloaded.` | The image URL could not be fetched or stored. Host the image on fast, reliable storage and resubmit. |
+| `invalid_image` | `The source image is not a supported opaque JPEG or PNG of sufficient size.` | The file is not a valid JPEG or PNG, exceeds 5 MiB, is smaller than 340 px on its shorter side, or is a non-opaque PNG. Fix the image and resubmit. |
+| `image_quality_rejected` | `The source image did not pass Avatar image requirements.` | The image passed format validation but was rejected by content checks, for example because it does not contain exactly one clearly visible face. |
+| `preprocess_failed` | `The source image could not be preprocessed.` | Preprocessing failed after download. Retry; contact support if it persists. |
+| `avatar_generation_failed` | `Avatar generation failed.` | Avatar generation failed or could not be started. Retry; contact support if it persists. |
+| `internal_error` | — | An unexpected failure. Retry; quote the job ID when contacting support. |
+
+The `retryable` flag on the error indicates whether resubmitting the same request may succeed.
 
 ## Rate limits
 
-Limits are enforced per account through an Open API policy. Your account may be configured below these hard caps:
+Limits are enforced per account. Your account may be configured below these hard caps:
 
 | Limit | Hard cap |
 | --- | --- |
@@ -76,10 +74,10 @@ List endpoints accept `pagination.pageSize` (default 20, maximum 100) and `pagin
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Open API Overview" icon="book-open" href="/open-api/overview">
-    The asynchronous Avatar creation flow, end to end.
+  <Card title="Overview" icon="book-open" href="/api-reference/overview">
+    The asynchronous avatar creation flow, end to end.
   </Card>
-  <Card title="Authentication" icon="key" href="/open-api/authentication">
+  <Card title="Authentication" icon="key" href="/api-reference/authentication">
     The X-App-ID and X-API-Key header pair.
   </Card>
 </CardGroup>

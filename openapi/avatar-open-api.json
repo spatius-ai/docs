@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Spatius Open API",
+    "title": "Spatius API",
     "version": "1.0.0",
-    "description": "The Spatius Open API lets you create and manage Avatars programmatically. Submit a source image, poll the asynchronous creation job, and use the resulting Avatar ID anywhere an Avatar ID is accepted (for example `SPATIUS_AVATAR_ID` in Direct Mode or Backend Mode integrations).\n\nAll endpoints require the `X-App-ID` and `X-API-Key` headers. See [Authentication](/open-api/authentication) and [Errors and Limits](/open-api/errors)."
+    "description": "The Spatius API lets you create and manage avatars programmatically. Submit a source image, poll the asynchronous creation job, and use the resulting avatar ID anywhere an avatar ID is accepted in your SDK integration.\n\nAll endpoints require the `X-App-ID` and `X-API-Key` headers. See [Authentication](/api-reference/authentication) and [Errors and Limits](/api-reference/errors)."
   },
   "servers": [
     {
@@ -94,7 +94,7 @@
       "get": {
         "operationId": "listAvatars",
         "summary": "List Avatars",
-        "description": "Returns the Studio Avatars owned by the authenticated account, including Avatars created through the Open API and through Spatius Studio. Results are paginated.",
+        "description": "Returns the Studio avatars owned by the authenticated account, including avatars created through the Spatius API and through Spatius Studio. Results are paginated.",
         "tags": ["Avatars"],
         "parameters": [
           {
@@ -332,8 +332,8 @@
                         "status": "failed",
                         "name": "Avatar-7a8b9c0d",
                         "error": {
-                          "code": "face_not_detected",
-                          "message": "No face was detected in the source image.",
+                          "code": "image_quality_rejected",
+                          "message": "The source image did not pass Avatar image requirements.",
                           "retryable": false
                         },
                         "createdAt": "2026-07-25T10:05:00Z",
@@ -491,13 +491,9 @@
             "enum": [
               "source_download_failed",
               "invalid_image",
-              "face_not_detected",
-              "multiple_faces_detected",
               "image_quality_rejected",
               "preprocess_failed",
               "avatar_generation_failed",
-              "avatar_generation_timed_out",
-              "avatar_generation_cancelled",
               "internal_error"
             ]
           },
@@ -609,7 +605,7 @@
       },
       "Error": {
         "type": "object",
-        "description": "The single public error envelope returned by every Open API endpoint.",
+        "description": "The single public error envelope returned by every Spatius API endpoint.",
         "properties": {
           "error": {
             "type": "object",
@@ -679,7 +675,7 @@
         }
       },
       "Forbidden": {
-        "description": "Open API access is not configured for the account, or Avatar creation is disabled.",
+        "description": "API access is not configured for the account, or avatar creation is disabled.",
         "content": {
           "application/json": {
             "schema": {
@@ -688,7 +684,7 @@
             "example": {
               "error": {
                 "code": "forbidden",
-                "message": "Open Avatar creation is disabled",
+                "message": "API Avatar creation is disabled",
                 "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }
@@ -722,7 +718,7 @@
             "example": {
               "error": {
                 "code": "insufficient_avatar_units",
-                "message": "There are not enough Avatar Creations to create this Avatar.",
+                "message": "There are not enough Avatar Units to create this Avatar.",
                 "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }
@@ -756,7 +752,7 @@
             "example": {
               "error": {
                 "code": "service_unavailable",
-                "message": "Avatar Creation reservation failed; retry later",
+                "message": "Avatar Unit reservation failed; retry later",
                 "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }

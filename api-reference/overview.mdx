@@ -1,24 +1,20 @@
 ---
-title: "Open API Overview"
+title: "Spatius API"
 sidebarTitle: "Overview"
-description: "Create and manage Spatius Avatars programmatically from a source image through the Open API."
+description: "Access and manage resources in Spatius Studio programmatically."
 ---
 
-The Spatius Open API lets your backend create and manage Avatars programmatically. Submit a source image, poll the asynchronous creation job, and receive an Avatar ID that works anywhere an Avatar ID is accepted — Direct Mode, Backend Mode, and platform integrations all consume the same Avatar ID through `SPATIUS_AVATAR_ID`.
-
-The Open API is served globally from a single host:
+The Spatius API lets your backend create and manage avatars programmatically. Submit a source image, and receive a custom avatar.
 
 ```
 https://console.spatius.ai/v1/open
 ```
 
-Unlike the regional Session Token and Motion Server endpoints, the Open API is not region-scoped — every account uses the same base URL.
-
 <Warning>
-The Open API is currently in **private beta** and is not available to all users. To request access, submit a feedback ticket at [app.spatius.ai/feedback/create](https://app.spatius.ai/feedback/create). If you receive `forbidden` with "Open API access is not configured", your account has not been enrolled yet.
+The Spatius API is currently in **private beta** and is not available to all users. To request access, submit a feedback ticket at [app.spatius.ai/feedback/create](https://app.spatius.ai/feedback/create). If you receive `forbidden` with "API Avatar creation is disabled" or "Open API access is not configured", your account has not been enrolled yet.
 </Warning>
 
-## How Avatar creation works
+## How avatar creation works
 
 Avatar creation is asynchronous. A single `POST /avatars` call accepts the job; a background worker then downloads, validates, and preprocesses the image, and generates the Avatar through the same pipeline used by Spatius Studio.
 
@@ -30,7 +26,7 @@ Avatar creation is asynchronous. A single `POST /avatars` call accepts the job; 
     Call `GET /avatar-jobs/{job_id}` every 5–10 seconds. The job moves from `queued` to `processing`, then to a terminal state.
   </Step>
   <Step title="Use the Avatar ID">
-    When the job reaches `succeeded`, read `avatarId` from the job and use it as `SPATIUS_AVATAR_ID` in any integration. If the job reaches `failed`, inspect `error.code` and `error.retryable`.
+    When the job reaches `succeeded`, read `avatarId` from the job and use it in your SDK integration. If the job reaches `failed`, inspect `error.code` and `error.retryable`.
   </Step>
 </Steps>
 
@@ -38,10 +34,10 @@ Avatar creation is asynchronous. A single `POST /avatars` call accepts the job; 
 
 | Status | Meaning |
 | --- | --- |
-| `queued` | The job was accepted and is waiting for a worker. |
-| `processing` | The image is being downloaded, validated, or the Avatar is being generated. |
-| `succeeded` | The Avatar is ready. `avatarId` is set. |
-| `failed` | The job ended with a stable error. See `error.code`. |
+| `queued` | The job was accepted and is waiting for dispatch. |
+| `processing` | The image is being downloaded, validated, and Spatius is generating an avatar. |
+| `succeeded` | The avatar is ready with `avatarId` available. |
+| `failed` | The job ended with an error. See `error.code`. |
 
 ## Source image requirements
 
@@ -62,10 +58,10 @@ You can view your current available Avatar Creations at [app.spatius.ai/avatars/
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Authentication" icon="key" href="/open-api/authentication">
+  <Card title="Authentication" icon="key" href="/api-reference/authentication">
     Authenticate with the X-App-ID and X-API-Key header pair.
   </Card>
-  <Card title="Errors and Limits" icon="triangle-exclamation" href="/open-api/errors">
+  <Card title="Errors and Limits" icon="triangle-exclamation" href="/api-reference/errors">
     Error envelope, status codes, job failure codes, and rate limits.
   </Card>
 </CardGroup>
