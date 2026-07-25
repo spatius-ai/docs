@@ -216,6 +216,7 @@
           {
             "group": "Avatar API",
             "icon": "image",
+            "tag": "Beta",
             "openapi": "/openapi/avatar-open-api.json"
           }
         ]
