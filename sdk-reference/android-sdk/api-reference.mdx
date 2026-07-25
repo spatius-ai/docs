@@ -372,7 +372,7 @@ fun cleanup()
 
 #### Render over an Avatar Background
 
-Download the optional 16:9 background from Spatius Studio and add it as a drawable resource. In Compose, place the background `Image` and transparent `AvatarView` in the same `Box`.
+Download the optional 16:9 background from Spatius Studio and add it as a drawable resource. In Compose, place the background `Image` and `AvatarView` in the same `Box`. `AvatarView` renders on a transparent surface by default, so the background shows through.
 
 ```kotlin
 @Composable
@@ -396,7 +396,6 @@ fun AvatarStage(
         AndroidView(
             factory = { context ->
                 AvatarView(context).also { avatarView ->
-                    avatarView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
                     avatarView.init(avatar, scope)
                 }
             },

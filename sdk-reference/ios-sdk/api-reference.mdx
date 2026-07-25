@@ -424,26 +424,16 @@ var contentTransform: Transform
 ```
 </Accordion>
 
-<Accordion title="isOpaque">
-Whether the view is opaque.
-
-```swift
-var isOpaque: Bool
-```
-</Accordion>
-
 #### Render over an Avatar Background
 
-Download the optional 16:9 background from Spatius Studio and add it to the Asset Catalog. Place the image and `AvatarView` in the same `ZStack`, with the image first, and make the Avatar view transparent.
+Download the optional 16:9 background from Spatius Studio and add it to the Asset Catalog. Place the image and `AvatarView` in the same `ZStack`, with the image first. `AvatarView` is transparent by default, so the background shows through.
 
 ```swift
 struct AvatarLayer: UIViewRepresentable {
     let avatar: Avatar
 
     func makeUIView(context: Context) -> AvatarView {
-        let avatarView = AvatarView(avatar: avatar)
-        avatarView.isOpaque = false
-        return avatarView
+        AvatarView(avatar: avatar)
     }
 
     func updateUIView(_ avatarView: AvatarView, context: Context) {}
