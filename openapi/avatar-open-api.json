@@ -1,0 +1,793 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Spatius Open API",
+    "version": "1.0.0",
+    "description": "The Spatius Open API lets you create and manage Avatars programmatically. Submit a source image, poll the asynchronous creation job, and use the resulting Avatar ID anywhere an Avatar ID is accepted (for example `SPATIUS_AVATAR_ID` in Direct Mode or Backend Mode integrations).\n\nAll endpoints require the `X-App-ID` and `X-API-Key` headers. See [Authentication](/open-api/authentication) and [Errors and Limits](/open-api/errors)."
+  },
+  "servers": [
+    {
+      "url": "https://console.us-west.spatius.ai/v1/open",
+      "description": "US West (default region)"
+    },
+    {
+      "url": "https://console.ap-northeast.spatius.ai/v1/open",
+      "description": "AP Northeast"
+    },
+    {
+      "url": "https://console.cn-beijing.spatialwalk.top/v1/open",
+      "description": "CN Beijing"
+    }
+  ],
+  "security": [
+    {
+      "AppId": [],
+      "ApiKey": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Avatars",
+      "description": "Create Avatars and read the canonical Studio Avatar resources owned by your account."
+    },
+    {
+      "name": "Avatar Jobs",
+      "description": "Track asynchronous Avatar creation jobs."
+    }
+  ],
+  "paths": {
+    "/avatars": {
+      "post": {
+        "operationId": "createAvatar",
+        "summary": "Create an Avatar",
+        "description": "Accepts a source image URL and queues an asynchronous Avatar creation job. Spatius downloads and validates the image, preprocesses it, and generates the Avatar through the Studio pipeline. Poll `GET /avatar-jobs/{job_id}` until the job reaches `succeeded` or `failed`.\n\nThe request is admitted only when your account is within its creation rate limits, rolling 24-hour quota, and concurrency limit, and holds enough Avatar Units. Units are reserved when the job is accepted and captured when preprocessing completes; they are released if the job fails before capture.\n\nSource image requirements:\n\n- Public HTTP(S) URL, reachable within 3 seconds\n- JPEG or PNG, at most 5 MiB\n- Shorter side at least 340 pixels\n- PNG images must be fully opaque\n- Exactly one clearly visible face",
+        "tags": ["Avatars"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAvatarRequest"
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "name": "Support Agent",
+                    "imageUrl": "https://example.com/portraits/agent.png"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The creation job was accepted and queued.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateAvatarResponse"
+                },
+                "example": {
+                  "jobId": "6f1e2b3c-9a1d-4e5f-8b0a-2c4d6e8f0a1b",
+                  "status": "queued",
+                  "createdAt": "2026-07-25T09:30:00Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/InsufficientAvatarUnits"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      },
+      "get": {
+        "operationId": "listAvatars",
+        "summary": "List Avatars",
+        "description": "Returns the Studio Avatars owned by the authenticated account, including Avatars created through the Open API and through Spatius Studio. Results are paginated.",
+        "tags": ["Avatars"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/PageToken"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of Avatars.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAvatarsResponse"
+                },
+                "example": {
+                  "avatars": [
+                    {
+                      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+                      "name": "Support Agent",
+                      "coverUrl": "https://cdn.spatius.ai/avatars/a1b2c3d4/cover.png",
+                      "backgroundImageUrl": "https://cdn.spatius.ai/avatars/a1b2c3d4/background.png",
+                      "createdAt": "2026-07-25T09:47:12Z",
+                      "updatedAt": "2026-07-25T09:47:12Z"
+                    }
+                  ],
+                  "pagination": {
+                    "nextPageToken": "20",
+                    "totalCount": 35
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/avatars/{avatar_id}": {
+      "get": {
+        "operationId": "getAvatar",
+        "summary": "Get an Avatar",
+        "description": "Returns a single Studio Avatar owned by the authenticated account.",
+        "tags": ["Avatars"],
+        "parameters": [
+          {
+            "name": "avatar_id",
+            "in": "path",
+            "required": true,
+            "description": "Avatar ID (UUID).",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested Avatar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAvatarResponse"
+                },
+                "example": {
+                  "avatar": {
+                    "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+                    "name": "Support Agent",
+                    "coverUrl": "https://cdn.spatius.ai/avatars/a1b2c3d4/cover.png",
+                    "backgroundImageUrl": "https://cdn.spatius.ai/avatars/a1b2c3d4/background.png",
+                    "createdAt": "2026-07-25T09:47:12Z",
+                    "updatedAt": "2026-07-25T09:47:12Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/avatar-jobs": {
+      "get": {
+        "operationId": "listAvatarJobs",
+        "summary": "List Avatar jobs",
+        "description": "Returns the Avatar creation jobs submitted by the authenticated account, newest first. Use the `statuses` query parameter to filter by job status.",
+        "tags": ["Avatar Jobs"],
+        "parameters": [
+          {
+            "name": "statuses",
+            "in": "query",
+            "required": false,
+            "description": "Repeatable status filter. Only jobs in one of the given statuses are returned.",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/JobStatus"
+              }
+            }
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/PageToken"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of Avatar creation jobs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAvatarJobsResponse"
+                },
+                "example": {
+                  "jobs": [
+                    {
+                      "id": "6f1e2b3c-9a1d-4e5f-8b0a-2c4d6e8f0a1b",
+                      "status": "succeeded",
+                      "name": "Support Agent",
+                      "avatarId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+                      "createdAt": "2026-07-25T09:30:00Z",
+                      "updatedAt": "2026-07-25T09:47:12Z",
+                      "completedAt": "2026-07-25T09:47:12Z"
+                    }
+                  ],
+                  "pagination": {
+                    "nextPageToken": "",
+                    "totalCount": 1
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/avatar-jobs/{job_id}": {
+      "get": {
+        "operationId": "getAvatarJob",
+        "summary": "Get an Avatar job",
+        "description": "Returns a single Avatar creation job. Poll this endpoint after `POST /avatars` until `status` is `succeeded` (use `avatarId`) or `failed` (inspect `error`). A polling interval of 5-10 seconds is recommended.",
+        "tags": ["Avatar Jobs"],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "description": "Job ID (UUID) returned by `POST /avatars`.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested job.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAvatarJobResponse"
+                },
+                "examples": {
+                  "succeeded": {
+                    "summary": "Succeeded job",
+                    "value": {
+                      "job": {
+                        "id": "6f1e2b3c-9a1d-4e5f-8b0a-2c4d6e8f0a1b",
+                        "status": "succeeded",
+                        "name": "Support Agent",
+                        "avatarId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+                        "createdAt": "2026-07-25T09:30:00Z",
+                        "updatedAt": "2026-07-25T09:47:12Z",
+                        "completedAt": "2026-07-25T09:47:12Z"
+                      }
+                    }
+                  },
+                  "failed": {
+                    "summary": "Failed job",
+                    "value": {
+                      "job": {
+                        "id": "7a8b9c0d-1e2f-4a5b-9c0d-3e4f5a6b7c8d",
+                        "status": "failed",
+                        "name": "Avatar-7a8b9c0d",
+                        "error": {
+                          "code": "face_not_detected",
+                          "message": "No face was detected in the source image.",
+                          "retryable": false
+                        },
+                        "createdAt": "2026-07-25T10:05:00Z",
+                        "updatedAt": "2026-07-25T10:05:41Z",
+                        "completedAt": "2026-07-25T10:05:41Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AppId": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-App-ID",
+        "description": "Your Spatius App ID."
+      },
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "The API key bound to the App ID."
+      }
+    },
+    "parameters": {
+      "PageSize": {
+        "name": "pagination.pageSize",
+        "in": "query",
+        "required": false,
+        "description": "Maximum number of items to return. Defaults to 20, capped at 100.",
+        "schema": {
+          "type": "integer",
+          "format": "int32",
+          "default": 20,
+          "maximum": 100,
+          "minimum": 1
+        }
+      },
+      "PageToken": {
+        "name": "pagination.pageToken",
+        "in": "query",
+        "required": false,
+        "description": "Opaque token from the previous page's `nextPageToken`. Omit for the first page.",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "schemas": {
+      "JobStatus": {
+        "type": "string",
+        "description": "Lifecycle status of an Avatar creation job.",
+        "enum": ["queued", "processing", "succeeded", "failed"]
+      },
+      "CreateAvatarRequest": {
+        "type": "object",
+        "required": ["imageUrl"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Optional display name. When omitted, a name like `Avatar-<job-id-prefix>` is generated."
+          },
+          "imageUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public HTTP(S) URL of the source image. Validated asynchronously after the job is accepted."
+          },
+          "preprocessTaskId": {
+            "type": "string",
+            "description": "Reserved for future use. Not supported yet; requests that set it are rejected."
+          }
+        }
+      },
+      "CreateAvatarResponse": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the accepted creation job. Poll it with `GET /avatar-jobs/{job_id}`."
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Avatar": {
+        "type": "object",
+        "description": "A canonical Studio Avatar resource.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Avatar ID usable anywhere an Avatar ID is accepted (for example `SPATIUS_AVATAR_ID`)."
+          },
+          "name": {
+            "type": "string"
+          },
+          "coverUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Avatar cover image."
+          },
+          "backgroundImageUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Default background image, when one is configured."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AvatarJobError": {
+        "type": "object",
+        "description": "Stable public error returned when an Avatar creation job fails.",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Machine-readable failure code.",
+            "enum": [
+              "source_download_failed",
+              "invalid_image",
+              "face_not_detected",
+              "multiple_faces_detected",
+              "image_quality_rejected",
+              "preprocess_failed",
+              "avatar_generation_failed",
+              "avatar_generation_timed_out",
+              "avatar_generation_cancelled",
+              "internal_error"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable explanation of the failure."
+          },
+          "retryable": {
+            "type": "boolean",
+            "description": "Whether resubmitting the same request may succeed."
+          }
+        }
+      },
+      "AvatarJob": {
+        "type": "object",
+        "description": "An asynchronous Avatar creation job.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name the Avatar will receive."
+          },
+          "avatarId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the created Avatar. Present only when `status` is `succeeded`."
+          },
+          "error": {
+            "$ref": "#/components/schemas/AvatarJobError"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Set when the job reaches `succeeded` or `failed`."
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "nextPageToken": {
+            "type": "string",
+            "description": "Pass as `pagination.pageToken` to fetch the next page. Empty when no more pages exist."
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Total number of matching items."
+          }
+        }
+      },
+      "GetAvatarResponse": {
+        "type": "object",
+        "properties": {
+          "avatar": {
+            "$ref": "#/components/schemas/Avatar"
+          }
+        }
+      },
+      "ListAvatarsResponse": {
+        "type": "object",
+        "properties": {
+          "avatars": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Avatar"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "GetAvatarJobResponse": {
+        "type": "object",
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/AvatarJob"
+          }
+        }
+      },
+      "ListAvatarJobsResponse": {
+        "type": "object",
+        "properties": {
+          "jobs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AvatarJob"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "description": "The single public error envelope returned by every Open API endpoint.",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Stable machine-readable error code.",
+                "enum": [
+                  "unauthorized",
+                  "forbidden",
+                  "invalid_request",
+                  "not_found",
+                  "insufficient_avatar_units",
+                  "rate_limit_exceeded",
+                  "concurrency_limit_exceeded",
+                  "service_unavailable",
+                  "unsupported_input",
+                  "internal_error"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable explanation specific to this occurrence."
+              },
+              "request_id": {
+                "type": "string",
+                "description": "Unique identifier for this request. Quote it when contacting support."
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "InvalidRequest": {
+        "description": "The request is malformed or violates a precondition, such as a missing `imageUrl` or an invalid ID in the path.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "invalid_request",
+                "message": "image_url is required",
+                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "The `X-App-ID` / `X-API-Key` pair is missing, does not match, or belongs to an inactive account.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "unauthorized",
+                "message": "Unauthorized.",
+                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Open API access is not configured for the account, or Avatar creation is disabled.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "forbidden",
+                "message": "Open Avatar creation is disabled",
+                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "The requested resource does not exist or belongs to another account.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "not_found",
+                "message": "Avatar job not found",
+                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "InsufficientAvatarUnits": {
+        "description": "The account does not hold enough Avatar Units to create this Avatar.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "insufficient_avatar_units",
+                "message": "There are not enough Avatar Units to create this Avatar.",
+                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "A rate limit, rolling 24-hour quota, or concurrency limit was exceeded. Back off and retry.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "rate_limit_exceeded",
+                "message": "Open API rate limit exceeded",
+                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "A transient backend failure occurred, for example reservation contention. Retry the request.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "service_unavailable",
+                "message": "Avatar Unit reservation failed; retry later",
+                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "An unexpected server error occurred.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "internal_error",
+                "message": "An internal error occurred.",
+                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -200,6 +200,25 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Open API",
+        "groups": [
+          {
+            "group": "Start Here",
+            "icon": "rocket",
+            "pages": [
+              "open-api/overview",
+              "open-api/authentication",
+              "open-api/errors"
+            ]
+          },
+          {
+            "group": "Avatar API",
+            "icon": "image",
+            "openapi": "/openapi/avatar-open-api.json"
+          }
+        ]
       }
     ]
   },

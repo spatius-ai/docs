@@ -1,0 +1,85 @@
+---
+title: "Open API Errors and Limits"
+sidebarTitle: "Errors and Limits"
+description: "Open API error envelope, HTTP status mapping, Avatar job failure codes, and per-account rate limits."
+---
+
+## Error envelope
+
+Every Open API error returns the same JSON envelope, regardless of which endpoint failed:
+
+```json
+{
+  "error": {
+    "code": "rate_limit_exceeded",
+    "message": "Open API rate limit exceeded",
+    "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+  }
+}
+```
+
+- `code` is a stable machine-readable string. Program against `code`, not `message`.
+- `message` is a human-readable explanation specific to this occurrence.
+- `request_id` uniquely identifies the request. It is also returned in the `X-Request-ID` response header. Quote it when contacting support.
+
+## HTTP status and error code mapping
+
+| HTTP status | `code` | Meaning |
+| --- | --- | --- |
+| `400` | `invalid_request` | Malformed request: missing `imageUrl`, invalid ID in the path, or no active Avatar pipeline is configured. |
+| `401` | `unauthorized` | Missing or mismatched `X-App-ID` / `X-API-Key` pair. See [Authentication](/open-api/authentication). |
+| `402` | `insufficient_avatar_units` | The account does not hold enough Avatar Units to create this Avatar. |
+| `403` | `forbidden` | Open API access is not configured, or Avatar creation is disabled for the account. |
+| `404` | `not_found` | The Avatar or job does not exist, or belongs to another account. |
+| `429` | `rate_limit_exceeded` | A rate limit or the rolling 24-hour creation quota was exceeded. |
+| `429` | `concurrency_limit_exceeded` | Too many jobs are queued or processing at once. Wait for an active job to finish. |
+| `500` | `internal_error` | An unexpected server error. Retry with backoff; quote `request_id` if it persists. |
+| `501` | `unsupported_input` | The request uses an input that is not supported yet, such as `preprocessTaskId`. |
+| `503` | `service_unavailable` | A transient backend failure, for example reservation contention. Retry the request. |
+
+## Job failure codes
+
+When a creation job reaches `failed`, the job's `error` object carries one of these stable codes. The `retryable` flag tells you whether resubmitting the same request may succeed.
+
+| Code | Meaning | Typical action |
+| --- | --- | --- |
+| `source_download_failed` | The image URL could not be fetched within the timeout. | Host the image on fast, reliable storage and resubmit. |
+| `invalid_image` | The file is not a valid JPEG or PNG, exceeds 5 MiB, is smaller than 340 px on its shorter side, or is a non-opaque PNG. | Fix the image and resubmit. |
+| `face_not_detected` | No face was found in the image. | Use an image with one clearly visible face. |
+| `multiple_faces_detected` | More than one face was found. | Crop to a single face and resubmit. |
+| `image_quality_rejected` | The image passed validation but was rejected by quality checks. | Use a sharper, well-lit portrait. |
+| `preprocess_failed` | Preprocessing failed after download. | Retry; contact support if it persists. |
+| `avatar_generation_failed` | Avatar generation failed. | Retry; contact support if it persists. |
+| `avatar_generation_timed_out` | Generation did not finish in time. | Retry the job. |
+| `avatar_generation_cancelled` | The job was cancelled. | Resubmit if still needed. |
+| `internal_error` | An unexpected failure. | Retry; quote the job ID when contacting support. |
+
+## Rate limits
+
+Limits are enforced per account through an Open API policy. Your account may be configured below these hard caps:
+
+| Limit | Hard cap |
+| --- | --- |
+| Avatar creations per minute | 20 |
+| Avatar creations per hour | 200 |
+| Avatar creations per rolling 24 hours | 2,000 |
+| Concurrent active creation jobs | 10 |
+| Read requests per second (token bucket) | 20, burst 40 |
+| Read requests per minute | 1,200 |
+
+Read limits apply to the `GET` endpoints; creation limits apply to `POST /avatars`. When a limit is hit, the API returns `429` with `rate_limit_exceeded` (or `concurrency_limit_exceeded` when the concurrency cap is the binding constraint). Back off and retry — for job polling, an interval of 5–10 seconds stays comfortably within the read limits.
+
+## Pagination
+
+List endpoints accept `pagination.pageSize` (default 20, maximum 100) and `pagination.pageToken`. Pass the previous response's `pagination.nextPageToken` as `pagination.pageToken` to fetch the next page; an empty `nextPageToken` means there are no more pages. An invalid page token is rejected with `400` and `invalid_request`.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Open API Overview" icon="book-open" href="/open-api/overview">
+    The asynchronous Avatar creation flow, end to end.
+  </Card>
+  <Card title="Authentication" icon="key" href="/open-api/authentication">
+    The X-App-ID and X-API-Key header pair.
+  </Card>
+</CardGroup>

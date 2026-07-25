@@ -1,0 +1,52 @@
+---
+title: "Open API Authentication"
+sidebarTitle: "Authentication"
+description: "Authenticate Open API requests with the X-App-ID and X-API-Key header pair."
+---
+
+Every Open API request must carry two headers:
+
+| Header | Value |
+| --- | --- |
+| `X-App-ID` | Your Spatius App ID |
+| `X-API-Key` | The API key bound to that App ID |
+
+Both values come from your application in [Spatius Studio](https://app.spatius.ai), the same credentials you use for `SPATIUS_APP_ID` and `SPATIUS_API_KEY`. The pair must match exactly: the API key must be the one bound to the given App ID, and the application's owner account must be active. Open API access must also be enabled for the account, and Avatar creation can be toggled separately from read access.
+
+<Warning>
+Call the Open API from your backend only. Never embed the API key in client-side code, mobile apps, or public repositories.
+</Warning>
+
+## Example
+
+```bash
+curl --request POST 'https://console.us-west.spatius.ai/v1/open/avatars' \
+  --header 'X-App-ID: <your-app-id>' \
+  --header 'X-API-Key: <your-api-key>' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{
+    "name": "Support Agent",
+    "imageUrl": "https://example.com/portraits/agent.png"
+  }'
+```
+
+## Authentication failures
+
+| Situation | HTTP status | Error code |
+| --- | --- | --- |
+| Either header missing, the pair does not match, or the owner account is inactive | `401` | `unauthorized` |
+| Open API access is not configured for the account | `403` | `forbidden` |
+| Avatar creation is disabled for the account (creation endpoints only) | `403` | `forbidden` |
+
+Authentication failures return the standard [error envelope](/open-api/errors). The response does not reveal which part of the credential pair was wrong — verify both values in Studio before retrying.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Create an Avatar" icon="image" href="/open-api/overview">
+    Walk through the asynchronous creation flow.
+  </Card>
+  <Card title="Errors and Limits" icon="triangle-exclamation" href="/open-api/errors">
+    Error envelope, status codes, and rate limits.
+  </Card>
+</CardGroup>

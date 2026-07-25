@@ -1,0 +1,69 @@
+---
+title: "Open API Overview"
+sidebarTitle: "Overview"
+description: "Create and manage Spatius Avatars programmatically from a source image through the Open API."
+---
+
+The Spatius Open API lets your backend create and manage Avatars programmatically. Submit a source image, poll the asynchronous creation job, and receive an Avatar ID that works anywhere an Avatar ID is accepted — Direct Mode, Backend Mode, and platform integrations all consume the same Avatar ID through `SPATIUS_AVATAR_ID`.
+
+The Open API is served by the Spatius Console API in each region:
+
+| Region | Base URL |
+| --- | --- |
+| `us-west` (default) | `https://console.us-west.spatius.ai/v1/open` |
+| `ap-northeast` | `https://console.ap-northeast.spatius.ai/v1/open` |
+| `cn-beijing` | `https://console.cn-beijing.spatialwalk.top/v1/open` |
+
+<Note>
+Open API access is enabled per account. If you receive `forbidden` with "Open API access is not configured", contact Spatius to enable it for your Studio account.
+</Note>
+
+## How Avatar creation works
+
+Avatar creation is asynchronous. A single `POST /avatars` call accepts the job; a background worker then downloads, validates, and preprocesses the image, and generates the Avatar through the same pipeline used by Spatius Studio.
+
+<Steps>
+  <Step title="Submit a creation job">
+    Call `POST /avatars` with a public image URL. The API validates your quota, concurrency, and Avatar Unit balance, reserves the Units, and returns a `jobId` with status `queued`.
+  </Step>
+  <Step title="Poll the job">
+    Call `GET /avatar-jobs/{job_id}` every 5–10 seconds. The job moves from `queued` to `processing`, then to a terminal state.
+  </Step>
+  <Step title="Use the Avatar ID">
+    When the job reaches `succeeded`, read `avatarId` from the job and use it as `SPATIUS_AVATAR_ID` in any integration. If the job reaches `failed`, inspect `error.code` and `error.retryable`.
+  </Step>
+</Steps>
+
+### Job statuses
+
+| Status | Meaning |
+| --- | --- |
+| `queued` | The job was accepted and is waiting for a worker. |
+| `processing` | The image is being downloaded, validated, or the Avatar is being generated. |
+| `succeeded` | The Avatar is ready. `avatarId` is set. |
+| `failed` | The job ended with a stable error. See `error.code`. |
+
+## Source image requirements
+
+The source image is validated asynchronously, after the job is accepted. A job whose image fails validation ends in `failed` with a specific error code, so submit images that already meet these rules:
+
+- Public HTTP(S) URL that responds within 3 seconds
+- JPEG or PNG, at most 5 MiB
+- Shorter side at least 340 pixels
+- PNG images must be fully opaque
+- Exactly one clearly visible face
+
+## Billing
+
+Each creation job reserves Avatar Units when it is accepted. The reservation is captured when preprocessing completes, and released if the job fails before that point. When the balance is insufficient, `POST /avatars` is rejected with `402` and code `insufficient_avatar_units`.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/open-api/authentication">
+    Authenticate with the X-App-ID and X-API-Key header pair.
+  </Card>
+  <Card title="Errors and Limits" icon="triangle-exclamation" href="/open-api/errors">
+    Error envelope, status codes, job failure codes, and rate limits.
+  </Card>
+</CardGroup>

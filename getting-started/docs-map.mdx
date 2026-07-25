@@ -1,7 +1,7 @@
 ---
 title: "Developer Docs Map"
 sidebarTitle: "Docs Map"
-description: "A structured map of Spatius guides, integration paths, SDK references, Session Token API pages, regions, and troubleshooting pages."
+description: "A structured map of Spatius guides, integration paths, SDK references, Open API pages, Session Token API pages, regions, and troubleshooting pages."
 ---
 
 This page is the shortest way to understand how the Spatius developer docs are organized. It is written for both developers and AI agents that need to find the right page before answering an implementation question.
@@ -21,6 +21,7 @@ Conversation logic is outside Spatius unless a platform integration provides it.
 | An Agora Convo AI avatar | [Agora Convo AI Integration](/agora-convoai/overview) | [Convo AI Agent](/agora-convoai/convo-ai-agent), [TEN Extension](/agora-convoai/ten-extension), [Client](/agora-convoai/client). |
 | A backend-owned ASR / LLM / TTS pipeline | [Backend Mode Integration](/backend-mode/overview) | [Server SDK role](/backend-mode/server-sdk), [Client SDK role](/backend-mode/client-sdk), then a transport page. |
 | A first runnable demo | [Quickstarts](/quickstarts/overview) | [Demo Matrix](/resources/demo-projects). |
+| Programmatic Avatar creation from a backend | [Open API Overview](/open-api/overview) | [Authentication](/open-api/authentication), [Errors and Limits](/open-api/errors), then the endpoint pages. |
 | Exact method names, enums, and request fields | [Reference Overview](/reference/overview) | The matching SDK, Session Token API, Regions, or Error Codes page. |
 
 ## Integration path map
@@ -58,6 +59,7 @@ Do not treat these as the same integration path.
 | Python Server SDK | [Python SDK](/sdk-reference/python-sdk/python-sdk) |
 | Go Server SDK | [Golang SDK](/sdk-reference/go-sdk/go-sdk) |
 | Session Token endpoint | [Session Token API](/api-reference/api-reference) |
+| Programmatic Avatar creation | [Open API Overview](/open-api/overview) |
 | Direct Mode token flow | [Session Token Auth Flow](/api-reference/auth) |
 | Supported regions and endpoint composition | [Regions](/api-reference/regions) |
 | Client-side recovery guidance | [Client Error Codes](/resources/client-error) |
@@ -70,6 +72,7 @@ Do not treat these as the same integration path.
 | Guides | Choosing a path, running a quickstart, and wiring an integration. | Exhaustive API signatures. |
 | Concepts | Mental model, lifecycle, state, audio rules, avatar behavior, and cross-cutting warnings. | Method-by-method SDK lookup. |
 | Reference | Exact classes, methods, enums, request fields, endpoint regions, and error codes. | Product onboarding narrative. |
+| Open API | REST endpoints for programmatic Avatar creation, authentication rules, and job polling. | Client SDK signatures or integration quickstarts. |
 | FAQ | Common product and integration questions from developer Q&A. | Source of truth for SDK signatures. |
 
 ## Canonical terms
