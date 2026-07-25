@@ -1,0 +1,67 @@
+---
+title: "Spatius API"
+sidebarTitle: "Overview"
+description: "Access and manage resources in Spatius Studio programmatically."
+---
+
+The Spatius API lets your backend create and manage avatars programmatically. Submit a source image, and receive a custom avatar.
+
+```
+https://console.spatius.ai/v1/open
+```
+
+<Warning>
+The Spatius API is currently in **private beta** and is not available to all users. To request access, submit a feedback ticket at [app.spatius.ai/feedback/create](https://app.spatius.ai/feedback/create). If you receive `forbidden` with "API Avatar creation is disabled" or "Open API access is not configured", your account has not been enrolled yet.
+</Warning>
+
+## How avatar creation works
+
+Avatar creation is asynchronous. A single `POST /avatars` call accepts the job; a background worker then downloads, validates, and preprocesses the image, and generates the Avatar through the same pipeline used by Spatius Studio.
+
+<Steps>
+  <Step title="Submit a creation job">
+    Call `POST /avatars` with a public image URL. The API validates your quota, concurrency, and Avatar Creations balance, reserves a creation, and returns a `jobId` with status `queued`.
+  </Step>
+  <Step title="Poll the job">
+    Call `GET /avatar-jobs/{job_id}` every 5–10 seconds. The job moves from `queued` to `processing`, then to a terminal state.
+  </Step>
+  <Step title="Use the Avatar ID">
+    When the job reaches `succeeded`, read `avatarId` from the job and use it in your SDK integration. If the job reaches `failed`, inspect `error.code` and `error.retryable`.
+  </Step>
+</Steps>
+
+### Job statuses
+
+| Status | Meaning |
+| --- | --- |
+| `queued` | The job was accepted and is waiting for dispatch. |
+| `processing` | The image is being downloaded, validated, and Spatius is generating an avatar. |
+| `succeeded` | The avatar is ready with `avatarId` available. |
+| `failed` | The job ended with an error. See `error.code`. |
+
+## Source image requirements
+
+The source image is validated asynchronously, after the job is accepted. A job whose image fails validation ends in `failed` with a specific error code, so submit images that already meet these rules:
+
+- Public HTTP(S) URL that responds within 3 seconds
+- JPEG or PNG, at most 5 MiB
+- Shorter side at least 340 pixels
+- PNG images must be fully opaque
+- Exactly one clearly visible face
+
+## Billing
+
+Each creation job reserves one Avatar Creation when it is accepted. The reservation is captured when preprocessing completes, and released if the job fails before that point. When the balance is insufficient, `POST /avatars` is rejected with `402` and code `insufficient_avatar_units`.
+
+You can view your current available Avatar Creations at [app.spatius.ai/avatars/creations](https://app.spatius.ai/avatars/creations).
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api-reference/authentication">
+    Authenticate with the X-App-ID and X-API-Key header pair.
+  </Card>
+  <Card title="Errors and Limits" icon="triangle-exclamation" href="/api-reference/errors">
+    Error envelope, status codes, job failure codes, and rate limits.
+  </Card>
+</CardGroup>

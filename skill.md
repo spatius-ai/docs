@@ -55,7 +55,7 @@ Use this decision order:
 | User has avatar speech audio and wants the smallest client-side integration. | Direct Mode Integration. |
 | User's backend owns ASR, LLM, TTS, transport, or latency tuning. | Backend Mode Integration. |
 | User only needs to mint Session Tokens for Direct Mode clients. | Session Token API. |
-| User wants exact classes, methods, enums, and fields. | Reference tab, not Concepts pages. |
+| User wants exact classes, methods, enums, and fields. | SDK Reference tab, not Concepts pages. |
 
 ## Where to read
 

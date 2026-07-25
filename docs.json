@@ -140,7 +140,7 @@
         ]
       },
       {
-        "tab": "Reference",
+        "tab": "SDK Reference",
         "groups": [
           {
             "group": "Reference Overview",
@@ -198,6 +198,29 @@
               "resources/client-error",
               "resources/server-error"
             ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Start Here",
+            "icon": "rocket",
+            "pages": [
+              "api-reference/overview",
+              "api-reference/authentication",
+              "api-reference/errors"
+            ]
+          },
+          {
+            "group": "Avatar API",
+            "icon": "image",
+            "tag": "Beta",
+            "openapi": {
+              "source": "/openapi/avatar-open-api.json",
+              "directory": "api-reference"
+            }
           }
         ]
       }

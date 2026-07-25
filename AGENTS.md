@@ -45,7 +45,8 @@ Top-level structure (Guides tab):
 
 Other tabs:
 
-- **Reference** → all API/reference material: client SDKs, server SDKs, Server API pages, shared Regions & Endpoints, and Error Codes. This tab is the single place to look up exact classes, methods, enums, request fields, endpoint regions, and error codes.
+- **SDK Reference** → all SDK/reference material: client SDKs, server SDKs, Server API pages, shared Regions & Endpoints, and Error Codes. This tab is the single place to look up exact classes, methods, enums, request fields, endpoint regions, and error codes.
+- **API Reference** → the public REST Spatius API for programmatic avatar creation. Hand-written pages live in `api-reference/` (overview, authentication, errors); endpoint pages are auto-generated from `openapi/avatar-open-api.json` via the group-level `openapi` key in `docs.json`.
 
 **Key IA boundary:** `backend-mode/with-livekit` lives under Standalone Integrations > Backend Mode even though it mentions LiveKit. It is a transport option for Backend Mode, not a Platform Integration. LiveKit Agents (Platform Integration) and Backend Mode with LiveKit Room transport (Standalone) must never be conflated. The phrase "Server-Side Integrations" was a previous interim grouping and is no longer used anywhere user-facing.
 
