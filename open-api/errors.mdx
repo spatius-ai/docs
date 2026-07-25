@@ -28,7 +28,7 @@ Every Open API error returns the same JSON envelope, regardless of which endpoin
 | --- | --- | --- |
 | `400` | `invalid_request` | Malformed request: missing `imageUrl`, invalid ID in the path, or no active Avatar pipeline is configured. |
 | `401` | `unauthorized` | Missing or mismatched `X-App-ID` / `X-API-Key` pair. See [Authentication](/open-api/authentication). |
-| `402` | `insufficient_avatar_units` | The account does not hold enough Avatar Units to create this Avatar. |
+| `402` | `insufficient_avatar_units` | The account has no Avatar Creations left. View your balance at [app.spatius.ai/avatars/creations](https://app.spatius.ai/avatars/creations). |
 | `403` | `forbidden` | Open API access is not configured, or Avatar creation is disabled for the account. |
 | `404` | `not_found` | The Avatar or job does not exist, or belongs to another account. |
 | `429` | `rate_limit_exceeded` | A rate limit or the rolling 24-hour creation quota was exceeded. |

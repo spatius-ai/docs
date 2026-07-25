@@ -24,7 +24,7 @@ Avatar creation is asynchronous. A single `POST /avatars` call accepts the job; 
 
 <Steps>
   <Step title="Submit a creation job">
-    Call `POST /avatars` with a public image URL. The API validates your quota, concurrency, and Avatar Unit balance, reserves the Units, and returns a `jobId` with status `queued`.
+    Call `POST /avatars` with a public image URL. The API validates your quota, concurrency, and Avatar Creations balance, reserves a creation, and returns a `jobId` with status `queued`.
   </Step>
   <Step title="Poll the job">
     Call `GET /avatar-jobs/{job_id}` every 5–10 seconds. The job moves from `queued` to `processing`, then to a terminal state.
@@ -55,7 +55,9 @@ The source image is validated asynchronously, after the job is accepted. A job w
 
 ## Billing
 
-Each creation job reserves Avatar Units when it is accepted. The reservation is captured when preprocessing completes, and released if the job fails before that point. When the balance is insufficient, `POST /avatars` is rejected with `402` and code `insufficient_avatar_units`.
+Each creation job reserves one Avatar Creation when it is accepted. The reservation is captured when preprocessing completes, and released if the job fails before that point. When the balance is insufficient, `POST /avatars` is rejected with `402` and code `insufficient_avatar_units`.
+
+You can view your current available Avatar Creations at [app.spatius.ai/avatars/creations](https://app.spatius.ai/avatars/creations).
 
 ## Next steps
 

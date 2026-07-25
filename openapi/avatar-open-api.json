@@ -32,7 +32,7 @@
       "post": {
         "operationId": "createAvatar",
         "summary": "Create an Avatar",
-        "description": "Accepts a source image URL and queues an asynchronous Avatar creation job. Spatius downloads and validates the image, preprocesses it, and generates the Avatar through the Studio pipeline. Poll `GET /avatar-jobs/{job_id}` until the job reaches `succeeded` or `failed`.\n\nThe request is admitted only when your account is within its creation rate limits, rolling 24-hour quota, and concurrency limit, and holds enough Avatar Units. Units are reserved when the job is accepted and captured when preprocessing completes; they are released if the job fails before capture.\n\nSource image requirements:\n\n- Public HTTP(S) URL, reachable within 3 seconds\n- JPEG or PNG, at most 5 MiB\n- Shorter side at least 340 pixels\n- PNG images must be fully opaque\n- Exactly one clearly visible face",
+        "description": "Accepts a source image URL and queues an asynchronous Avatar creation job. Spatius downloads and validates the image, preprocesses it, and generates the Avatar through the Studio pipeline. Poll `GET /avatar-jobs/{job_id}` until the job reaches `succeeded` or `failed`.\n\nThe request is admitted only when your account is within its creation rate limits, rolling 24-hour quota, and concurrency limit, and holds enough Avatar Creations. A creation is reserved when the job is accepted and captured when preprocessing completes; it is released if the job fails before capture.\n\nSource image requirements:\n\n- Public HTTP(S) URL, reachable within 3 seconds\n- JPEG or PNG, at most 5 MiB\n- Shorter side at least 340 pixels\n- PNG images must be fully opaque\n- Exactly one clearly visible face",
         "tags": ["Avatars"],
         "requestBody": {
           "required": true,
@@ -713,7 +713,7 @@
         }
       },
       "InsufficientAvatarUnits": {
-        "description": "The account does not hold enough Avatar Units to create this Avatar.",
+        "description": "The account has no Avatar Creations left to create this Avatar.",
         "content": {
           "application/json": {
             "schema": {
@@ -722,7 +722,7 @@
             "example": {
               "error": {
                 "code": "insufficient_avatar_units",
-                "message": "There are not enough Avatar Units to create this Avatar.",
+                "message": "There are not enough Avatar Creations to create this Avatar.",
                 "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }
@@ -756,7 +756,7 @@
             "example": {
               "error": {
                 "code": "service_unavailable",
-                "message": "Avatar Unit reservation failed; retry later",
+                "message": "Avatar Creation reservation failed; retry later",
                 "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }
