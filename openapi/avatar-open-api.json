@@ -425,10 +425,6 @@
             "type": "string",
             "format": "uri",
             "description": "Public HTTP(S) URL of the source image. Validated asynchronously after the job is accepted."
-          },
-          "preprocessTaskId": {
-            "type": "string",
-            "description": "Reserved for future use. Not supported yet; requests that set it are rejected."
           }
         }
       },
