@@ -34,7 +34,7 @@ Every Spatius API error returns the same JSON envelope, regardless of which endp
 | `429` | `rate_limit_exceeded` | A rate limit or the rolling 24-hour creation quota was exceeded. |
 | `429` | `concurrency_limit_exceeded` | Too many jobs are queued or processing at once. Wait for an active job to finish. |
 | `500` | `internal_error` | An unexpected server error. Retry with backoff; quote `request_id` if it persists. |
-| `501` | `unsupported_input` | The request uses an input that is not supported yet, such as `preprocessTaskId`. |
+| `501` | `unsupported_input` | The request uses an input that this API version does not support yet. |
 | `503` | `service_unavailable` | A transient backend failure, for example reservation contention. Retry the request. |
 
 ## Job failure codes
