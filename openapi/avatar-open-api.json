@@ -401,7 +401,7 @@
         "name": "pagination.pageToken",
         "in": "query",
         "required": false,
-        "description": "Opaque token from the previous page's `nextPageToken`. Omit for the first page. Pass back exactly what the previous response returned rather than constructing a value.",
+        "description": "Opaque token from the previous page's `nextPageToken`. Omit for the first page. Pass back exactly what the previous response returned rather than constructing a value. A token is only valid for the `pagination.pageSize` it was issued with; keep that value stable while paging, or start again from the first page.",
         "schema": {
           "type": "string"
         }

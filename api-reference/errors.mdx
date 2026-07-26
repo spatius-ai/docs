@@ -26,7 +26,7 @@ Every Spatius API error returns the same JSON envelope, regardless of which endp
 
 | HTTP status | `code` | Meaning |
 | --- | --- | --- |
-| `400` | `invalid_request` | Malformed request: missing `imageUrl`, an invalid ID in the path, an invalid page token, or no active avatar pipeline configured. |
+| `400` | `invalid_request` | Malformed request: missing `imageUrl`, an invalid ID in the path, a page token that is invalid or does not match `pageSize`, or no active avatar pipeline configured. |
 | `401` | `unauthorized` | Missing or mismatched `X-App-ID` / `X-API-Key` pair. See [Authentication](/api-reference/authentication). |
 | `402` | `insufficient_avatar_units` | The account has no Avatar Creations left. View your balance at [app.spatius.ai/avatars/creations](https://app.spatius.ai/avatars/creations). |
 | `403` | `forbidden` | API access is not configured (`Open API access is not configured`), or avatar creation is disabled for the account (`API Avatar creation is disabled`). |
@@ -78,6 +78,10 @@ A `pageSize` above 99 does not return 99 items — it falls back to the default 
 </Warning>
 
 To page through results, pass the previous response's `pagination.nextPageToken` as `pagination.pageToken`. An empty `nextPageToken` means there are no more pages. Treat the token as opaque and pass back exactly what you received; do not construct or increment it yourself. An invalid page token is rejected with `400` and `invalid_request`.
+
+<Warning>
+Keep `pageSize` the same for every request in a pagination sequence. A token is only valid for the `pageSize` it was issued with, and reusing it with a different `pageSize` is rejected with `400` and `invalid_request`. To change the page size, start again from the first page with no `pageToken`.
+</Warning>
 
 ## Next steps
 
