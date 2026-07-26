@@ -23,7 +23,7 @@ Avatar creation is asynchronous. A single `POST /avatars` call accepts the job; 
     Call `POST /avatars` with a public image URL. The API validates your quota, concurrency, and Avatar Creations balance, reserves a creation, and returns a `jobId` with status `queued`.
   </Step>
   <Step title="Poll the job">
-    Call `GET /avatar-jobs/{job_id}` every 5–10 seconds. The job moves from `queued` to `processing`, then to a terminal state.
+    Call `GET /avatar-jobs/{jobId}` every 5–10 seconds. The job moves from `queued` to `processing`, then to a terminal state.
   </Step>
   <Step title="Use the Avatar ID">
     When the job reaches `succeeded`, read `avatarId` from the job and use it in your SDK integration. If the job reaches `failed`, inspect `error.code` and `error.retryable`.

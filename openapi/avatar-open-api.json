@@ -32,7 +32,7 @@
       "post": {
         "operationId": "createAvatar",
         "summary": "Create an Avatar",
-        "description": "Accepts a source image URL and queues an asynchronous Avatar creation job. Spatius downloads and validates the image, preprocesses it, and generates the Avatar through the Studio pipeline. Poll `GET /avatar-jobs/{job_id}` until the job reaches `succeeded` or `failed`.\n\nThe request is admitted only when your account is within its creation rate limits, rolling 24-hour quota, and concurrency limit, and holds enough Avatar Creations. A creation is reserved when the job is accepted and captured when preprocessing completes; it is released if the job fails before capture.\n\nSource image requirements:\n\n- Public HTTP(S) URL, reachable within 3 seconds\n- JPEG or PNG, at most 5 MiB\n- Shorter side at least 340 pixels\n- PNG images must be fully opaque\n- Exactly one clearly visible face",
+        "description": "Accepts a source image URL and queues an asynchronous Avatar creation job. Spatius downloads and validates the image, preprocesses it, and generates the Avatar through the Studio pipeline. Poll `GET /avatar-jobs/{jobId}` until the job reaches `succeeded` or `failed`.\n\nThe request is admitted only when your account is within its creation rate limits, rolling 24-hour quota, and concurrency limit, and holds enough Avatar Creations. A creation is reserved when the job is accepted and captured when preprocessing completes; it is released if the job fails before capture.\n\nSource image requirements:\n\n- Public HTTP(S) URL, reachable within 3 seconds\n- JPEG or PNG, at most 5 MiB\n- Shorter side at least 340 pixels\n- PNG images must be fully opaque\n- Exactly one clearly visible face",
         "tags": ["Avatars"],
         "requestBody": {
           "required": true,
@@ -149,7 +149,7 @@
         }
       }
     },
-    "/avatars/{avatar_id}": {
+    "/avatars/{avatarId}": {
       "get": {
         "operationId": "getAvatar",
         "summary": "Get an Avatar",
@@ -157,7 +157,7 @@
         "tags": ["Avatars"],
         "parameters": [
           {
-            "name": "avatar_id",
+            "name": "avatarId",
             "in": "path",
             "required": true,
             "description": "Avatar ID (UUID).",
@@ -283,7 +283,7 @@
         }
       }
     },
-    "/avatar-jobs/{job_id}": {
+    "/avatar-jobs/{jobId}": {
       "get": {
         "operationId": "getAvatarJob",
         "summary": "Get an Avatar job",
@@ -291,7 +291,7 @@
         "tags": ["Avatar Jobs"],
         "parameters": [
           {
-            "name": "job_id",
+            "name": "jobId",
             "in": "path",
             "required": true,
             "description": "Job ID (UUID) returned by `POST /avatars`.",
@@ -388,12 +388,12 @@
         "name": "pagination.pageSize",
         "in": "query",
         "required": false,
-        "description": "Maximum number of items to return. Defaults to 20, capped at 100.",
+        "description": "Maximum number of items to return. Defaults to 20; the maximum is 99. A value above 99 falls back to the default of 20 rather than being capped, so request at most 99.",
         "schema": {
           "type": "integer",
           "format": "int32",
           "default": 20,
-          "maximum": 100,
+          "maximum": 99,
           "minimum": 1
         }
       },
@@ -401,7 +401,7 @@
         "name": "pagination.pageToken",
         "in": "query",
         "required": false,
-        "description": "Opaque token from the previous page's `nextPageToken`. Omit for the first page.",
+        "description": "Opaque token from the previous page's `nextPageToken`. Omit for the first page. Pass back exactly what the previous response returned rather than constructing a value.",
         "schema": {
           "type": "string"
         }
@@ -434,7 +434,7 @@
           "jobId": {
             "type": "string",
             "format": "uuid",
-            "description": "ID of the accepted creation job. Poll it with `GET /avatar-jobs/{job_id}`."
+            "description": "ID of the accepted creation job. Poll it with `GET /avatar-jobs/{jobId}`."
           },
           "status": {
             "$ref": "#/components/schemas/JobStatus"
@@ -626,7 +626,7 @@
                 "type": "string",
                 "description": "Human-readable explanation specific to this occurrence."
               },
-              "request_id": {
+              "requestId": {
                 "type": "string",
                 "description": "Unique identifier for this request. Quote it when contacting support."
               }
@@ -646,8 +646,8 @@
             "example": {
               "error": {
                 "code": "invalid_request",
-                "message": "image_url is required",
-                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+                "message": "imageUrl is required",
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }
           }
@@ -664,7 +664,7 @@
               "error": {
                 "code": "unauthorized",
                 "message": "Unauthorized.",
-                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }
           }
@@ -681,7 +681,7 @@
               "error": {
                 "code": "forbidden",
                 "message": "API Avatar creation is disabled",
-                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }
           }
@@ -698,7 +698,7 @@
               "error": {
                 "code": "not_found",
                 "message": "Avatar job not found",
-                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }
           }
@@ -715,7 +715,7 @@
               "error": {
                 "code": "insufficient_avatar_units",
                 "message": "There are not enough Avatar Units to create this Avatar.",
-                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }
           }
@@ -732,7 +732,7 @@
               "error": {
                 "code": "rate_limit_exceeded",
                 "message": "Open API rate limit exceeded",
-                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }
           }
@@ -749,7 +749,7 @@
               "error": {
                 "code": "service_unavailable",
                 "message": "Avatar Unit reservation failed; retry later",
-                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }
           }
@@ -766,7 +766,7 @@
               "error": {
                 "code": "internal_error",
                 "message": "An internal error occurred.",
-                "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
               }
             }
           }

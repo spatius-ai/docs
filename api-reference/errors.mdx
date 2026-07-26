@@ -13,14 +13,14 @@ Every Spatius API error returns the same JSON envelope, regardless of which endp
   "error": {
     "code": "rate_limit_exceeded",
     "message": "Open API rate limit exceeded",
-    "request_id": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+    "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
   }
 }
 ```
 
 - `code` is a stable machine-readable string. Program against `code`, not `message`.
 - `message` is a human-readable explanation specific to this occurrence.
-- `request_id` uniquely identifies the request. It is also returned in the `X-Request-ID` response header. Quote it when contacting support.
+- `requestId` uniquely identifies the request. It is also returned in the `X-Request-ID` response header. Quote it when contacting support.
 
 ## HTTP status and error code mapping
 
@@ -33,7 +33,7 @@ Every Spatius API error returns the same JSON envelope, regardless of which endp
 | `404` | `not_found` | The avatar or job does not exist, or belongs to another account. |
 | `429` | `rate_limit_exceeded` | A rate limit or the rolling 24-hour creation quota was exceeded. |
 | `429` | `concurrency_limit_exceeded` | Too many jobs are queued or processing at once. Wait for an active job to finish. |
-| `500` | `internal_error` | An unexpected server error. Retry with backoff; quote `request_id` if it persists. |
+| `500` | `internal_error` | An unexpected server error. Retry with backoff; quote `requestId` if it persists. |
 | `501` | `unsupported_input` | The request uses an input that this API version does not support yet. |
 | `503` | `service_unavailable` | A transient backend failure, for example reservation contention. Retry the request. |
 
@@ -69,7 +69,15 @@ Read limits apply to the `GET` endpoints; creation limits apply to `POST /avatar
 
 ## Pagination
 
-List endpoints accept `pagination.pageSize` (default 20, maximum 100) and `pagination.pageToken`. Pass the previous response's `pagination.nextPageToken` as `pagination.pageToken` to fetch the next page; an empty `nextPageToken` means there are no more pages. An invalid page token is rejected with `400` and `invalid_request`.
+Both list endpoints (`GET /avatars` and `GET /avatar-jobs`) paginate the same way. They accept `pagination.pageSize` and `pagination.pageToken`, and return `pagination.nextPageToken` and `pagination.totalCount`.
+
+`pageSize` defaults to 20 and has a maximum of 99.
+
+<Warning>
+A `pageSize` above 99 does not return 99 items — it falls back to the default of 20. Request at most 99 to avoid receiving fewer items than you expect.
+</Warning>
+
+To page through results, pass the previous response's `pagination.nextPageToken` as `pagination.pageToken`. An empty `nextPageToken` means there are no more pages. Treat the token as opaque and pass back exactly what you received; do not construct or increment it yourself. An invalid page token is rejected with `400` and `invalid_request`.
 
 ## Next steps
 
