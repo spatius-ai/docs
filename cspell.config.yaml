@@ -32,7 +32,6 @@ words:
   - avatarkit
   - avatarsdk
   - avatarsdkgo
-  - autocapture
   - backoff
   - bitrate
   - backend
@@ -84,9 +83,7 @@ words:
   - onProgress
   - onwards
   - params
-  - pagehide
   - pcm
-  - PostHog
   - protobuf
   - pubspec
   - pyproject
@@ -110,7 +107,6 @@ words:
   - unmount
   - url
   - UIView
-  - visibilitychange
   - vite
   - Vue
   - wasm

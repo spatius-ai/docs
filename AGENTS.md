@@ -108,7 +108,7 @@ Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "
 | Python | `livekit-plugins-spatius` |
 | Android (Maven) | `ai.spatius:avatarkit` |
 | iOS | `AvatarKit.xcframework` (downloaded from `spatius-ai/avatarkit-ios-release`) |
-| Flutter | `spatius` |
+| Flutter | `spatius_avatarkit` |
 | Env vars | `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`, `SPATIUS_REGION` (`us-west` default; `ap-northeast` and `cn-beijing` supported). Vite-built frontends use `VITE_SPATIUS_*`. |
 | Logo files | Favicon uses `/images/spatius-logo-mark-black.svg` and `/images/spatius-logo-mark-white.svg`. Navbar logo uses the original wordmark PNGs: `/images/spatius-logo-wordmark-black.png` and `/images/spatius-logo-wordmark-white.png`. |
 
