@@ -247,6 +247,12 @@
   },
   "redirects": [],
   "customCSS": "/custom.css",
+  "integrations": {
+    "posthog": {
+      "apiKey": "phc_BJpW8hXVP84eK4bnQsRevfNy7uDdD7PAmxafqxLBerfj",
+      "sessionRecording": false
+    }
+  },
   "contextual": {
     "options": [
       "copy",
