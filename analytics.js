@@ -37,6 +37,7 @@
   var IDLE_CHECK_INTERVAL_MS = 5 * 1000
   var NOT_FOUND_TITLE = 'Page Not Found'
   var NOT_FOUND_CHECK_DELAY_MS = 1200
+  var AUTH_API_BASE_URL = 'https://api.studio.spatius.ai'
 
   if (!TRACK_EVENTS || !POSTHOG_API_KEY || typeof window === 'undefined') return
 
@@ -50,6 +51,8 @@
   var bannerObserver = null
   var engagement = null
   var reportedNotFound = {}
+  var knownUserId = ''
+  var knownUserTraits = null
 
   start()
 
@@ -62,6 +65,7 @@
     installScrollTracking()
     installEngagementTracking()
     installNotFoundTracking()
+    resolveIdentity()
     installRouteChangeReset()
   }
 
@@ -297,6 +301,9 @@
         client.opt_in_capturing({ captureEventName: false })
         posthog = client
         capturing = true
+        // The identity probe races SDK loading; whichever finishes second wires
+        // the id in, so it is applied here too rather than only in the probe.
+        if (knownUserId) applyIdentity(knownUserId)
         flushQueue()
       })
       .catch(function () {
@@ -683,6 +690,65 @@
       if (percent < milestone || reachedMilestones[key]) continue
       reachedMilestones[key] = true
       capture('docs.page.scrolled', { depth_percent: milestone, from_path: window.location.pathname })
+    }
+  }
+
+  /* -------------------------------------------------------------- identity */
+
+  /**
+   * Signed-in identity, when there is one.
+   *
+   * The Studio session cookie is HttpOnly on `.spatius.ai`, so its contents are
+   * invisible to this script — but the browser still attaches it to a credentialed
+   * request, which is how the marketing site resolves the same thing. A 401 simply
+   * means "anonymous reader"; nothing prompts, and nothing blocks.
+   *
+   * Identity fields match what Studio already sends on its `user_info` event,
+   * so a person looks the same whichever front end they came through.
+   */
+  function resolveIdentity() {
+    if (!window.fetch) return
+    window.fetch(AUTH_API_BASE_URL + '/v1/auth/me', {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    })
+      .then(function (response) {
+        if (!response.ok) return null
+        return response.json()
+      })
+      .then(function (data) {
+        if (!data) return
+        var user = data.user || (data.data && (data.data.user || data.data)) || null
+        var userId = user && user.id
+        if (!userId || typeof userId !== 'string') return
+        applyIdentity(userId, {
+          email: user.email || '',
+          username: user.username || '',
+          nickname: user.nickname || '',
+        })
+      })
+      .catch(function () {
+        /* Offline, blocked, or logged out — anonymous is a valid outcome. */
+      })
+  }
+
+  function applyIdentity(userId, traits) {
+    knownUserId = userId
+    if (traits) knownUserTraits = traits
+    if (!capturing || !posthog) return
+    var attributes = knownUserTraits || {}
+    try {
+      // identify() ties this browser's history to the account and stores the
+      // traits on the Person; register() puts the id on every event so cohorts
+      // work without a Person join.
+      posthog.identify(userId, {
+        email: attributes.email || undefined,
+        username: attributes.username || undefined,
+        nickname: attributes.nickname || undefined,
+      })
+      posthog.register({ user_id: userId })
+    } catch (error) {
+      /* Analytics must never break the docs. */
     }
   }
 

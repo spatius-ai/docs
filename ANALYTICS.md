@@ -64,6 +64,20 @@ Studio 共用同一份，任一站点做出的选择在其他站点即时生效�
 
 `person_profiles: 'identified_only'`，与其他前端保持一致，匿名访客不建 Person 档案。
 
+### 登录用户识别
+
+Studio 的会话 Cookie 是 `.spatius.ai` 根域上的 HttpOnly Cookie，脚本读不到它的内容，
+但浏览器会在带凭证的请求上自动附加它。因此文档站在页面加载时调用一次
+`GET /v1/auth/me`（`credentials: 'include'`），与官网 `src/api/auth.ts` 的做法一致：
+
+- 返回 200 → 取 `user.id` 调用 `identify()`，并把 `user_id` 注册为公共属性；
+  `email`、`username`、`nickname` 作为 Person 属性写入，与 Studio 的 `user_info` 事件字段一致；
+- 返回 401 → 匿名访客，跳过，**不提示、不引导登录**；
+- 后端已放行 `docs.spatius.ai` 的跨域凭证请求（`access-control-allow-credentials: true`），
+  无需额外配置。
+
+身份探测与 SDK 加载是并发的，两侧都会尝试写入，因此谁先完成都不影响结果。
+
 ## 事件
 
 页面浏览由 `capture_pageview: 'history_change'` 处理，覆盖 Mintlify 的 SPA 路由切换。
