@@ -91,7 +91,6 @@ Use Reference pages for exact API details:
 | Web AvatarKit SDK | `https://docs.spatius.ai/sdk-reference/web-sdk/reference.md` |
 | Web build tool setup | `https://docs.spatius.ai/sdk-reference/web-sdk/toolchain.md` |
 | Web RTC Adapter | `https://docs.spatius.ai/sdk-reference/web-sdk/rtc-adapter.md` |
-| React AvatarKit UI | `https://docs.spatius.ai/sdk-reference/web-sdk/avatarkit-ui.md` |
 | iOS SDK | `https://docs.spatius.ai/sdk-reference/ios-sdk/api-reference.md` |
 | Android SDK | `https://docs.spatius.ai/sdk-reference/android-sdk/api-reference.md` |
 | Flutter SDK | `https://docs.spatius.ai/sdk-reference/flutter-sdk/api-reference.md` |

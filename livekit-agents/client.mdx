@@ -199,15 +199,10 @@ import { AvatarPlayer, LiveKitProvider } from '@spatius/avatarkit-rtc'
 import { AvatarSDK, AvatarView, AvatarManager, DrivingServiceMode } from '@spatius/avatarkit'
 
 async function init() {
-  // Initialize AvatarKit for LiveKit transport rendering.
+  // Initialize AvatarKit
   await AvatarSDK.initialize('your-app-id', {
-    region: 'us-west',
-    drivingServiceMode: DrivingServiceMode.backend,
+    drivingServiceMode: DrivingServiceMode.rtc,
   })
-
-  // `setSessionToken` is not needed on the RTC Adapter path —
-  // `DrivingServiceMode.backend` does not open a Motion Server WebSocket from the client,
-  // and `AvatarManager.load()` fetches avatar metadata over an App-ID-scoped public endpoint.
 
   // Load avatar and create view
   const avatar = await AvatarManager.shared.load('character-id')
