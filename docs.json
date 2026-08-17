@@ -159,8 +159,7 @@
                 "pages": [
                   "sdk-reference/web-sdk/reference",
                   "sdk-reference/web-sdk/toolchain",
-                  "sdk-reference/web-sdk/rtc-adapter",
-                  "sdk-reference/web-sdk/avatarkit-ui"
+                  "sdk-reference/web-sdk/rtc-adapter"
                 ]
               },
               "sdk-reference/ios-sdk/api-reference",

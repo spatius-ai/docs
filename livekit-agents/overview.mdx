@@ -6,10 +6,6 @@ description: "Use LiveKit Agents and Spatius to build voice avatars."
 
 import { LiveKitPluginDiagram } from '/snippets/spatius-diagrams.jsx'
 
-LiveKit Agents Integration is a **Platform Integration**. Use it when your voice agent runs in [LiveKit Agents](https://docs.livekit.io/agents/) and you want `livekit-plugins-spatius` to connect that agent worker to Motion Server. The package attaches to your agent and pipes agent audio to Motion Server; Motion Server publishes lip-synced audio and motion data back into the same LiveKit room.
-
-LiveKit Agents is the platform integration; the [RTC Adapter](/sdk-reference/web-sdk/rtc-adapter) (`@spatius/avatarkit-rtc`) is the Web client adapter that renders the avatar stream from the LiveKit room. The LiveKit room itself is the transport.
-
 <Note>
 **Web Only:** The current AvatarKit RTC client demo path targets Web. LiveKit ships iOS and Android client SDKs, but Spatius does not yet provide iOS or Android demos for this path.
 </Note>
@@ -20,7 +16,7 @@ LiveKit Agents is the platform integration; the [RTC Adapter](/sdk-reference/web
 | --- | --- |
 | **Dev effort** | 🟢 Low if you already use LiveKit Agents; 🟡 Medium if you are adopting LiveKit too. |
 | **Latency profile** | ⚡ Ultra-low; agent audio is handled in the LiveKit worker and avatar output returns through the room. |
-| **You build** | 🎙️ LiveKit Agents worker wiring, 🔌 Spatius plugin configuration, 🎟️ LiveKit token flow, and 🌐 Web RTC client. |
+| **You build** | 🎙️ LiveKit Agents worker wiring, 🔌 Spatius plugin configuration, and 🌐 Web RTC client. |
 | **You do not build** | 🚫 A custom Server SDK pipeline or downstream transport. |
 | **Best first demo** | 🚀 [LiveKit Agents Integration quickstart](/quickstarts/livekit-agents). |
 | **Client support** | 🌐 Web today |
@@ -79,12 +75,7 @@ bun add @spatius/avatarkit-rtc @spatius/avatarkit
 Configure your build tool to load the AvatarKit WebAssembly assets. See [Toolchain Setup](/sdk-reference/web-sdk/toolchain).
 </Step>
 
-<Step title="Pick a UI path">
-- For drop-in React components, use [AvatarKit UI](/sdk-reference/web-sdk/avatarkit-ui).
-- To own the UI and connection flow yourself, use the JavaScript API below.
-</Step>
-
-<Step title="JavaScript API (custom UI)">
+<Step title="Integrate the SDK">
 
 <Accordion title="Step-by-step JS API setup">
 
@@ -95,7 +86,7 @@ Configure your build tool to load the AvatarKit WebAssembly assets. See [Toolcha
 import { AvatarSDK, DrivingServiceMode } from '@spatius/avatarkit'
 
 await AvatarSDK.initialize('your-app-id', {
-  drivingServiceMode: DrivingServiceMode.backend,
+  drivingServiceMode: DrivingServiceMode.rtc,
 })
 ```
 
@@ -176,31 +167,8 @@ uv add livekit-plugins-spatius
 
 ## Server setup
 
-If you already use [LiveKit Agents](https://docs.livekit.io/agents/), add `livekit-plugins-spatius` to your agent worker. The package attaches to your `AgentSession` and pipes TTS audio to Spatius; Motion Server publishes the resulting audio and motion data to the same LiveKit room.
-
-Required environment variables:
-
-- Spatius: `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`
-- Optional region: `SPATIUS_REGION` defaults to `us-west`
-- LiveKit: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`
-
-Create an `AvatarSession` and start it with your agent session and room:
-
-```python
-from livekit.agents import AgentSession, JobContext
-from livekit.plugins import spatius
-
-async def entrypoint(ctx: JobContext):
-    await ctx.connect()
-
-    session = AgentSession(vad=vad, stt=stt, llm=llm, tts=tts)
-    avatar = spatius.AvatarSession()
-    await avatar.start(session, room=ctx.room)
-
-    await session.start(agent=YourAgent(), room=ctx.room)
-```
-
-See the [LiveKit Agents Integration Server guide](/livekit-agents/server) for the full `livekit-plugins-spatius` flow, interruption behavior, and API links.
+Spatius plugin is part of LiveKit Agents framework since 1.6.7, see [the LiveKit documentation](https://docs.livekit.io/agents/models/avatar/plugins/spatius/) for the setup,
+and [LiveKit Agents Integration Server](/livekit-agents/server) for the full reference.
 
 ## Next steps
 

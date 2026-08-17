@@ -13,8 +13,6 @@ description: "Build a voice avatar with Spatius, LiveKit Agents, and Gemini Live
   Source code for this quickstart.
 </Card>
 
-This quickstart targets the [LiveKit Agents Integration](/livekit-agents/overview) path. For Direct Mode first-run paths, see [Web / iOS / Android / Flutter Quickstarts](/quickstarts/overview).
-
 ## Prerequisites
 
 - Node.js 18+, pnpm, Python 3.10+, uv
@@ -94,28 +92,6 @@ Open `http://localhost:3000`, click **Connect**, then **Enable Mic** to start sp
 | Agent worker connects | `livekit-plugins-spatius` is installed and able to reach Motion Server. |
 | Browser connects + avatar appears | AvatarKit RTC client is wired into the LiveKit room. |
 | Avatar speaks when you talk | End-to-end agent pipeline (mic → STT → LLM → TTS → Spatius → render) works. |
-
-## Troubleshooting
-
-### Agent worker exits with `TypeError ... 'avatar_identity'`
-
-`livekit-plugins-spatius` tracks specific `livekit-agents` releases. If your installed `livekit-agents` is newer than the one the plugin targets, `AvatarSession()` cannot satisfy the abstract `BaseAvatarSession.avatar_identity` method added in newer agents core.
-
-Confirm `backend/pyproject.toml` pins all three packages to matching versions (the quickstart pins them at install time), then `uv sync`:
-
-```toml title="backend/pyproject.toml"
-"livekit-agents==1.5.8",
-"livekit-plugins-google==1.5.8",
-"livekit-plugins-spatius==1.5.8",
-```
-
-### Gemini Live returns `APIError: 1008 ... denied access`
-
-The Google project behind `GOOGLE_API_KEY` cannot reach Gemini Live API for the model in `E2E_GOOGLE_MODEL`. Options, in order of effort:
-
-- **Verify Live access** in AI Studio's "Stream Realtime" tab with the same key. If the test there fails too, the project itself is denied — issue a key from a project that has Live API enabled.
-- **Switch model** — change `E2E_GOOGLE_MODEL` to a model your project is allowed to call. The quickstart defaults to `gemini-2.5-flash-native-audio-preview-12-2025`; widely-available alternatives include `gemini-2.0-flash-live-001` and `gemini-live-2.5-flash-preview`.
-- **Use a different realtime LLM** — replace `google.realtime.RealtimeModel` in `agent.py` with OpenAI / Azure / xAI Realtime. The [reference demos](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agents-reference-demo) show several provider wirings.
 
 ## Next steps
 
