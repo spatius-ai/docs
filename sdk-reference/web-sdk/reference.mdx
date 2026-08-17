@@ -49,7 +49,7 @@ Initialize the SDK. Must be called before any other operation.
 
 ```typescript
 await AvatarSDK.initialize('your-app-id', {
-  region: 'us-west',
+  region: 'us-west',                                // optional, default: closest region
   drivingServiceMode: DrivingServiceMode.direct,    // optional, default: direct
   logLevel: LogLevel.warning,                       // optional, default: off
   renderQuality: RenderQuality.ultra,               // optional, default: ultra
@@ -496,7 +496,7 @@ controller.getVolume()                 // returns current volume
 
 ```typescript
 interface Configuration {
-  region?: string                            // Defaults to 'us-west'
+  region?: string                            // Default: automatic selection
   drivingServiceMode?: DrivingServiceMode    // Default: DrivingServiceMode.direct
   logLevel?: LogLevel                        // Default: LogLevel.off
   audioFormat?: AudioFormat                  // Default: { channelCount: 1, sampleRate: 16000 }
@@ -505,7 +505,11 @@ interface Configuration {
 }
 ```
 
-`region` selects the Spatius deployment region. It defaults to `'us-west'`; supported values are `'us-west'`, `'ap-northeast'`, and `'cn-beijing'`. See [Regions](/api-reference/regions) for endpoint details and override options.
+`region` selects the Spatius deployment region. Supported values are `'us-west'`, `'ap-northeast'`, and `'cn-beijing'`. When unset, the SDK selects the closest serving region at initialization; passing a value forces that region. If automatic selection cannot be reached, the SDK falls back to a default region and continues initializing. See [Regions](/api-reference/regions) for endpoint details and override options.
+
+<Note>
+`initialize` fails fast when `appId` is missing, rather than returning silently. Get an App ID from [app.spatius.ai](https://app.spatius.ai/).
+</Note>
 
 ### DrivingServiceMode
 
@@ -513,8 +517,11 @@ interface Configuration {
 enum DrivingServiceMode {
   direct = 'direct',    // Client SDK handles the Motion Server connection (Direct Mode)
   backend = 'backend',  // Your backend handles the Motion Server connection (Backend Mode)
+  rtc = 'rtc',          // Driven through @spatius/avatarkit-rtc (RTC Adapter)
 }
 ```
+
+Use `rtc` only when driving the avatar through `@spatius/avatarkit-rtc`. It unlocks no API and identifies RTC-driven sessions in reporting. The RTC Adapter requires it; see [RTC Adapter](/sdk-reference/web-sdk/rtc-adapter).
 
 ### RenderQuality
 
@@ -600,12 +607,15 @@ Multiply by 100 when rendering as a percentage in your UI.
 
 ### AudioFormat
 
-The SDK requires audio in **mono PCM16** format.
+The SDK takes audio as **mono PCM16** by default, and can also take Opus.
 
 ```typescript
 interface AudioFormat {
-  readonly channelCount: 1   // Fixed to mono
-  readonly sampleRate: number // 8000 | 16000 | 22050 | 24000 | 32000 | 44100 | 48000
+  readonly channelCount: 1                   // Fixed to mono
+  readonly sampleRate: number                // Default: 16000
+  readonly inputAudioFormat?: 'pcm' | 'opus' // Default: 'pcm'
+  readonly opusUplinkEnabled?: boolean       // Default: true
+  readonly opusBitrate?: number              // Default: 48000
 }
 ```
 
@@ -615,6 +625,19 @@ interface AudioFormat {
 | **Channels** | Mono (1 channel) |
 | **Sample rate** | Configurable: 8000 / 16000 / 22050 / 24000 / 32000 / 44100 / 48000 Hz (default: 16000) |
 | **Data type** | `ArrayBuffer` or `Uint8Array` |
+
+| Field | What it does |
+|-------|--------------|
+| `inputAudioFormat` | The codec of the audio you feed into the SDK via `send()` / `yieldAudioData()`. Fixed for the whole session; do not vary it per call. Direct Mode only. Under `'opus'` the configured `sampleRate` does not apply: Opus always decodes at 48 kHz, and the SDK reports that rate for the session. |
+| `opusUplinkEnabled` | Whether the SDK compresses the Direct Mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in Backend Mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing to initialize. |
+| `opusBitrate` | Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload. |
+
+Under `inputAudioFormat: 'opus'` the SDK accepts either shape TTS providers produce, and detects which from the bytes:
+
+- **Ogg Opus**, as file-style APIs return it. Any chunk boundary is fine.
+- **Bare Opus packets, one per call**, as streaming APIs push them over a WebSocket. These cannot be batched: an Opus packet carries no length of its own, so several concatenated into one buffer have no recoverable boundaries.
+
+Opus audio must be mono and must keep one shape for the whole conversation. WebM, MP4, WAV and CAF are not demuxed, even when the Opus inside them is valid. Audio that does not meet these requirements is reported through `onError` as `ErrorCode.invalidAudioInput`.
 
 **Data size:** 1 second at 16 kHz = 16,000 samples × 2 bytes = 32,000 bytes.
 
@@ -696,6 +719,7 @@ enum ErrorCode {
   failedToFetchAvatarMetadata = 'failedToFetchAvatarMetadata',
   invalidAvatarMetadata = 'invalidAvatarMetadata',
   failedToDownloadAvatarAssets = 'failedToDownloadAvatarAssets',
+  unsupportedAvatarAsset = 'unsupportedAvatarAsset',
   websocketError = 'websocketError',
   websocketClosedAbnormally = 'websocketClosedAbnormally',
   websocketClosedUnexpected = 'websocketClosedUnexpected',
@@ -706,6 +730,7 @@ enum ErrorCode {
   playbackInitFailed = 'playbackInitFailed',
   audioOnlyInitFailed = 'audioOnlyInitFailed',
   noAudio = 'noAudio',
+  invalidAudioInput = 'invalidAudioInput',
   audioContextNotInitialized = 'audioContextNotInitialized',
   animationPlayerNotInitialized = 'animationPlayerNotInitialized',
   serverError = 'serverError',
@@ -797,7 +822,7 @@ class AvatarApp {
 
   async init(appId: string, sessionToken: string, avatarId: string, container: HTMLElement) {
     // Initialize the SDK
-    await AvatarSDK.initialize(appId, { region: 'us-west' })
+    await AvatarSDK.initialize(appId)
     AvatarSDK.setSessionToken(sessionToken)
 
     // Load the avatar

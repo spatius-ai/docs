@@ -58,4 +58,22 @@ Motion Server accepts **mono 16-bit PCM (`s16le`)**. Choose one of the following
 
 Audio is not resampled automatically. If the source does not match, convert it first. For details, see [FAQ - Supported Audio Format](/resources/faq#supported-audio-format).
 
+### Opus input
+
+The client SDKs also accept **Opus**, for sources that already produce it. Set `inputAudioFormat` to `opus` at initialization and send Opus instead of PCM. The default is `pcm`.
+
+The setting declares what you feed in and applies to the whole session. Audio that does not match it is reported as an error rather than converted.
+
+Opus input applies to Direct Mode only.
+
+### Uplink compression
+
+In Direct Mode the SDK compresses audio to Opus before sending it to Motion Server. This is the default, and a change from earlier releases, which always sent raw PCM. It reduces the upload to roughly an eighth, at the cost of encoding on the client.
+
+Set `opusUplinkEnabled` to `false` to keep the raw PCM uplink. `opusBitrate` sets the target bitrate when compression is on; the default is 48000.
+
+Two cases are handled automatically. Opus input is forwarded unchanged, since it is already compressed. If `sampleRate` is not one Opus supports, the SDK logs a warning and sends raw PCM instead of failing to initialize.
+
+Backend Mode has no uplink, so neither setting applies there.
+
 Reference: [Web `Configuration`](/sdk-reference/web-sdk/reference#configuration) | [iOS `AudioFormat`](/sdk-reference/ios-sdk/api-reference#audioformat) | [Android `AudioFormat`](/sdk-reference/android-sdk/api-reference#audioformat) | [Flutter `AudioFormat`](/sdk-reference/flutter-sdk/api-reference#initialize)

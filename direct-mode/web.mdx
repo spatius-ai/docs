@@ -177,7 +177,7 @@ The smallest end-to-end flow with `@spatius/avatarkit`:
 import { AvatarSDK, DrivingServiceMode } from '@spatius/avatarkit'
 
 await AvatarSDK.initialize('your-app-id', {
-  region: 'us-west',
+  region: 'us-west',                             // optional, default: closest region
   drivingServiceMode: DrivingServiceMode.direct, // default
 })
 

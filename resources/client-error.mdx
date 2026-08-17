@@ -50,6 +50,7 @@ controller.onError = (error) {
 | `failedToFetchAvatarMetadata` | Failed to fetch avatar metadata. | Check network connectivity and retry. |
 | `invalidAvatarMetadata` | Avatar metadata is invalid. | Verify the avatar asset version or contact Spatius support. |
 | `failedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
+| `unsupportedAvatarAsset` | The avatar asset requires a newer SDK. | Upgrade the SDK to a version that supports the asset. |
 | `websocketError` | WebSocket handshake or network error. | Check network connectivity, region, and proxy settings. |
 | `websocketClosedAbnormally` | WebSocket closed with code `1006`. | Reconnect and inspect network stability. |
 | `websocketClosedUnexpected` | WebSocket closed with an unexpected close code. | Check the close reason and server logs. |
@@ -59,6 +60,7 @@ controller.onError = (error) {
 | `playbackInitFailed` | Playback initialization failed. | Retry initialization from a user gesture and inspect browser audio permissions. |
 | `audioOnlyInitFailed` | Audio-only fallback initialization failed. | Retry or prompt the user to refresh the page. |
 | `noAudio` | No audio data is available for playback. | Check that your audio chunks are non-empty. |
+| `invalidAudioInput` | Audio does not match the declared `inputAudioFormat`. | Under `'opus'`, send mono Ogg Opus or one bare Opus packet per call, keeping one shape for the whole conversation. The error message names the specific problem. |
 | `audioContextNotInitialized` | AudioContext has not been initialized. | Call `initializeAudioContext()` inside a user gesture before sending audio. |
 | `animationPlayerNotInitialized` | Animation player has not been initialized. | Reload the avatar and recreate the `AvatarView`. |
 | `serverError` | Server-side error. | Check the error message for details. |
@@ -79,6 +81,7 @@ controller.onError = (error) {
 | `invalidAvatarMetadata` | Avatar metadata is invalid. | Verify the avatar asset version or contact Spatius support. |
 | `incompatibleAvatarAsset` | Avatar asset is incompatible with the SDK. | Upgrade the SDK or regenerate the avatar assets. |
 | `failedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
+| `invalidAudioInput(message)` | Audio does not match the declared `inputAudioFormat`. | Under `.opus`, send mono Opus and keep one shape for the whole conversation. The error message names the specific problem. |
 | `invalidAnimationData` | Motion data payload is invalid. | Verify your Backend Mode or RTC data path. |
 | `serverError(code, message)` | Server-side error. | Check the error message for details. |
 
@@ -97,6 +100,7 @@ controller.onError = (error) {
 | `InvalidAvatarMetadata` | Avatar metadata is invalid. | Verify the avatar asset version or contact Spatius support. |
 | `IncompatibleAvatarAsset` | Avatar asset is incompatible with the SDK. | Upgrade the SDK or regenerate the avatar assets. |
 | `FailedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
+| `InvalidAudioInput(message)` | Audio does not match the declared `inputAudioFormat`. | Under `AudioCodec.OPUS`, send mono Opus and keep one shape for the whole conversation. The error message names the specific problem. |
 | `InvalidAnimationData` | Motion data payload is invalid. | Verify your Backend Mode or RTC data path. |
 | `ServerError(message, code)` | Server-side error. | Check the error message for details. |
 

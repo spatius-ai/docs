@@ -35,7 +35,6 @@ Initialize AvatarKit once before loading avatars or creating an avatar view.
 await AvatarSDK.initialize(
   appID: appId,
   configuration: Configuration(
-    region: 'us-west',
     audioFormat: const AudioFormat(sampleRate: 16000),
     drivingServiceMode: DrivingServiceMode.direct,
     logLevel: LogLevel.all,
@@ -46,6 +45,37 @@ await AvatarSDK.setSessionToken(sessionToken);
 ```
 
 Use `DrivingServiceMode.direct` for [Direct Mode](/direct-mode/overview). Use `DrivingServiceMode.backend` when your Flutter app receives encoded audio payloads and motion data payloads from a [Backend Mode](/backend-mode/overview).
+
+`initialize` fails fast when `appID` is missing, rather than returning silently. Get an App ID from [app.spatius.ai](https://app.spatius.ai/).
+
+### Configuration
+
+| Field | What it does |
+|-------|--------------|
+| `region` | Defaults to `'auto'`: the SDK selects the closest serving region at initialization and reuses the cached choice on later launches. Pass `'us-west'`, `'ap-northeast'`, or `'cn-beijing'` to force that region. If automatic selection cannot be reached, the SDK falls back to a default region and continues initializing. |
+| `audioFormat` | See [AudioFormat](#audioformat) below. |
+| `drivingServiceMode` | `direct` or `backend`, as described above. |
+| `logLevel` | SDK log verbosity. |
+
+### AudioFormat
+
+```dart
+const AudioFormat({
+  int sampleRate = 16000,
+  AudioCodec inputAudioFormat = AudioCodec.pcm,
+  bool opusUplinkEnabled = true,
+  int opusBitrate = 48000,
+})
+```
+
+| Field | What it does |
+|-------|--------------|
+| `sampleRate` | Sample rate in Hz. Supported: 8000, 16000, 22050, 24000, 32000, 44100, 48000. Not used when `inputAudioFormat` is `AudioCodec.opus`: Opus always decodes at 48 kHz, so the session runs at 48000. |
+| `inputAudioFormat` | The codec of the audio you feed into the SDK via `send` / `yieldAudioData`. `AudioCodec.pcm` (default) for raw PCM16, `AudioCodec.opus` for Opus. Fixed for the whole session. Direct Mode only. |
+| `opusUplinkEnabled` | Whether the SDK compresses the Direct Mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in Backend Mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing to initialize. |
+| `opusBitrate` | Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload. |
+
+Audio that does not match the declared `inputAudioFormat` is reported through `AvatarController.onError` as `AvatarError.invalidAudioInput`.
 
 ## Load an avatar
 
@@ -128,6 +158,10 @@ For Backend Mode input, feed encoded audio payloads and motion data payloads rec
 final conversationId = await controller.yieldAudioData(audioBytes, end: isLastChunk);
 controller.yieldAnimations(framesData, conversationID: conversationId);
 ```
+
+<Note>
+The per-call `audioFormat` parameter of `yieldAudioData` is deprecated and ignored. The format comes from `Configuration.audioFormat` passed to `initialize`. Drop the argument if you still pass it; it will be removed in a future release. The iOS and Android SDKs have already removed theirs.
+</Note>
 
 ## Demos
 

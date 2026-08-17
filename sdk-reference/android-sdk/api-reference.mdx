@@ -8,7 +8,7 @@ description: "Browse the Android AvatarKit SDK API reference."
 
 ```kotlin title="build.gradle.kts"
 dependencies {
-    implementation("ai.spatius:avatarkit:1.2.0")
+    implementation("ai.spatius:avatarkit:1.3.3")
 }
 ```
 
@@ -437,7 +437,7 @@ Creates a new configuration with the specified parameters.
 
 ```kotlin
 data class Configuration(
-    val region: String,
+    val region: String = "auto",
     val audioFormat: AudioFormat = AudioFormat(16000),
     val drivingServiceMode: DrivingServiceMode = DrivingServiceMode.DIRECT,
     val logLevel: LogLevel = LogLevel.INFO,
@@ -446,7 +446,7 @@ data class Configuration(
 ```
 
 **Parameters:**
-- `region`: The region to connect to (`"us-west"`, `"ap-northeast"`, or `"cn-beijing"`)
+- `region`: The region to connect to. Defaults to `"auto"`: the SDK selects the closest serving region at initialization and reuses the cached choice on later launches. Pass `"us-west"`, `"ap-northeast"`, or `"cn-beijing"` to force that region. If automatic selection cannot be reached, the SDK falls back to a default region and continues initializing.
 - `audioFormat`: The audio format configuration
 - `drivingServiceMode`: The driving service mode
 - `logLevel`: The log level
@@ -463,15 +463,23 @@ class AudioFormat
 
 ##### Initializers
 
-<Accordion title="AudioFormat(sampleRate:)">
-Creates a new audio format with the specified sample rate.
+<Accordion title="AudioFormat(sampleRate:opusBitrate:inputAudioFormat:opusUplinkEnabled:)">
+Creates a new audio format.
 
 ```kotlin
-class AudioFormat(val sampleRate: Int)
+class AudioFormat(
+    sampleRate: Int,
+    val opusBitrate: Int = 48000,
+    val inputAudioFormat: AudioCodec = AudioCodec.PCM,
+    val opusUplinkEnabled: Boolean = true,
+)
 ```
 
 **Parameters:**
-- `sampleRate`: The audio sample rate in Hz. Supported sample rates are: 8000, 16000, 22050, 24000, 32000, 44100, 48000.
+- `sampleRate`: The audio sample rate in Hz. Supported sample rates are: 8000, 16000, 22050, 24000, 32000, 44100, 48000. Not used when `inputAudioFormat` is `AudioCodec.OPUS`: Opus always decodes at 48 kHz, so the session runs at 48000.
+- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send`. `AudioCodec.PCM` (default) for raw PCM16, `AudioCodec.OPUS` for Opus. Fixed for the whole session; audio that does not match is reported as `AvatarError.InvalidAudioInput`. Direct mode only.
+- `opusUplinkEnabled`: Whether the SDK compresses the direct mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in `BACKEND` mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing to initialize.
+- `opusBitrate`: Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload.
 </Accordion>
 
 ### DrivingServiceMode
@@ -486,6 +494,20 @@ enum class DrivingServiceMode
 |------|-------------|
 | `DIRECT` | The SDK handles the Motion Server connection directly. |
 | `BACKEND` | The host application provides encoded audio and motion data payloads. |
+| `RTC` | The avatar is driven through the companion RTC SDK, `ai.spatius:avatarkit-rtc`. Set it only on that path. It unlocks no API and does not change runtime behavior; it identifies RTC-driven sessions in reporting. |
+
+### AudioCodec
+
+Codec of the audio the host feeds into the SDK.
+
+```kotlin
+enum class AudioCodec
+```
+
+| Case | Description |
+|------|-------------|
+| `PCM` | Raw PCM16, mono. The default. |
+| `OPUS` | Opus. Decoded to PCM locally for rendering and forwarded upstream unchanged. Direct mode only. |
 
 ### RenderQuality
 
