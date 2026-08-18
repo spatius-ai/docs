@@ -29,13 +29,15 @@ pnpm add @spatius/avatarkit-rtc @spatius/avatarkit agora-rtc-sdk-ng
 
 Configure your build tool to load the AvatarKit WebAssembly assets. See [Toolchain Setup](/sdk-reference/web-sdk/toolchain).
 
+Initialize AvatarKit with `DrivingServiceMode.rtc`. `AvatarPlayer` throws if the SDK was initialized with another mode, or before `initialize()` was called.
+
 ```typescript
 import { AvatarPlayer, AgoraProvider } from '@spatius/avatarkit-rtc'
 import { AvatarSDK, AvatarView, AvatarManager, DrivingServiceMode } from '@spatius/avatarkit'
 
 async function init() {
   await AvatarSDK.initialize('your-spatius-app-id', {
-    drivingServiceMode: DrivingServiceMode.backend,
+    drivingServiceMode: DrivingServiceMode.rtc,
   })
 
   const avatar = await AvatarManager.shared.load('your-spatius-avatar-id')
@@ -120,11 +122,16 @@ Or install with CocoaPods:
 pod 'AvatarKitRTC', '~> 1.0'
 ```
 
-`AvatarKitRTC` expects a standard AvatarKit setup with an initialized SDK, a loaded avatar, and an `AvatarView`.
+`AvatarKitRTC` expects a standard AvatarKit setup with an initialized SDK, a loaded avatar, and an `AvatarView`. Initialize AvatarKit with `drivingServiceMode: .rtc`; constructing `AvatarPlayer` in another mode, or before `initialize`, traps.
 
 ```swift
 import AvatarKit
 import AvatarKitRTC
+
+AvatarSDK.initialize(
+    appID: appID,
+    configuration: Configuration(drivingServiceMode: .rtc)
+)
 
 let view = AvatarView(avatar: avatar)
 let provider = AgoraProvider()
@@ -162,6 +169,25 @@ await player.disconnect()
 
 `publishAudio()` captures the device microphone, so your app must include `NSMicrophoneUsageDescription` and request microphone permission.
 
+#### Using your own Agora engine
+
+If your app already owns and manages an `AgoraRtcEngineKit`, hand it to the player with `attach(to:)` instead of calling `connect(_:)`. The SDK borrows the engine to read avatar data from the encoded video stream and render it. It does not create, join, or destroy the engine, and `detach()` returns it untouched.
+
+```swift
+let engine = AgoraRtcEngineKit.sharedEngine(with: config, delegate: self)
+
+try player.attach(to: engine)   // before joinChannel
+
+engine.setClientRole(.audience)
+// subscribe to encoded video, then:
+engine.joinChannel(byToken: token, channelId: channel, uid: uid, mediaOptions: options)
+
+// Later:
+await player.detach()
+```
+
+`attach(to:)` must be called before `joinChannel`, and the two paths are exclusive: do not mix it with `connect(_:)`. It requires an `AgoraProvider`, and throws if the player is already connected.
+
 </Tab>
 <Tab title="Android">
 
@@ -171,9 +197,12 @@ Install the Android RTC package:
 implementation("ai.spatius:avatarkit-rtc:1.0.0")
 ```
 
-The Android package expects a standard AvatarKit setup with an initialized SDK, a loaded avatar, and an `AvatarView`.
+The Android package expects a standard AvatarKit setup with an initialized SDK, a loaded avatar, and an `AvatarView`. Initialize AvatarKit with `drivingServiceMode = DrivingServiceMode.RTC`; constructing `AvatarPlayer` in another mode, or before `initialize()`, throws `IllegalStateException`.
 
 ```kotlin
+import ai.spatius.avatarkit.AvatarSDK
+import ai.spatius.avatarkit.Configuration
+import ai.spatius.avatarkit.DrivingServiceMode
 import ai.spatius.avatarkit.rtc.AgoraConnectionConfig
 import ai.spatius.avatarkit.rtc.AvatarPlayer
 import ai.spatius.avatarkit.rtc.AvatarPlayerEvent
@@ -181,6 +210,12 @@ import ai.spatius.avatarkit.rtc.AvatarPlayerOptions
 import ai.spatius.avatarkit.rtc.RTCLogLevel
 import ai.spatius.avatarkit.rtc.providers.AgoraProvider
 import kotlinx.coroutines.launch
+
+AvatarSDK.initialize(
+    context = context,
+    appId = appId,
+    configuration = Configuration(drivingServiceMode = DrivingServiceMode.RTC),
+)
 
 val provider = AgoraProvider(context)
 val player = AvatarPlayer(
