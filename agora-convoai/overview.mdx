@@ -6,77 +6,18 @@ description: "Use Agora Convo AI and Spatius to build voice avatars."
 
 import { AgoraConvoAiDiagram } from '/snippets/spatius-diagrams.jsx'
 
-## At a glance
-
-| Dimension | Agora Convo AI Integration |
-| --- | --- |
-| **Dev effort** | 🟡 Medium |
-| **Latency profile** | ⚡ Ultra-low; Spatius publishes avatar output into the Agora channel. |
-| **You build** | 🧠 Convo AI avatar provider config or TEN extension config, 🎟️ Agora RTC credentials, and 📡 RTC client setup. |
-| **You do not build** | 🚫 You do not build a custom agent worker. |
-| **Best first setup** | 🧭 [Convo AI Agent](/agora-convoai/convo-ai-agent), then [Agora Convo AI Client](/agora-convoai/client). |
-| **Client support** | 🌐 Web / 🍎 iOS / 🤖 Android |
-
 ## Architecture
 
 <Frame>
   <AgoraConvoAiDiagram />
 </Frame>
 
-1. The user joins an Agora channel and speaks to the Convo AI agent.
-2. The Convo AI agent runs the ASR, LLM, and TTS pipeline.
-3. The Spatius avatar provider opens a Motion Server session with Agora egress.
-4. Motion Server generates motion data from the agent audio and publishes synchronized audio + motion data to the Agora channel.
-5. The client joins the same Agora channel with `AgoraProvider` and renders the avatar locally.
-
-Spatius is not a video streaming service. Even when you use Agora as the transport layer and Convo AI as the voice agent platform, Agora transports avatar audio and motion data, not finished avatar video. AvatarKit renders the avatar locally on the client.
-
-## Client setup
-
-Choose the client package for your platform:
-
-| Platform | Package | Provider |
-| --- | --- | --- |
-| Web | `@spatius/avatarkit-rtc` with `agora-rtc-sdk-ng` | `AgoraProvider` |
-| iOS | `AvatarKitRTC` from [`spatius-ai/avatarkit-ios-rtc`](https://github.com/spatius-ai/avatarkit-ios-rtc) | `AgoraProvider` |
-| Android | `ai.spatius:avatarkit-rtc` | `AgoraProvider` |
-
-Each client joins the same Agora channel configured in the Convo AI agent or TEN extension. Use a distinct Agora UID for every participant so the avatar publisher, browser users, and native users do not collide.
-
-<Card
-  title="Agora Convo AI Client"
-  icon="tower-broadcast"
-  href="/agora-convoai/client"
-  horizontal
->
-  Install and connect Web, iOS, and Android clients.
-</Card>
-
-## Server setup
-
-Choose the setup path that matches what you run:
-
-<CardGroup cols={2}>
-  <Card title="Convo AI Agent" icon="bot" href="/agora-convoai/convo-ai-agent">
-    Configure Spatius as `properties.avatar.vendor = "spatius"` in the Convo AI start-agent request.
-  </Card>
-  <Card title="TEN Extension" icon="blocks" href="/agora-convoai/ten-extension">
-    Use `spatius_avatar_python` when you run a TEN Framework graph directly.
-  </Card>
-</CardGroup>
-
-Most Agora Convo AI users should start with [Convo AI Agent](/agora-convoai/convo-ai-agent). Use [TEN Extension](/agora-convoai/ten-extension) only when your deployment exposes a TEN Framework graph that you configure directly.
+The avatar provider or TEN extension sends avatar speech audio to Motion Server. AvatarKit receives synchronized audio and motion data from the Agora channel and renders the avatar locally.
 
 ## Next steps
 
 <CardGroup cols={3}>
-  <Card title="Convo AI Agent" icon="bot" href="/agora-convoai/convo-ai-agent">
-    Add Spatius to the Agora Convo AI start-agent payload.
-  </Card>
-  <Card title="TEN Extension" icon="blocks" href="/agora-convoai/ten-extension">
-    Configure `spatius_avatar_python` inside a TEN Framework graph.
-  </Card>
-  <Card title="Client" icon="globe" href="/agora-convoai/client">
-    Render the avatar in your Web, iOS, or Android app with `AgoraProvider`.
-  </Card>
+  <Card title="Convo AI Agent" icon="robot" href="/agora-convoai/convo-ai-agent" />
+  <Card title="TEN Extension" icon="puzzle-piece" href="/agora-convoai/ten-extension" />
+  <Card title="Client" icon="globe" href="/agora-convoai/client" />
 </CardGroup>

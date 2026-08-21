@@ -20,44 +20,36 @@
             "group": "Start Here",
             "icon": "rocket",
             "pages": [
-              "getting-started/docs-map",
               "getting-started/introduction",
-              "concepts/how-it-works",
-              "getting-started/credentials",
-              "getting-started/how-to-integrate"
+              "concepts/how-it-works"
             ]
           },
           {
             "group": "Quickstarts",
             "icon": "bolt",
             "pages": [
-              "quickstarts/overview",
               "quickstarts/web-sdk",
               "quickstarts/ios-sdk",
-              "quickstarts/android-sdk",
-              "quickstarts/flutter-sdk"
+              "quickstarts/android-sdk"
             ]
           },
           {
-            "group": "Platform Integrations",
-            "icon": "tower-broadcast",
+            "group": "Integrations",
+            "icon": "plug",
             "pages": [
+              "integrations/overview",
               {
-                "group": "LiveKit Agents Integration",
+                "group": "LiveKit Agents",
+                "tag": "Recommended",
                 "pages": [
                   "livekit-agents/overview",
-                  "quickstarts/livekit-agents",
-                  {
-                    "group": "Implementation guides",
-                    "pages": [
-                      "livekit-agents/server",
-                      "livekit-agents/client"
-                    ]
-                  }
+                  "livekit-agents/server",
+                  "livekit-agents/client"
                 ]
               },
               {
-                "group": "Agora Convo AI / TEN Framework Integration",
+                "group": "Agora ConvoAI",
+                "tag": "Recommended",
                 "pages": [
                   "agora-convoai/overview",
                   {
@@ -67,53 +59,20 @@
                       "agora-convoai/ten-extension"
                     ]
                   },
-                  {
-                    "group": "Clients",
-                    "pages": [
-                      "agora-convoai/client"
-                    ]
-                  }
+                  "agora-convoai/client"
                 ]
-              }
-            ]
-          },
-          {
-            "group": "Standalone Integrations",
-            "icon": "code",
-            "pages": [
+              },
               {
                 "group": "Direct Mode",
                 "pages": [
-                  "direct-mode/overview",
-                  {
-                    "group": "Client guides",
-                    "pages": [
-                      "direct-mode/web",
-                      "direct-mode/ios",
-                      "direct-mode/android",
-                      "direct-mode/flutter"
-                    ]
-                  }
+                  "direct-mode/client"
                 ]
               },
               {
                 "group": "Backend Mode",
                 "pages": [
-                  "backend-mode/overview",
-                  {
-                    "group": "Runtime roles",
-                    "pages": [
-                      "backend-mode/server-sdk",
-                      "backend-mode/client-sdk"
-                    ]
-                  },
-                  {
-                    "group": "Transports",
-                    "pages": [
-                      "backend-mode/own-transport",
-                      "backend-mode/with-livekit"
-                    ]
-                  }
+                  "backend-mode/server-sdk",
+                  "backend-mode/client-sdk"
                 ]
               }
             ]
@@ -191,7 +150,7 @@
             ]
           },
           {
-            "group": "Error Codes",
+            "group": "Error Handling",
             "icon": "triangle-exclamation",
             "pages": [
               "resources/client-error",
@@ -244,7 +203,120 @@
       "href": "https://app.spatius.ai"
     }
   },
-  "redirects": [],
+  "redirects": [
+    {
+      "source": "/backend-mode/own-transport",
+      "destination": "/backend-mode/server-sdk"
+    },
+    {
+      "source": "/backend-mode/own-transport.md",
+      "destination": "/backend-mode/server-sdk"
+    },
+    {
+      "source": "/backend-mode/with-livekit",
+      "destination": "/integrations/overview"
+    },
+    {
+      "source": "/backend-mode/with-livekit.md",
+      "destination": "/integrations/overview"
+    },
+    {
+      "source": "/backend-mode/overview",
+      "destination": "/backend-mode/server-sdk"
+    },
+    {
+      "source": "/backend-mode/overview.md",
+      "destination": "/backend-mode/server-sdk"
+    },
+    {
+      "source": "/direct-mode/overview",
+      "destination": "/direct-mode/client"
+    },
+    {
+      "source": "/direct-mode/overview.md",
+      "destination": "/direct-mode/client"
+    },
+    {
+      "source": "/direct-mode/web",
+      "destination": "/direct-mode/client"
+    },
+    {
+      "source": "/direct-mode/web.md",
+      "destination": "/direct-mode/client"
+    },
+    {
+      "source": "/direct-mode/ios",
+      "destination": "/direct-mode/client"
+    },
+    {
+      "source": "/direct-mode/ios.md",
+      "destination": "/direct-mode/client"
+    },
+    {
+      "source": "/direct-mode/android",
+      "destination": "/direct-mode/client"
+    },
+    {
+      "source": "/direct-mode/android.md",
+      "destination": "/direct-mode/client"
+    },
+    {
+      "source": "/direct-mode/flutter",
+      "destination": "/direct-mode/client"
+    },
+    {
+      "source": "/direct-mode/flutter.md",
+      "destination": "/direct-mode/client"
+    },
+    {
+      "source": "/quickstarts/overview",
+      "destination": "/quickstarts/web-sdk"
+    },
+    {
+      "source": "/quickstarts/overview.md",
+      "destination": "/quickstarts/web-sdk"
+    },
+    {
+      "source": "/quickstarts/livekit-agents",
+      "destination": "/quickstarts/web-sdk"
+    },
+    {
+      "source": "/quickstarts/livekit-agents.md",
+      "destination": "/quickstarts/web-sdk"
+    },
+    {
+      "source": "/quickstarts/flutter-sdk",
+      "destination": "/sdk-reference/flutter-sdk/api-reference"
+    },
+    {
+      "source": "/quickstarts/flutter-sdk.md",
+      "destination": "/sdk-reference/flutter-sdk/api-reference"
+    },
+    {
+      "source": "/getting-started/docs-map",
+      "destination": "/getting-started/introduction"
+    },
+    {
+      "source": "/getting-started/docs-map.md",
+      "destination": "/getting-started/introduction"
+    },
+    {
+      "source": "/getting-started/credentials",
+      "destination": "/integrations/overview"
+    },
+    {
+      "source": "/getting-started/credentials.md",
+      "destination": "/integrations/overview"
+    },
+    {
+      "source": "/getting-started/how-to-integrate",
+      "destination": "/integrations/overview"
+    },
+    {
+      "source": "/getting-started/how-to-integrate.md",
+      "destination": "/integrations/overview"
+    }
+  ],
   "customCSS": "/custom.css",
   "integrations": {
     "posthog": {

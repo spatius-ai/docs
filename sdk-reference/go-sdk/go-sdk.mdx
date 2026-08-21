@@ -1,6 +1,6 @@
 ---
-title: "Golang SDK"
-sidebarTitle: "Golang"
+title: "Go SDK"
+sidebarTitle: "Go"
 description: "Go Server SDK reference for Backend Mode sessions, audio input, callbacks, LiveKit egress, options, and errors."
 ---
 
@@ -132,6 +132,10 @@ session := spatius.NewAvatarSession(
 ```
 
 ## LiveKit egress
+
+<Note>
+Server SDK egress is a low-level capability, not an additional integration path. Use [LiveKit Agents Integration](/livekit-agents/overview) for the supported LiveKit Agents workflow.
+</Note>
 
 Use LiveKit egress when Spatius should publish avatar output directly into a LiveKit room:
 

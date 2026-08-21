@@ -1,80 +1,63 @@
 ---
 title: "RTC Adapter"
 sidebarTitle: "RTC Adapter"
-description: "Use @spatius/avatarkit-rtc as the Web transport adapter for LiveKit and Agora RTC providers."
+description: "Reference for @spatius/avatarkit-rtc, the Web transport adapter for LiveKit and Agora RTC providers."
 ---
 
-`@spatius/avatarkit-rtc` is the Web RTC transport adapter for AvatarKit. It lets a browser app render a Spatius avatar from an RTC room by connecting to the room, playing the remote audio track through WebRTC, and feeding motion data into `@spatius/avatarkit`.
+`@spatius/avatarkit-rtc` feeds motion data from a supported RTC room into AvatarKit for local rendering. In its managed path, it also creates the RTC client and plays the remote audio.
 
-## What it is
+## Package boundary
 
 | Package | Role |
 | --- | --- |
-| `@spatius/avatarkit` | Web avatar rendering SDK. |
-| `@spatius/avatarkit-rtc` | Web transport adapter for RTC rooms. Depends on `@spatius/avatarkit`. |
+| `@spatius/avatarkit` | Loads and renders the avatar in the browser. |
+| `@spatius/avatarkit-rtc` | Connects AvatarKit to LiveKit or Agora RTC rooms. |
 
-The RTC Adapter is **part of the Web SDK family**, not a standalone cross-platform SDK and not a diagnostic tool. Native Agora Convo AI clients use the platform RTC packages documented in [Agora Convo AI Client](/agora-convoai/client), not this npm package.
+The RTC Adapter is part of the Web SDK family. Native Agora clients use `AvatarKitRTC` on iOS or `ai.spatius:avatarkit-rtc` on Android.
 
-<Note>
-**Web only.** The RTC Adapter currently targets browser apps.
-</Note>
-
-## When to use the RTC Adapter
-
-| Scenario | Use RTC Adapter? |
+| Integration | Use the Web RTC Adapter? |
 | --- | --- |
-| Direct Mode | No. Use `@spatius/avatarkit` directly. |
-| Backend Mode with your own WebSocket | Usually no. Your client manually calls `yieldAudioData()` / `yieldFramesData()`. |
-| Backend Mode with LiveKit / Agora egress transport | Yes. The Web client uses the RTC Adapter. |
-| LiveKit Agents Integration | Yes. The Web client uses the RTC Adapter with `LiveKitProvider`. |
-| Agora Convo AI Integration | Yes for Web. Native clients use their platform RTC packages with `AgoraProvider`. |
-
-The [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-room-demo) demo is the minimal LiveKit example for the RTC Adapter; it is not the full Backend Mode + RTC transport voice-agent demo. For Agora, see [Agora Convo AI Client](/agora-convoai/client).
+| LiveKit Agents Integration | Yes, with `LiveKitProvider`. |
+| Agora Convo AI Integration | Yes, with `AgoraProvider`. |
+| Direct Mode Integration | No. Use `@spatius/avatarkit`. |
+| Backend Mode Integration | No. Feed the backend output into the core AvatarKit SDK. |
 
 ## Install
 
+Install the peer for the provider your application uses.
+
 <Tabs>
-<Tab title="pnpm">
+<Tab title="LiveKit">
 
 ```bash
-pnpm add @spatius/avatarkit-rtc @spatius/avatarkit
+npm install @spatius/avatarkit @spatius/avatarkit-rtc livekit-client
 ```
 
 </Tab>
-<Tab title="npm">
+<Tab title="Agora">
 
 ```bash
-npm install @spatius/avatarkit-rtc @spatius/avatarkit
-```
-
-</Tab>
-<Tab title="yarn">
-
-```bash
-yarn add @spatius/avatarkit-rtc @spatius/avatarkit
+npm install @spatius/avatarkit @spatius/avatarkit-rtc agora-rtc-sdk-ng
 ```
 
 </Tab>
 </Tabs>
 
-<Warning>
-**Pin `livekit-client` to `2.16.1`** if you install it directly in your app. `@spatius/avatarkit-rtc` is built against this version; other 2.x releases can introduce protocol changes that break the adapter's room wiring.
+### Package compatibility
 
-```json title="package.json"
-{
-  "dependencies": {
-    "livekit-client": "2.16.1"
-  }
-}
-```
-</Warning>
+The published peer ranges for `@spatius/avatarkit-rtc@1.1.3` are:
 
-<Note>
-`@spatius/avatarkit-rtc@1.1.3` requires `@spatius/avatarkit@1.3.7` or newer.
-</Note>
+| Peer package | Supported range | Required when |
+| --- | --- | --- |
+| `@spatius/avatarkit` | `>=1.3.7` | Always |
+| `livekit-client` | `^2.15.9` | Using `LiveKitProvider` |
+| `agora-rtc-sdk-ng` | `^4.x` | Using `AgoraProvider` |
 
-<Warning>
-**Initialize the underlying SDK with `DrivingServiceMode.rtc`.** Constructing an `AvatarPlayer` throws if the SDK was initialized with another mode, or before `initialize()` was called.
+Use any release within the declared peer range; no patch-level pin is required.
+
+## Runtime contract
+
+Initialize AvatarKit in RTC mode before constructing `AvatarPlayer`.
 
 ```typescript
 import { AvatarSDK, DrivingServiceMode } from '@spatius/avatarkit'
@@ -83,94 +66,215 @@ await AvatarSDK.initialize(appId, {
   drivingServiceMode: DrivingServiceMode.rtc,
 })
 ```
-</Warning>
 
-## How it works
+The adapter owns the RTC-to-renderer data flow. Do not manually call `yieldAudioData()` or `yieldFramesData()` while it is active.
 
-The RTC Adapter is a thin layer on top of `@spatius/avatarkit`:
-
-1. It runs on top of the underlying SDK initialized with `DrivingServiceMode.rtc`, so the avatar accepts externally driven motion data.
-2. A **provider** opens an RTC connection to the room. This page documents and demos `LiveKitProvider`; `AgoraProvider` is also exported by `@spatius/avatarkit-rtc` with the same `AvatarPlayer` surface.
-3. The provider publishes the local microphone track (when `startPublishing()` is called) and subscribes to the remote audio track and the motion data stream published by Motion Server.
-4. The browser plays the remote audio track through WebRTC. The RTC Adapter feeds motion data into `@spatius/avatarkit` for local rendering.
-
-<Warning>
-**Do not call `yieldAudioData()` or `yieldFramesData()` manually when using the RTC Adapter.** The adapter owns the data flow from the room to the renderer. Manual feeds bypass the provider and corrupt playback timing.
-</Warning>
-
-## Provider abstraction
+## Providers
 
 ```typescript
-import { AvatarPlayer, LiveKitProvider } from '@spatius/avatarkit-rtc'
+import {
+  AgoraProvider,
+  AvatarPlayer,
+  LiveKitProvider,
+} from '@spatius/avatarkit-rtc'
 
 const provider = new LiveKitProvider()
-const player = new AvatarPlayer(provider, avatarView, options)
+const player = new AvatarPlayer(provider, avatarView)
 ```
 
-### LiveKitProviderOptions
+| Provider | Connection config | Used by |
+| --- | --- | --- |
+| `LiveKitProvider` | `LiveKitConnectionConfig` | LiveKit Agents |
+| `AgoraProvider` | `AgoraConnectionConfig` | Agora Convo AI |
 
-Most LiveKit integrations use the default provider constructor. If your LiveKit transport publishes the motion data track under a custom publication name, pass a `LiveKitProviderOptions` object.
+### `LiveKitProviderOptions`
 
-```typescript
-import { LiveKitProvider, type LiveKitProviderOptions } from '@spatius/avatarkit-rtc'
-
-const providerOptions: LiveKitProviderOptions = {
-  animationTrackName: 'custom-motion-track',
-  // Or match a family of track names:
-  // animationTrackNamePattern: /^spatius-motion-/,
-}
-
-const provider = new LiveKitProvider(providerOptions)
-```
+Most applications use `new LiveKitProvider()` without options. Use these options only when the room publishes motion data under custom track names.
 
 | Option | Type | Description |
 | --- | --- | --- |
-| `animationTrackName` | `string` | Exact LiveKit publication track name to treat as the motion data track. |
-| `animationTrackNamePattern` | `RegExp` | Pattern for LiveKit publication track names to treat as motion data tracks. |
-
-| Provider | Status |
-| --- | --- |
-| `LiveKitProvider` | Documented here. Demoed in [`platform-integrations/livekit-room-demo`](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-room-demo). |
-| `AgoraProvider` | Documented in [Agora Convo AI Client](/agora-convoai/client). API surface mirrors `LiveKitProvider`; connection config uses `appId`, `channel`, optional `token`, and optional `uid`. |
-
-The same `AvatarPlayer` surface works across providers — code that talks to the player does not need to change when the provider swaps. Both providers are exported from the package root:
+| `animationTrackName` | `string` | Exact publication track name to treat as the motion data track. |
+| `animationTrackNamePattern` | `RegExp` | Pattern used to match motion data track names. |
 
 ```typescript
-import { LiveKitProvider, AgoraProvider } from '@spatius/avatarkit-rtc'
+const provider = new LiveKitProvider({
+  animationTrackNamePattern: /^spatius-motion-/,
+})
 ```
+
+## Connection configuration
+
+```typescript
+interface LiveKitConnectionConfig {
+  url: string
+  token: string
+  roomName: string
+}
+
+interface AgoraConnectionConfig {
+  appId: string
+  channel: string
+  token?: string
+  uid?: number
+}
+```
+
+Use short-lived room credentials returned by your backend. Never put a LiveKit API secret, Agora App Certificate, or Spatius API Key in the browser.
+
+## `AvatarPlayer`
+
+### Constructor
+
+```typescript
+new AvatarPlayer(
+  provider: RTCProvider,
+  avatarView: AvatarView,
+  options?: AvatarPlayerOptions,
+)
+```
+
+### `AvatarPlayerOptions`
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `logLevel` | `'info' \| 'warning' \| 'error' \| 'none'` | `'warning'` | SDK log level. |
+| `enableJitterBuffer` | `boolean` | `true` | Buffers and orders motion data for smoother playback. |
+| `maxBufferDelayMs` | `number` | `80` | Maximum jitter-buffer delay when buffering is enabled. |
+
+### Properties
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `isConnected` | `boolean` | Whether the player is connected or attached. |
+| `sessionSummary` | SDK-owned object | Cumulative playback diagnostics for this player lifetime. |
+
+Treat the shape of `sessionSummary` as diagnostics data, not application state.
+
+### Methods
+
+| Method | Returns | Description |
+| --- | --- | --- |
+| `prepareConnection(config)` | `Promise<void>` | Best-effort LiveKit connection pre-warm. Does not join the room. |
+| `connect(config)` | `Promise<void>` | Create and connect the provider-owned RTC client. |
+| `disconnect()` | `Promise<void>` | Disconnect the provider-owned client and release SDK-owned resources. |
+| `attach(client)` | `Promise<void>` | Attach to a host-owned RTC client. See [Host-owned RTC clients](#host-owned-rtc-clients). |
+| `detach()` | `Promise<void>` | Remove adapter listeners without disconnecting the host-owned client. |
+| `startPublishing()` | `Promise<void>` | Request microphone access and publish it. |
+| `stopPublishing()` | `Promise<void>` | Unpublish and release the SDK-owned microphone track. |
+| `publishAudio(track)` | `Promise<void>` | Publish a supplied audio `MediaStreamTrack`. |
+| `unpublishAudio()` | `Promise<void>` | Unpublish a supplied track without stopping it. |
+| `reconnect()` | `Promise<void>` | Reconnect with the last managed connection config. |
+| `getConnectionState()` | `string` | Return the provider connection state. |
+| `getNativeClient()` | `unknown` | Return the underlying LiveKit Room or Agora client. |
+| `on(event, handler)` | `void` | Add an event handler. |
+| `off(event, handler)` | `void` | Remove the same handler reference. |
+
+### Audio publishing
+
+Use `startPublishing()` for the microphone or supply any browser audio track with `publishAudio()`.
+
+```typescript
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+const track = stream.getAudioTracks()[0]
+
+await player.publishAudio(track)
+
+// Later
+await player.unpublishAudio()
+track.stop()
+```
+
+`unpublishAudio()` does not stop a host-supplied track. The application that created it must release it.
+
+## State and events
+
+The package exports `ConnectionState`:
+
+```typescript
+enum ConnectionState {
+  Disconnected = 'disconnected',
+  Connecting = 'connecting',
+  Connected = 'connected',
+  Reconnecting = 'reconnecting',
+  Failed = 'failed',
+}
+```
+
+| Event | Handler argument | Meaning |
+| --- | --- | --- |
+| `'connected'` | None | A managed provider connected. |
+| `'disconnected'` | None | A managed provider disconnected. |
+| `'error'` | `Error` | The provider reported an error. |
+| `'connection-state-changed'` | Connection state string | The provider state changed. |
+| `'stalled'` | None | The motion data stream stalled and the avatar returned to idle. |
+
+```typescript
+const recover = () => {
+  void player.reconnect()
+}
+
+player.on('stalled', recover)
+player.off('stalled', recover)
+```
+
+## Host-owned RTC clients
+
+The default `connect()` path lets the adapter create and own the RTC client. Use `attach()` only when your application already owns that client.
+
+### LiveKit Room
+
+Create the room with `singlePeerConnection: false`, attach before connecting, and use `detach()` before your application disconnects the room. In this flow, your application also owns remote audio playback.
+
+```typescript
+import { Room } from 'livekit-client'
+import { AvatarPlayer, LiveKitProvider } from '@spatius/avatarkit-rtc'
+
+const room = new Room({ singlePeerConnection: false })
+const player = new AvatarPlayer(new LiveKitProvider(), avatarView)
+
+await player.attach(room)
+await room.connect(url, token)
+
+// Later
+await player.detach()
+await room.disconnect()
+```
+
+### Agora client
+
+Attach before joining the channel. The host-owned client must use the H.264 codec and remains responsible for joining, subscribing, audio playback, and leaving.
+
+Do not mix `connect()` with `attach()` on the same player.
 
 ## Native client access
 
-The RTC Adapter creates and owns the low-level RTC client internally. Do not create a separate LiveKit `Room` or Agora Web SDK client for avatar playback. For advanced platform features, access the owned client through `getNativeClient()`.
+For provider-specific features in the managed path, read the client owned by the provider:
 
 ```typescript
-import type { LiveKitRoom, AgoraClient } from '@spatius/avatarkit-rtc'
+import type { AgoraClient, LiveKitRoom } from '@spatius/avatarkit-rtc'
 
-const liveKitRoom = liveKitProvider.getNativeClient()  // LiveKitRoom | null
-const agoraClient = agoraProvider.getNativeClient()    // AgoraClient | null
-
-const sameLiveKitRoom = liveKitPlayer.getNativeClient() as LiveKitRoom | null
-const sameAgoraClient = agoraPlayer.getNativeClient() as AgoraClient | null
+const room: LiveKitRoom | null = liveKitProvider.getNativeClient()
+const agoraClient: AgoraClient | null = agoraProvider.getNativeClient()
 ```
 
-Use the provider method when you still have a typed provider reference. Use the `AvatarPlayer` method when your app plumbing only has the player instance. The value is `null` until the provider has a native RTC client to return.
+`player.getNativeClient()` returns the same object as `unknown`; keep the provider reference when you want the provider-specific type.
 
-## API
+## Browser requirements
 
-For the full `AvatarPlayer` API — constructor options, `connect`, microphone control, custom audio publishing, events, reconnect, and browser compatibility — see [LiveKit Agents Integration Client](/livekit-agents/client). The signatures are exposed by the same package; only the integration narrative on that page differs.
+The package targets browser applications. AvatarKit's WebAssembly and rendering requirements still apply; see [Web Toolchain Setup](/sdk-reference/web-sdk/toolchain).
 
-`AvatarPlayer` also exposes `sessionSummary`, a read-only diagnostics snapshot for the current player lifetime. Use it to inspect cumulative RTC playback health, such as ordering, loss recovery, skipped playback, and stalled playback behavior. Treat the object shape as SDK-owned diagnostics data rather than application state.
+`LiveKitProvider` additionally requires `RTCRtpScriptTransform` to receive motion data. Check for the capability at runtime instead of relying on a fixed browser-version table:
 
-## Related guides
+```typescript
+const liveKitMotionSupported =
+  typeof globalThis.RTCRtpScriptTransform !== 'undefined'
+```
 
-<CardGroup cols={3}>
-  <Card title="LiveKit Agents Client" icon="bolt" href="/livekit-agents/client">
-    Use the RTC Adapter with a LiveKit Agents worker.
-  </Card>
-  <Card title="Agora Client" icon="tower-broadcast" href="/agora-convoai/client">
-    Use the RTC Adapter with an Agora Convo AI graph.
-  </Card>
-  <Card title="Backend Mode with LiveKit" icon="route" href="/backend-mode/with-livekit">
-    Use the RTC Adapter as the Web transport for a Backend Mode pipeline.
-  </Card>
+Browser autoplay policies can also require a user gesture before remote audio plays or microphone capture begins.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="LiveKit Agents Client" icon="bolt" href="/livekit-agents/client" />
+  <Card title="Agora Convo AI Client" icon="tower-broadcast" href="/agora-convoai/client" />
 </CardGroup>

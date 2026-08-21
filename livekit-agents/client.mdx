@@ -1,248 +1,72 @@
 ---
 title: "LiveKit Agents Integration Client"
 sidebarTitle: "Client"
-description: "Use the AvatarKit RTC client in a LiveKit Agents Integration."
+description: "Connect a Web client to a LiveKit Agents room and render the avatar."
 ---
 
-<Note>
-**Web Only:** The AvatarKit RTC client path is currently available for Web applications only.
-</Note>
+## Before you start
 
-This page covers the Web client side of [LiveKit Agents Integration](/livekit-agents/overview). The client joins the LiveKit room and renders the avatar's audio and motion stream produced by the LiveKit Agents worker with `livekit-plugins-spatius`.
+- Complete the [Agent setup](/livekit-agents/server).
+- Create a backend endpoint that returns a short-lived LiveKit token, server URL, and room name for the client.
+- Use the same Spatius App ID and Avatar ID as the worker. Keep the Spatius API Key on the worker.
 
-This page uses the [RTC Adapter](/sdk-reference/web-sdk/rtc-adapter) with the LiveKit provider. LiveKit Agents is the platform integration; the RTC Adapter (`@spatius/avatarkit-rtc`) is the Web client adapter used to render the avatar stream from the LiveKit room.
+This packaged LiveKit client path is currently available on Web. The native RTC SDKs expose an `RTCProvider` extension point, but do not bundle a native `LiveKitProvider`.
 
-<Warning>
-When using the AvatarKit RTC client, do not call `new Room()` from `livekit-client` yourself. `@spatius/avatarkit-rtc` creates and owns the LiveKit `Room` internally so it can wire audio, avatar motion data, and lifecycle handling correctly. If you need access to the underlying Room instance for advanced LiveKit features, see [Native Client Access](#native-client-access).
-</Warning>
+## Install
 
-## AvatarPlayer API
-
-<Note>
-Code in this section shows **type signatures**, not copy-paste examples. For runnable code, see the [Complete Example](#complete-example) at the bottom of the page.
-</Note>
-
-### Constructor
-
-```typescript
-new AvatarPlayer(provider: LiveKitProvider, avatarView: AvatarView, options?: AvatarPlayerOptions)
+```bash
+npm install @spatius/avatarkit @spatius/avatarkit-rtc livekit-client
 ```
 
-### LiveKitProviderOptions
+Configure your build tool to load the AvatarKit WebAssembly assets. See [Toolchain Setup](/sdk-reference/web-sdk/toolchain).
 
-```typescript
-interface LiveKitProviderOptions {
-  /** Exact LiveKit publication track name to treat as the motion data track. */
-  animationTrackName?: string
-
-  /** Pattern for LiveKit publication track names to treat as motion data tracks. */
-  animationTrackNamePattern?: RegExp
-}
-
-const provider = new LiveKitProvider({
-  animationTrackName: 'custom-motion-track',
-})
-```
-
-Most integrations use `new LiveKitProvider()` without options. Set these only when your LiveKit transport publishes motion data under custom publication names.
-
-### AvatarPlayerOptions
-
-```typescript
-interface AvatarPlayerOptions {
-  /** Log level: 'info' | 'warning' | 'error' | 'none'. Default: 'warning' */
-  logLevel?: LogLevel
-
-  /**
-   * Enable jitter buffer for smoother animation playback. When enabled, frames are
-   * buffered and rendered in sequence at a steady 25fps, absorbing network jitter
-   * and out-of-order delivery. Default: true.
-   */
-  enableJitterBuffer?: boolean
-
-  /**
-   * Max delay (ms) a frame can sit in the jitter buffer before being rendered.
-   * Only used when enableJitterBuffer is true. Default: 80 (2 frames @ 25fps).
-   */
-  maxBufferDelayMs?: number
-}
-```
-
-### Connection
-
-```typescript
-// Connect to LiveKit server
-await player.connect(config: LiveKitConnectionConfig): Promise<void>
-
-// Disconnect and clean up
-await player.disconnect(): Promise<void>
-
-// Reconnect using last config (useful after stalls)
-await player.reconnect(): Promise<void>
-
-// Check connection status
-player.isConnected           // boolean
-player.getConnectionState()  // string
-
-// Read cumulative RTC playback diagnostics for this player lifetime
-player.sessionSummary
-```
-
-#### LiveKitConnectionConfig
-
-```typescript
-interface LiveKitConnectionConfig {
-  url: string       // LiveKit server URL (wss://...)
-  token: string     // Auth token from your backend
-  roomName: string  // Room name
-}
-```
-
-### Microphone Control
-
-```typescript
-// Start microphone (requests permission automatically)
-await player.startPublishing()
-
-// Stop microphone
-await player.stopPublishing()
-```
-
-### Custom Audio Publishing
-
-For non-microphone audio sources like audio elements or Web Audio API.
-
-```typescript
-// Publish a custom audio track
-await player.publishAudio(track: MediaStreamTrack)
-
-// Stop custom audio
-await player.unpublishAudio()
-```
-
-| Audio Source | How to Obtain Track |
-|-------------|---------------------|
-| `<audio>` element | `audioElement.captureStream().getAudioTracks()[0]` |
-| Screen share audio | `getDisplayMedia({ audio: true })` |
-| Web Audio API | `audioContext.createMediaStreamDestination().stream.getAudioTracks()[0]` |
-
-<Note>
-`unpublishAudio()` does **not** stop the track. You are responsible for calling `track.stop()` to release the resource.
-</Note>
-
-### Native Client Access
-
-Access the underlying LiveKit `Room` instance for advanced features.
-
-```typescript
-import type { LiveKitRoom } from '@spatius/avatarkit-rtc'
-
-// Via provider (recommended — full type safety)
-const room = provider.getNativeClient()  // LiveKitRoom | null
-
-// Via player (requires type assertion)
-const room = player.getNativeClient() as LiveKitRoom | null
-
-console.log('Remote participants:', room?.remoteParticipants.size)
-```
-
-### ConnectionState
-
-```typescript
-type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'failed'
-```
-
-## Events
-
-```typescript
-player.on(event: string, handler: Function)
-player.off(event: string, handler: Function)
-```
-
-| Event | Callback | Description |
-|-------|----------|-------------|
-| `'connected'` | `()` | Connected to RTC server |
-| `'disconnected'` | `()` | Disconnected from RTC server |
-| `'error'` | `(error: Error)` | An error occurred |
-| `'connection-state-changed'` | `(state: ConnectionState)` | Connection state changed |
-| `'stalled'` | `()` | Data stream stalled (no frames for 3s) |
-
-<Note>
-When a `stalled` event fires, the avatar automatically transitions to idle animation. Consider calling `player.reconnect()` to recover.
-</Note>
-
-### Session diagnostics
-
-```typescript
-const summary = player.sessionSummary
-```
-
-`sessionSummary` is a read-only diagnostics snapshot for the current `AvatarPlayer` lifetime. Use it when investigating RTC playback health, including packet ordering, recovery, skipped playback, and stalled playback behavior. The object shape is SDK-owned diagnostics data, so avoid depending on individual fields for core application state.
-
-**Stall recovery example:**
-
-```typescript
-player.on('stalled', async () => {
-  console.log('Stream stalled, reconnecting...')
-  try {
-    await player.reconnect()
-  } catch (error) {
-    console.error('Reconnection failed:', error)
-  }
-})
-```
-
-## Complete Example
+## Connect and render
 
 ```typescript
 import { AvatarPlayer, LiveKitProvider } from '@spatius/avatarkit-rtc'
 import { AvatarSDK, AvatarView, AvatarManager, DrivingServiceMode } from '@spatius/avatarkit'
 
-async function init() {
-  // Initialize AvatarKit
-  await AvatarSDK.initialize('your-app-id', {
+interface LiveKitSession {
+  url: string
+  token: string
+  roomName: string
+}
+
+export async function startAvatar(
+  container: HTMLElement,
+  session: LiveKitSession,
+) {
+  await AvatarSDK.initialize('your-spatius-app-id', {
     drivingServiceMode: DrivingServiceMode.rtc,
   })
 
-  // Load avatar and create view
-  const avatar = await AvatarManager.shared.load('character-id')
-  const container = document.getElementById('avatar-container')!
+  const avatar = await AvatarManager.shared.load('your-spatius-avatar-id')
   const avatarView = new AvatarView(avatar, container)
 
-  // Create player
   const provider = new LiveKitProvider()
-  const player = new AvatarPlayer(provider, avatarView, {
-    logLevel: 'info',
-    enableJitterBuffer: true,
-    maxBufferDelayMs: 80,
-  })
+  const player = new AvatarPlayer(provider, avatarView)
 
-  // Listen to events
-  player.on('connected', () => console.log('Connected!'))
-  player.on('disconnected', () => console.log('Disconnected!'))
-  player.on('error', (err) => console.error('Error:', err))
-  player.on('stalled', async () => {
-    console.log('Stream stalled, reconnecting...')
-    await player.reconnect()
-  })
-
-  // Connect to LiveKit server
-  await player.connect({
-    url: 'wss://your-livekit-server.com',
-    token: 'your-livekit-token',
-    roomName: 'my-room',
-  })
-
-  // Start microphone
+  await player.connect(session)
   await player.startPublishing()
+
+  return {
+    player,
+    async dispose() {
+      await player.stopPublishing()
+      await player.disconnect()
+      avatarView.dispose()
+    },
+  }
 }
 ```
 
-## Browser Compatibility
+`startPublishing()` requests microphone permission, so call `startAvatar()` from a user action. Run the returned `dispose()` function when the experience ends.
 
-| Browser | Minimum Version | Notes |
-|---------|-----------------|-------|
-| Chrome | 94+ | VP8 + RTCRtpScriptTransform |
-| Firefox | 117+ | RTCRtpScriptTransform required |
-| Safari | 15.4+ | RTCRtpScriptTransform supported |
-| Edge | 94+ | Same as Chrome |
+The adapter creates and owns the LiveKit `Room` in this path. If your app must supply an existing room, follow the advanced `attach()` flow in the [RTC Adapter reference](/sdk-reference/web-sdk/rtc-adapter#host-owned-rtc-clients).
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="RTC Adapter API" icon="code" href="/sdk-reference/web-sdk/rtc-adapter" />
+  <Card title="Client lifecycle" icon="arrows-rotate" href="/concepts/lifecycle" />
+</CardGroup>

@@ -4,7 +4,7 @@ sidebarTitle: "How It Works"
 description: "Spatius architecture: Motion Server receives avatar speech audio, returns motion data, and AvatarKit renders locally."
 ---
 
-Spatius does not stream digital human video to the client. Instead, it **renders the Avatar locally on the client**. The cloud only transmits motion data, and client renders the Avatar in real time.
+Spatius does not stream finished Avatar video to the client. Instead, it **renders the Avatar locally on the client**. Motion Server returns motion data rather than video; delivery depends on the selected integration.
 
 ## Overall Flow
 
@@ -39,7 +39,8 @@ graph LR
     D["<b>your app</b><br/>observes state and handles recovery"]
 
     A --> B
-    B -->|"audio + motion data"| C
+    A -->|"audio"| C
+    B -->|"motion data"| C
     C --> D
 ```
 
@@ -51,7 +52,7 @@ graph LR
 
 ### AvatarKit Client SDK
 
-The client SDK covers Web, iOS, Android, and Flutter. It renders the Avatar on the client and keeps the audio and digital human visuals synchronized.
+The client SDK covers Web, iOS, Android, and Flutter. It renders the Avatar on the client and keeps avatar speech audio and motion data synchronized.
 
 Reference: [Web](/sdk-reference/web-sdk/reference) | [iOS](/sdk-reference/ios-sdk/api-reference) | [Android](/sdk-reference/android-sdk/api-reference) | [Flutter](/sdk-reference/flutter-sdk/api-reference)
 
@@ -59,19 +60,13 @@ Reference: [Web](/sdk-reference/web-sdk/reference) | [iOS](/sdk-reference/ios-sd
 
 > Cloud service provided by Spatius.
 
-- **Input**: audio, the audio the digital human should speak, usually the TTS output from an ASR -> LLM -> TTS pipeline.
-- **Output**: motion data, about 10-15 KB/s, much lower than a video stream.
-- **Role**: drives AvatarKit on the client to produce the digital human speaking visuals. **Audio-video synchronization is handled by the SDK, so application developers don't need to manage it.**
+- **Input**: avatar speech audio, usually the TTS output from an ASR -> LLM -> TTS pipeline.
+- **Output**: motion data, ~10–15 KB/s, much lower than a video stream.
+- **Role**: provides motion data that AvatarKit uses to animate the Avatar. **AvatarKit synchronizes audio and motion data playback, so application developers don't need to manage it.**
 
-## Integration Modes
+## Next steps
 
-Different integration modes match different development scenarios.
-
-| Integration | Description |
-|------|-------------|
-| **[Direct Mode](/direct-mode/overview)** | The simplest integration path. The client SDK connects directly to Motion Server, suitable for quickly integrating Web, iOS, Android, or Flutter apps. |
-| **[LiveKit Agents Integration](/livekit-agents/overview)** | For projects already using the LiveKit Agents framework. Add `livekit-plugins-spatius` in a few lines. |
-| **[Agora Convo AI Integration](/agora-convoai/overview)** | For projects already using Agora Convo AI. Configure Spatius as the Convo AI avatar provider, or use `spatius_avatar_python` when running a TEN Framework graph directly. |
-| **[Backend Mode](/backend-mode/overview)** | A custom integration path. Your backend uses the Server SDK and chooses a downstream transport such as your own WebSocket, LiveKit Room, or Agora channel. |
-
-For mode selection, see [How to Integrate](/getting-started/how-to-integrate).
+<CardGroup cols={2}>
+  <Card title="Compare integrations" icon="plug" href="/integrations/overview" />
+  <Card title="Run the Web quickstart" icon="bolt" href="/quickstarts/web-sdk" />
+</CardGroup>

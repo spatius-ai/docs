@@ -5,12 +5,12 @@ description: "How Direct Mode clients obtain and use Spatius Session Tokens with
 ---
 
 <Note>
-**This flow only applies to Direct Mode** (`DrivingServiceMode.direct`), where the client opens a Motion Server WebSocket from `AvatarController.start()`. Platform Integrations, Backend Mode, and the RTC Adapter path all use `DrivingServiceMode.backend` — the client never opens that WebSocket and never needs a Spatius Session Token. Those paths authenticate inside their own transport (LiveKit room token, Agora RTC token, your backend's own auth, etc.). See [Credentials](/getting-started/credentials).
+**This flow only applies to Direct Mode** (`DrivingServiceMode.direct`), where the client opens a Motion Server WebSocket from `AvatarController.start()`. The recommended RTC integrations use `DrivingServiceMode.rtc`; Backend Mode uses `DrivingServiceMode.backend`. None of those paths opens that client-side Motion Server WebSocket or needs a Spatius Session Token.
 </Note>
 
 ## Before you start
 
-Make sure you have your App ID and API Key. Session Token issuance requires a server-side component — implement an authentication endpoint on your own business server.
+Open [Apps](https://app.spatius.ai/apps), select your app, then copy its App ID and generate an API Key under **Developer → API Key**. Session Token issuance requires a server-side component — implement an authentication endpoint on your own business server and keep the API Key there.
 
 The flow involves two distinct Spatius services:
 
@@ -20,11 +20,11 @@ The flow involves two distinct Spatius services:
 ## Connection flow
 
 1. The client sends an authentication request to your business server.
-2. The business server sends a request to the **Spatius Console API** to generate a Session Token, including expiration time in the request body and the API Key in the `X-Api-Key` header.
+2. The business server sends a request to the **Spatius Console API** to generate a Session Token, including expiration time in the request body and the API Key in the `X-API-Key` header.
 3. The Console API returns the Session Token to your business server.
 4. The business server returns the Session Token to the client.
-5. The client calls `AvatarSDK.setSessionToken(token)` before `AvatarController.start()`. (The token is set on the SDK; it is **not** an `AvatarSDK.initialize()` parameter.)
-6. `AvatarController.start()` opens the **Motion Server** WebSocket authenticated with the Session Token.
+5. The client sets the token on `AvatarSDK`, then starts its `AvatarController`. The exact setter differs by platform.
+6. The controller opens the **Motion Server** WebSocket authenticated with the Session Token.
 
 ```mermaid
 sequenceDiagram
@@ -38,7 +38,7 @@ sequenceDiagram
     BizServer->>Console: Generate Session Token (API Key + expireAt)
     Console-->>BizServer: Return Session Token
     BizServer-->>Client: Return Session Token
-    Client->>Kit: setSessionToken(token) + AvatarController.start()
+    Client->>Kit: Set Session Token + start controller
     Kit->>Motion: Open WebSocket (Session Token)
     Motion-->>Kit: Connection response
     Note over Motion,Kit: After token expiration, new connections are rejected<br>Existing connections are not affected
@@ -51,6 +51,6 @@ If you attempt to establish a new connection after the token's configured expira
 ## Notes
 
 - Avoid leaking your API Key; ensure it is only used on the server.
-- The Session Token is designed to be single-use. Issue a fresh token for each connection.
+- Keep Session Tokens short-lived and issue a fresh token for each new connection.
 
 > For the endpoint shape and request fields, see the [Session Token API](/api-reference/api-reference).

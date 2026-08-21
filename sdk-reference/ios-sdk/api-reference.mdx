@@ -148,15 +148,20 @@ static let shared: AvatarManager
 
 ##### Instance Methods
 
-<Accordion title="load(id:onProgress:)">
+<Accordion title="load(id:useCompressedModel:onProgress:)">
 Loads an avatar by ID.
 
 ```swift
-func load(id: String, onProgress: (ProgressHandler)?) async throws -> Avatar
+func load(
+    id: String,
+    useCompressedModel: Bool = false,
+    onProgress: ProgressHandler? = nil
+) async throws -> Avatar
 ```
 
 **Parameters:**
 - `id`: The avatar identifier
+- `useCompressedModel`: Load the smaller compressed model variant
 - `onProgress`: Optional progress callback
 
 **Returns:** The loaded `Avatar` instance.
@@ -270,14 +275,6 @@ The main controller for managing avatar driving service connections and interact
 
 ##### Instance Properties
 
-<Accordion title="onFirstRendering">
-Callback when the avatar is first rendered.
-
-```swift
-var onFirstRendering: (() -> Void)?
-```
-</Accordion>
-
 <Accordion title="onConnectionState">
 Callback for connection state changes.
 
@@ -318,27 +315,19 @@ func close()
 ```
 </Accordion>
 
-<Accordion title="pauseRendering()">
-Pauses avatar rendering.
+<Accordion title="pause()">
+Pauses Avatar playback.
 
 ```swift
-func pauseRendering()
+func pause()
 ```
 </Accordion>
 
-<Accordion title="resumeRendering()">
-Resumes avatar rendering.
+<Accordion title="resume()">
+Resumes Avatar playback.
 
 ```swift
-func resumeRendering()
-```
-</Accordion>
-
-<Accordion title="isRendering">
-Whether the current avatar is actually rendering.
-
-```swift
-var isRendering: Bool { get }
+func resume()
 ```
 </Accordion>
 
@@ -366,31 +355,32 @@ func send(_ data: Data, end: Bool) -> String
 **Returns:** A conversation ID string.
 </Accordion>
 
-<Accordion title="yield(_:end:audioFormat:)">
-Yields audio from the host.
+<Accordion title="yieldAudioData(_:end:)">
+Provides response audio received from your backend in Backend Mode.
 
 ```swift
-func yield(_ data: Data, end: Bool, audioFormat: AudioFormat?) -> String
+func yieldAudioData(_ data: Data, end: Bool) -> String
 ```
 
 **Parameters:**
 - `data`: The audio data
 - `end`: Whether this is the end of the audio stream
-- `audioFormat`: The audio format (optional)
 
 **Returns:** A conversation ID string.
 </Accordion>
 
-<Accordion title="yield(_:conversationID:)">
-Yields animations from the host.
+<Accordion title="yieldFramesData(_:conversationID:)">
+Provides motion data payloads received from your backend in Backend Mode.
 
 ```swift
-func yield(_ animations: [Data], conversationID: String)
+func yieldFramesData(_ frames: [Data], conversationID: String) -> Bool
 ```
 
 **Parameters:**
-- `animations`: Array of encoded motion data frames
-- `conversationID`: The conversation identifier
+- `frames`: Array of encoded motion data payloads
+- `conversationID`: The identifier returned by the matching `yieldAudioData()` call
+
+**Returns:** Whether the payload completed the current conversation.
 </Accordion>
 
 <Accordion title="pointCount">
@@ -440,11 +430,53 @@ var controller: AvatarController { get }
 ```
 </Accordion>
 
-<Accordion title="contentTransform">
+<Accordion title="onFirstRendering">
+Callback when the Avatar is first rendered.
+
+```swift
+var onFirstRendering: (() -> Void)?
+```
+</Accordion>
+
+<Accordion title="avatarTransform">
 Transform for avatar content position and scale within the view.
 
 ```swift
-var contentTransform: Transform
+var avatarTransform: Transform
+```
+</Accordion>
+
+##### Instance Methods
+
+<Accordion title="pauseRendering()">
+Pauses Avatar rendering.
+
+```swift
+func pauseRendering()
+```
+</Accordion>
+
+<Accordion title="resumeRendering()">
+Resumes Avatar rendering.
+
+```swift
+func resumeRendering()
+```
+</Accordion>
+
+<Accordion title="isRenderingEnabled()">
+Returns whether rendering is enabled.
+
+```swift
+func isRenderingEnabled() -> Bool
+```
+</Accordion>
+
+<Accordion title="getBoundingRect()">
+Returns the rendered Avatar bounds when available.
+
+```swift
+func getBoundingRect() -> CGRect?
 ```
 </Accordion>
 
@@ -560,7 +592,7 @@ init(
 
 **Parameters:**
 - `sampleRate`: The audio sample rate in Hz. Defaults to 16000. Supported: 8000, 16000, 22050, 24000, 32000, 44100, 48000. Not used when `inputAudioFormat` is `.opus`: Opus always decodes at 48 kHz, so the session runs at 48000.
-- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send`. `.pcm` (default) for raw PCM16, `.opus` for Opus. Fixed for the whole session; audio that does not match is reported as `AvatarError.invalidAudioInput`. Direct mode only.
+- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send` or `yieldAudioData`. `.pcm` (default) for raw PCM16, `.opus` for Opus. Fixed for the whole session; audio that does not match is reported as `AvatarError.invalidAudioInput`.
 - `opusBitrate`: Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload.
 - `opusUplinkEnabled`: Whether the SDK compresses the direct mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in `.backend` mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing to initialize.
 </Accordion>
@@ -584,8 +616,8 @@ enum DrivingServiceMode
 | Case | Description |
 |------|-------------|
 | `direct` | The SDK handles the Motion Server connection directly. |
-| `backend` | The host application provides encoded audio and motion data payloads. |
-| `rtc` | The avatar is driven through the companion RTC SDK, `AvatarKitRTC`. Set it only on that path. It unlocks no API and does not change runtime behavior; it identifies RTC-driven sessions in reporting. |
+| `backend` | The host application provides response audio and motion data. |
+| `rtc` | The avatar is driven through the companion RTC SDK, `AvatarKitRTC`. It does not connect to a channel by itself; see [Agora Convo AI Client](/agora-convoai/client). |
 
 ### AudioCodec
 
@@ -598,7 +630,7 @@ enum AudioCodec
 | Case | Description |
 |------|-------------|
 | `pcm` | Raw PCM16, mono. The default. |
-| `opus` | Opus. Decoded to PCM locally for rendering and forwarded upstream unchanged. Direct mode only. |
+| `opus` | Opus. Decoded to PCM locally; in Direct Mode, forwarded upstream unchanged. |
 
 ### RenderQuality
 

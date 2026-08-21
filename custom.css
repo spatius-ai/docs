@@ -16,6 +16,26 @@ html.dark,
   background: var(--spatius-selection-background);
 }
 
+.spatius-comparison-recommended {
+  display: inline-block;
+  margin-top: 0.35rem;
+  padding: 0.12rem 0.48rem;
+  border-radius: 999px;
+  color: #5559a9;
+  background: rgba(147, 153, 227, 0.18);
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+html.dark .spatius-comparison-recommended,
+.dark .spatius-comparison-recommended,
+[data-theme="dark"] .spatius-comparison-recommended {
+  color: #c3c5ff;
+  background: rgba(173, 175, 244, 0.16);
+}
+
 .step-container {
   margin-bottom: 0.25rem !important;
 }

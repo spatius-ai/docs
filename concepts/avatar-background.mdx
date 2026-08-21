@@ -4,23 +4,21 @@ sidebarTitle: "Background"
 description: "Download the optional 16:9 Avatar background from Spatius Studio and render it behind AvatarKit in your app."
 ---
 
-An **Avatar Background** is an optional visual companion asset for a Personal Avatar. It is generated from the final photo used to create the Avatar and is intended to be rendered behind the Avatar in your application.
-
-The background does not change the Avatar's 3DGS assets, does not change Motion Server behavior, and does not affect motion data. It is a separate image layer that your client app can display behind the AvatarKit rendering surface.
+An **Avatar Background** is an optional image generated with a Personal Avatar. It is a separate client-side asset, not part of the avatar assets or Motion Server flow.
 
 ## Mental model
 
-Treat the background and the Avatar as one fixed stage:
+Treat the background and Avatar as one fixed stage:
 
 - The background is the **16:9 master stage**.
-- The Avatar keeps the same position and scale within that stage.
-- Other view sizes are display windows cropped from the same stage.
+- The Avatar keeps the same position and scale inside that stage.
+- Other aspect ratios crop a window from the same stage.
 
 <Frame>
   <img src="/images/avatar-background-stage.jpg" alt="Avatar rendered on a 16:9 background stage" />
 </Frame>
 
-The extracted background asset is the same stage without the Avatar:
+The downloaded asset is that stage without the Avatar:
 
 <Frame>
   <img src="/images/avatar-background-asset.jpg" alt="Extracted 16:9 Avatar background asset" />
@@ -28,112 +26,55 @@ The extracted background asset is the same stage without the Avatar:
 
 ## Get the background asset
 
-The background is available for a Personal Avatar when one was generated during Avatar creation.
-
 <Steps>
   <Step title="Open the Avatar in Spatius Studio">
     Go to [Spatius Studio](https://app.spatius.ai), open the Personal Avatar, and find the **Background** card below the preview.
   </Step>
   <Step title="Download the background">
-    Select **Download** in the Background card. The downloaded image is the 16:9 master stage without the Avatar.
+    Select **Download**. The image is the 16:9 master stage without the Avatar.
   </Step>
   <Step title="Add it to your app">
-    Bundle the image with the client or upload it to infrastructure that your application controls.
+    Bundle the image with the client or upload it to infrastructure your application controls.
   </Step>
 </Steps>
 
-| Platform | Common storage option |
-|----------|-----------------------|
-| Web | Static application asset or your own CDN |
-| iOS | Asset Catalog |
-| Android | `drawable` resource |
-| Flutter | Asset declared in `pubspec.yaml` |
-
 <Note>
-`AvatarManager.load()` loads avatar assets, but it does not download the separate background image. If your app supports multiple Avatars, keep an application-level mapping from each `avatar-id` to its background asset.
+`AvatarManager` loads avatar assets, but not this background image. If your app supports multiple Avatars, map each `avatar-id` to its background in your application.
 </Note>
 
-## Add it to your app
+## Render the two layers
 
-Build the visual as two layers inside the same 16:9 stage:
+Place a transparent Avatar view above the background inside the same stage:
 
 ```text
 Display window (clips overflow)
 └── 16:9 stage
     ├── Background image
-    └── Transparent AvatarView
+    └── Transparent Avatar view
 ```
 
-The background fills the stage first. AvatarKit then renders the Avatar in a transparent view above it. Both layers must fill the same stage and use the same coordinate system.
+Both layers must fill the stage and share the same coordinate system. This composition is entirely client-side and works with every integration.
 
-This composition is entirely client-side. It works the same way with Direct Mode Integration, Backend Mode Integration, and Platform Integrations; it does not change the Motion Server connection or motion data flow.
+Implementation guides: [Web](/sdk-reference/web-sdk/reference#render-over-an-avatar-background) · [iOS](/sdk-reference/ios-sdk/api-reference#render-over-an-avatar-background) · [Android](/sdk-reference/android-sdk/api-reference#render-over-an-avatar-background) · [Flutter](/sdk-reference/flutter-sdk/api-reference#render-over-an-avatar-background)
 
-For implementation examples, see [Web](/sdk-reference/web-sdk/reference#render-over-an-avatar-background), [iOS](/sdk-reference/ios-sdk/api-reference#render-over-an-avatar-background), [Android](/sdk-reference/android-sdk/api-reference#render-over-an-avatar-background), or [Flutter](/sdk-reference/flutter-sdk/api-reference#render-over-an-avatar-background).
+## Crop for other aspect ratios
 
-## Display windows
-
-Use the 16:9 background as the only master image. For square, portrait, or custom containers, crop the visible window from the same stage instead of stretching the image.
-
-| Container | Recommended behavior |
-|-----------|----------------------|
-| 16:9 | Show the full background stage. |
-| 1:1 | Center-crop from the 16:9 stage. |
-| 9:16 | Center-crop from the same stage. Mild shoulder cropping can be acceptable. |
-| Custom | Use the same aspect-fill, center-crop rule. |
-
-The Avatar layer and the background layer should share the same container coordinate system. When the container ratio changes, do not move or scale the Avatar independently to "fix" the crop.
-
-To size the 16:9 stage so it covers a custom display window, use the larger of the horizontal and vertical scale factors:
-
-```text
-scale = max(window width / 16, window height / 9)
-stage width = 16 × scale
-stage height = 9 × scale
-```
-
-Center the stage in the display window and clip the overflow.
+Use aspect-fill and center-crop for square, portrait, or custom containers. Keep the 16:9 stage centered and clip its overflow; do not stretch the background or move the Avatar independently.
 
 <Warning>
-Do not stretch, squeeze, or re-center the 16:9 background to match the container. That breaks the spatial relationship between the Avatar and the background.
+The Avatar and background must be transformed together. Independent scaling or positioning breaks their spatial relationship.
 </Warning>
 
-## Loading and switching
+## Practical rules
 
-- Preload the background while `AvatarManager.load()` loads the Avatar so the two layers can appear together.
-- When switching Avatars, update the Avatar and its mapped background as one visual change.
-- If an Avatar has no background, or the image fails to load, use a solid color or an application-provided fallback.
-- A background loading failure should not block AvatarKit initialization or the Motion Server connection.
-
-## What not to do
-
-- Do not use a separate background position for each device ratio.
-- Do not zoom or move the Avatar when switching from 16:9 to 1:1 or 9:16.
-- Do not use the background asset as part of the avatar assets bundle. Load it as a normal image layer in your app.
-- Do not expect the background to preserve physical contact between the original person and nearby objects perfectly.
-
-## Source image limits
-
-The background is generated from a photo that originally contained the person. It works best when the person and background are visually related but not strongly physically coupled.
-
-Avoid depending on the background for cases where the original photo must preserve exact contact details, such as:
-
-- the person pressing into a sofa or chair
-- visible body shadows that must line up exactly
-- hands or arms resting on a table
-- clothing or hair occluding detailed background objects
-
-In those cases, the extracted background can still be useful, but the reconstructed contact area may not look identical to the original photo.
+- Store the image as a normal Web, iOS, Android, or Flutter application asset, or serve it from your CDN.
+- Preload it while the Avatar loads so both layers can appear together.
+- Switch the Avatar and its mapped background in the same visual update.
+- If the image is unavailable, fall back to an application-provided scene without blocking AvatarKit.
 
 ## Next steps
 
-<CardGroup cols={3}>
-  <Card title="Avatar" icon="user" href="/concepts/avatar">
-    Understand how Avatar IDs and avatar assets work.
-  </Card>
-  <Card title="Client Lifecycle" icon="play" href="/concepts/lifecycle">
-    See where the Avatar is loaded and rendered in your app.
-  </Card>
-  <Card title="Demo projects" icon="code" href="/resources/demo-projects">
-    Explore complete client implementations.
-  </Card>
+<CardGroup cols={2}>
+  <Card title="Avatar" icon="user" href="/concepts/avatar" />
+  <Card title="Client Lifecycle" icon="play" href="/concepts/lifecycle" />
 </CardGroup>

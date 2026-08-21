@@ -1,123 +1,39 @@
 ---
-title: "Client Error Codes"
-description: "Web, iOS, Android, and Flutter SDK error codes with recovery guidance"
+title: "Client Error Handling"
+sidebarTitle: "Client"
+description: "How to classify and recover from AvatarKit loading, connection, audio, playback, and runtime errors."
 ---
 
-All client SDKs surface errors through the `AvatarController.onError` callback as `AvatarError`.
+Handle a client error according to **where it occurred in the lifecycle**. Exact error names and associated values differ by platform; use the SDK Reference as the source of truth.
 
-<Tabs>
-<Tab title="Web">
-```typescript
-controller.onError = (error: AvatarError) => {
-  console.error('Error:', error.code, error.message)
-}
-```
-</Tab>
-<Tab title="iOS">
-```swift
-controller.onError = { error in
-    print("Error: \(error)")
-}
-```
-</Tab>
-<Tab title="Android">
-```kotlin
-controller?.onError = { error ->
-    Log.e("Avatar", "Error: ${error.message}")
-}
-```
-</Tab>
-<Tab title="Flutter">
-```dart
-controller.onError = (error) {
-  debugPrint('Error: ${error.name}');
-};
-```
-</Tab>
-</Tabs>
+| Lifecycle area | Representative signal | First action |
+| --- | --- | --- |
+| Avatar loading | Unknown ID, metadata failure, asset download failure | Verify the `avatar-id`, then retry transient downloads. |
+| Direct Mode authentication | Invalid or expired Session Token | Request a fresh token from your backend before reconnecting. |
+| Direct Mode connection | Handshake, WebSocket, timeout, or unexpected close | Check region and network reachability, then reconnect with backoff. |
+| Audio input | Input does not match the configured codec or sample rate | Convert the source and keep one configured format for the session. |
+| Playback | Audio context or render player is not ready | Restore the required client lifecycle before retrying playback. |
+| Backend Mode feed | Invalid or mismatched audio or motion data | Verify the configured format and ordering by turn ID. |
+| Server response | Motion Server reports an application, billing, or runtime failure | Log the complete error and fix non-transient configuration failures before retrying. |
 
-## Web — ErrorCode
+<Warning>
+Spatius API Keys must never be used for client recovery. In Direct Mode, the backend exchanges the API Key for a short-lived Session Token and returns only that token to the client.
+</Warning>
 
-| Code | Description | Recovery |
-|------|-------------|----------|
-| `appIDUnrecognized` | App ID not recognized. | Verify your app ID in the dashboard. |
-| `sessionTokenInvalid` | Session token is invalid or appId mismatch. | Verify token generation on your server. |
-| `sessionTokenExpired` | Session token has expired. | Request a new token from your server. |
-| `insufficientBalance` | Account balance is insufficient. | Top up your account in the dashboard. |
-| `sessionTimeout` | Session timed out. | Reconnect by calling `start()` again. |
-| `concurrentLimitExceeded` | Concurrent connection limit exceeded. | Close other active sessions before starting a new one. |
-| `avatarIDUnrecognized` | Avatar ID not found. | Check the avatar ID exists and is published. |
-| `failedToFetchAvatarMetadata` | Failed to fetch avatar metadata. | Check network connectivity and retry. |
-| `invalidAvatarMetadata` | Avatar metadata is invalid. | Verify the avatar asset version or contact Spatius support. |
-| `failedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
-| `unsupportedAvatarAsset` | The avatar asset requires a newer SDK. | Upgrade the SDK to a version that supports the asset. |
-| `websocketError` | WebSocket handshake or network error. | Check network connectivity, region, and proxy settings. |
-| `websocketClosedAbnormally` | WebSocket closed with code `1006`. | Reconnect and inspect network stability. |
-| `websocketClosedUnexpected` | WebSocket closed with an unexpected close code. | Check the close reason and server logs. |
-| `connectionInProgress` | A connection is already being established. | Wait for the current `start()` call to complete. |
-| `networkLayerNotAvailable` | Direct Mode network layer is not available. | Ensure the SDK is initialized with `DrivingServiceMode.direct` before calling Direct Mode methods. |
-| `playbackStartFailed` | Failed to start playback. | Make sure `initializeAudioContext()` was called inside a user gesture. |
-| `playbackInitFailed` | Playback initialization failed. | Retry initialization from a user gesture and inspect browser audio permissions. |
-| `audioOnlyInitFailed` | Audio-only fallback initialization failed. | Retry or prompt the user to refresh the page. |
-| `noAudio` | No audio data is available for playback. | Check that your audio chunks are non-empty. |
-| `invalidAudioInput` | Audio does not match the declared `inputAudioFormat`. | Under `'opus'`, send mono Ogg Opus or one bare Opus packet per call, keeping one shape for the whole conversation. The error message names the specific problem. |
-| `audioContextNotInitialized` | AudioContext has not been initialized. | Call `initializeAudioContext()` inside a user gesture before sending audio. |
-| `animationPlayerNotInitialized` | Animation player has not been initialized. | Reload the avatar and recreate the `AvatarView`. |
-| `serverError` | Server-side error. | Check the error message for details. |
+## Recovery flow
 
-## iOS — AvatarError
+1. Log the error, integration, SDK version, region, and current lifecycle phase.
+2. Retry only network and download failures that are likely to be transient.
+3. Refresh credentials for authentication failures instead of repeatedly reconnecting with the same token.
+4. Treat format, asset compatibility, and application configuration failures as developer errors.
+5. Stop automatic retries after a bounded number of attempts and surface a recoverable UI state.
 
-| Error | Description | Recovery |
-|-------|-------------|----------|
-| `appIDUnrecognized` | App ID not recognized. | Verify your app ID in the dashboard. |
-| `sessionTokenInvalid` | Session token is invalid or appId mismatch. | Verify token generation on your server. |
-| `sessionTokenExpired` | Session token has expired. | Request a new token from your server. |
-| `insufficientBalance` | Account balance is insufficient. | Top up your account in the dashboard. |
-| `sessionTimeout` | Session timed out. | Reconnect by calling `start()` again. |
-| `concurrentLimitExceeded` | Concurrent connection limit exceeded. | Close other active sessions before starting a new one. |
-| `avatarIDUnrecognized` | Avatar ID not found. | Check the avatar ID exists and is published. |
-| `avatarAssetMissing` | Avatar asset is missing locally. | Re-download with `AvatarManager.load()`. |
-| `failedToFetchAvatarMetadata` | Failed to fetch avatar metadata. | Check network connectivity and retry. |
-| `invalidAvatarMetadata` | Avatar metadata is invalid. | Verify the avatar asset version or contact Spatius support. |
-| `incompatibleAvatarAsset` | Avatar asset is incompatible with the SDK. | Upgrade the SDK or regenerate the avatar assets. |
-| `failedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
-| `invalidAudioInput(message)` | Audio does not match the declared `inputAudioFormat`. | Under `.opus`, send mono Opus and keep one shape for the whole conversation. The error message names the specific problem. |
-| `invalidAnimationData` | Motion data payload is invalid. | Verify your Backend Mode or RTC data path. |
-| `serverError(code, message)` | Server-side error. | Check the error message for details. |
+## Exact platform errors
 
-## Android — AvatarError
-
-| Error | Description | Recovery |
-|-------|-------------|----------|
-| `AppIDUnrecognized` | App ID not recognized. | Verify your app ID in the dashboard. |
-| `SessionTokenInvalid` | Session token is invalid or appId mismatch. | Verify token generation on your server. |
-| `SessionTokenExpired` | Session token has expired. | Request a new token from your server. |
-| `InsufficientBalance` | Account balance is insufficient. | Top up your account in the dashboard. |
-| `SessionTimeout` | Session timed out. | Reconnect by calling `start()` again. |
-| `ConcurrentLimitExceeded` | Concurrent connection limit exceeded. | Close other active sessions before starting a new one. |
-| `AvatarIDUnrecognized` | Avatar ID not found. | Check the avatar ID exists and is published. |
-| `FailedToFetchAvatarMetadata` | Failed to fetch avatar metadata. | Check network connectivity and retry. |
-| `InvalidAvatarMetadata` | Avatar metadata is invalid. | Verify the avatar asset version or contact Spatius support. |
-| `IncompatibleAvatarAsset` | Avatar asset is incompatible with the SDK. | Upgrade the SDK or regenerate the avatar assets. |
-| `FailedToDownloadAvatarAssets` | Failed to download avatar assets. | Check network connectivity and retry. |
-| `InvalidAudioInput(message)` | Audio does not match the declared `inputAudioFormat`. | Under `AudioCodec.OPUS`, send mono Opus and keep one shape for the whole conversation. The error message names the specific problem. |
-| `InvalidAnimationData` | Motion data payload is invalid. | Verify your Backend Mode or RTC data path. |
-| `ServerError(message, code)` | Server-side error. | Check the error message for details. |
-
-## Flutter — AvatarError
-
-Flutter surfaces `AvatarError` through `AvatarController.onError`. Error names match the client SDK categories above; log `error.name` and the current lifecycle phase for recovery.
-
-## Recommended Handling Flow
-
-1. Log the error code and current lifecycle phase.
-2. Retry transient network/download failures with backoff.
-3. Refresh session token for auth-related errors.
-4. Surface configuration errors to developers/operators.
-
-For platform-specific API details, see:
-
-- [Web SDK reference](/sdk-reference/web-sdk/reference)
-- [iOS SDK reference](/sdk-reference/ios-sdk/api-reference)
+- [Web SDK error handling](/sdk-reference/web-sdk/reference#error-handling)
+- [iOS `AvatarError`](/sdk-reference/ios-sdk/api-reference#avatarerror)
 - [Android SDK reference](/sdk-reference/android-sdk/api-reference)
 - [Flutter SDK reference](/sdk-reference/flutter-sdk/api-reference)
+- [Web RTC Adapter](/sdk-reference/web-sdk/rtc-adapter)
+
+For backend failures, see [Server Error Handling](/resources/server-error).

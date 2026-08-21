@@ -14,10 +14,10 @@ description: "Complete API reference for @spatius/avatarkit (Web)."
 | `AvatarController` | Runtime communication and playback control | `start()`, `send()`, `yieldAudioData()`, `yieldFramesData()`, `pause()`, `resume()`, `interrupt()` |
 
 <Note>
-**App ID** is required on every integration path and identifies your Spatius application (it scopes which avatars you can load). **Session Token** is only required for **Direct Mode** (`DrivingServiceMode.direct`), where it authenticates the Motion Server WebSocket; RTC / Platform Integration / Backend Mode paths do not need it. See [Credentials](/getting-started/credentials) for the per-path breakdown.
+**App ID** is required on every integration and identifies your Spatius application (it scopes which avatars you can load). **Session Token** is only required for **Direct Mode** (`DrivingServiceMode.direct`), where it authenticates the Motion Server WebSocket; LiveKit Agents, Agora Convo AI, and Backend Mode do not need it.
 </Note>
 
-For the minimum end-to-end integration walkthrough (install, build configuration, init, load, connect), see the [Direct Mode guide for Web](/direct-mode/web).
+For the minimum end-to-end integration walkthrough, open the Web tab in [Direct Mode Client](/direct-mode/client).
 
 ---
 
@@ -69,7 +69,7 @@ AvatarSDK.setSessionToken('your-session-token')
 ```
 
 - Required for `DrivingServiceMode.direct` before calling `AvatarController.start()`.
-- **Not required** for `DrivingServiceMode.backend` (LiveKit Agents Integration, RTC Adapter path, Backend Mode). Those paths receive audio and motion data through their own transport and do not open a Motion Server WebSocket from the client; `AvatarManager.load()` fetches avatar metadata over an App-ID-scoped public endpoint.
+- **Not required** for `DrivingServiceMode.backend` (Backend Mode) or `DrivingServiceMode.rtc` (the recommended RTC integrations). Those paths receive audio and motion data externally and do not open a Motion Server WebSocket from the client; `AvatarManager.load()` fetches avatar metadata over an App-ID-scoped public endpoint.
 - The token must be obtained from your backend (see [Session token API](/api-reference/api-reference)).
 - Maximum 24-hour validity.
 - Token must be paired with the App ID used in `initialize()`.
@@ -521,7 +521,7 @@ enum DrivingServiceMode {
 }
 ```
 
-Use `rtc` only when driving the avatar through `@spatius/avatarkit-rtc`. It unlocks no API and identifies RTC-driven sessions in reporting. The RTC Adapter requires it; see [RTC Adapter](/sdk-reference/web-sdk/rtc-adapter).
+Use `rtc` only when driving the avatar through `@spatius/avatarkit-rtc`. It unlocks no API and does not connect to a room by itself. See the [RTC Adapter](/sdk-reference/web-sdk/rtc-adapter) and the relevant [LiveKit Agents Client](/livekit-agents/client) or [Agora Convo AI Client](/agora-convoai/client).
 
 ### RenderQuality
 
@@ -628,7 +628,7 @@ interface AudioFormat {
 
 | Field | What it does |
 |-------|--------------|
-| `inputAudioFormat` | The codec of the audio you feed into the SDK via `send()` / `yieldAudioData()`. Fixed for the whole session; do not vary it per call. Direct Mode only. Under `'opus'` the configured `sampleRate` does not apply: Opus always decodes at 48 kHz, and the SDK reports that rate for the session. |
+| `inputAudioFormat` | The codec of the audio you feed into the SDK via `send()` / `yieldAudioData()`. Fixed for the whole session; do not vary it per call. Under `'opus'` the configured `sampleRate` does not apply: Opus always decodes at 48 kHz, and the SDK reports that rate for the session. |
 | `opusUplinkEnabled` | Whether the SDK compresses the Direct Mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in Backend Mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing to initialize. |
 | `opusBitrate` | Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload. |
 
@@ -737,7 +737,7 @@ enum ErrorCode {
 }
 ```
 
-See [Client Error Codes](/resources/client-error) for recovery guidance and [Server Error Codes](/resources/server-error) for Console API and Motion Server errors.
+See [Client Error Handling](/resources/client-error) for recovery guidance and [Server Error Handling](/resources/server-error) for Console API and Motion Server errors.
 
 ---
 
@@ -822,7 +822,7 @@ class AvatarApp {
 
   async init(appId: string, sessionToken: string, avatarId: string, container: HTMLElement) {
     // Initialize the SDK
-    await AvatarSDK.initialize(appId)
+    await AvatarSDK.initialize(appId, {})
     AvatarSDK.setSessionToken(sessionToken)
 
     // Load the avatar
