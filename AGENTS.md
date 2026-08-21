@@ -36,7 +36,7 @@ Mintlify reads `docs.json` and serves only what is referenced from `navigation.t
 
 Top-level structure (Guides tab):
 
-1. **Start Here** — `getting-started/introduction`, `concepts/how-it-works`
+1. **Start Here** — `getting-started`, `concepts/how-it-works`
 2. **Quickstarts** — complete scenario first-runs from `spatius-scenario-demo` for Web, iOS, and Android only (`quickstarts/{web-sdk,ios-sdk,android-sdk}`). There is no Quickstarts Overview page. The current native scenario clients use Agora, but this must be described as a demo implementation choice, never as the complete iOS or Android platform capability. Flutter remains in SDK Reference and integration guides, not Quickstarts.
 3. **Integrations** — starts with `integrations/overview`, followed by `LiveKit Agents` (tagged `Recommended`), `Agora ConvoAI` (tagged `Recommended`), `Direct Mode`, then `Backend Mode`. Direct Mode contains only `Client`; Backend Mode contains `Backend Setup` and `Client`. These concise labels may also be used in the comparison table; integration page titles use the full public names.
 4. **Concepts** — `concepts/{avatar,avatar-background,audio,lifecycle,state-events}` (mental model + cross-cutting warnings; `how-it-works` lives in Start Here as orientation).

@@ -20,7 +20,7 @@
             "group": "Start Here",
             "icon": "rocket",
             "pages": [
-              "getting-started/introduction",
+              "getting-started",
               "concepts/how-it-works"
             ]
           },
@@ -294,11 +294,19 @@
     },
     {
       "source": "/getting-started/docs-map",
-      "destination": "/getting-started/introduction"
+      "destination": "/getting-started"
     },
     {
       "source": "/getting-started/docs-map.md",
-      "destination": "/getting-started/introduction"
+      "destination": "/getting-started"
+    },
+    {
+      "source": "/getting-started/introduction",
+      "destination": "/getting-started"
+    },
+    {
+      "source": "/getting-started/introduction.md",
+      "destination": "/getting-started"
     },
     {
       "source": "/getting-started/credentials",
