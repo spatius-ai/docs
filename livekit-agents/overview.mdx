@@ -6,180 +6,19 @@ description: "Use LiveKit Agents and Spatius to build voice avatars."
 
 import { LiveKitPluginDiagram } from '/snippets/spatius-diagrams.jsx'
 
-<Note>
-**Web Only:** The current AvatarKit RTC client demo path targets Web. LiveKit ships iOS and Android client SDKs, but Spatius does not yet provide iOS or Android demos for this path.
-</Note>
-
-## At a glance
-
-| Dimension | LiveKit Agents Integration |
-| --- | --- |
-| **Dev effort** | 🟢 Low if you already use LiveKit Agents; 🟡 Medium if you are adopting LiveKit too. |
-| **Latency profile** | ⚡ Ultra-low; agent audio is handled in the LiveKit worker and avatar output returns through the room. |
-| **You build** | 🎙️ LiveKit Agents worker wiring, 🔌 Spatius plugin configuration, and 🌐 Web RTC client. |
-| **You do not build** | 🚫 A custom Server SDK pipeline or downstream transport. |
-| **Best first demo** | 🚀 [LiveKit Agents Integration quickstart](/quickstarts/livekit-agents). |
-| **Client support** | 🌐 Web today |
-
 ## Architecture
 
 <Frame>
   <LiveKitPluginDiagram />
 </Frame>
 
-- **LiveKit room** handles transport.
-- **Agent worker** runs your voice agent with `livekit-plugins-spatius` attached.
-- **Motion Server** generates motion data from the agent audio and publishes the synchronized audio + motion stream back into the room.
-- **AvatarKit RTC client** joins the room and renders the avatar.
+## Runtime boundary
 
-Spatius is not a video streaming service. Even when you use LiveKit as the transport layer and LiveKit Agents as the voice agent framework, LiveKit transports avatar audio and motion data, not finished avatar video. `@spatius/avatarkit` renders the avatar locally in the browser.
-
-## Frontend installation
-
-<Tabs>
-<Tab title="pnpm">
-
-```bash
-pnpm add @spatius/avatarkit-rtc @spatius/avatarkit
-```
-
-</Tab>
-<Tab title="npm">
-
-```bash
-npm install @spatius/avatarkit-rtc @spatius/avatarkit
-```
-
-</Tab>
-<Tab title="yarn">
-
-```bash
-yarn add @spatius/avatarkit-rtc @spatius/avatarkit
-```
-
-</Tab>
-<Tab title="bun">
-
-```bash
-bun add @spatius/avatarkit-rtc @spatius/avatarkit
-```
-
-</Tab>
-</Tabs>
-
-## Frontend setup
-
-<Steps>
-
-<Step title="Toolchain setup">
-Configure your build tool to load the AvatarKit WebAssembly assets. See [Toolchain Setup](/sdk-reference/web-sdk/toolchain).
-</Step>
-
-<Step title="Integrate the SDK">
-
-<Accordion title="Step-by-step JS API setup">
-
-<Steps>
-<Step title="Initialize SDK">
-
-```typescript
-import { AvatarSDK, DrivingServiceMode } from '@spatius/avatarkit'
-
-await AvatarSDK.initialize('your-app-id', {
-  drivingServiceMode: DrivingServiceMode.rtc,
-})
-```
-
-</Step>
-<Step title="Load Avatar & Create View">
-
-```typescript
-const avatar = await AvatarManager.shared.load('avatar-id')
-const container = document.getElementById('avatar-container')!
-const avatarView = new AvatarView(avatar, container)
-```
-
-</Step>
-<Step title="Create Player with LiveKit Provider">
-
-```typescript
-import { AvatarPlayer, LiveKitProvider } from '@spatius/avatarkit-rtc'
-
-const provider = new LiveKitProvider()
-const player = new AvatarPlayer(provider, avatarView, {
-  logLevel: 'warning',
-})
-```
-
-</Step>
-<Step title="Connect to LiveKit Server">
-
-```typescript
-await player.connect({
-  url: 'wss://your-livekit-server.com',
-  token: 'your-livekit-token',
-  roomName: 'room-name',
-})
-```
-
-</Step>
-<Step title="Start voice interaction">
-
-```typescript
-// Start microphone publishing
-await player.startPublishing()
-
-// Stop microphone
-await player.stopPublishing()
-
-// Disconnect when done
-await player.disconnect()
-```
-
-</Step>
-</Steps>
-
-</Accordion>
-
-Full RTC client API reference: [LiveKit Agents Client](/livekit-agents/client).
-
-</Step>
-</Steps>
-
-## LiveKit Agents plugin installation
-
-<Tabs>
-<Tab title="pip">
-
-```bash
-pip install livekit-plugins-spatius
-```
-
-</Tab>
-<Tab title="uv">
-
-```bash
-uv add livekit-plugins-spatius
-```
-
-</Tab>
-</Tabs>
-
-## Server setup
-
-Spatius plugin is part of LiveKit Agents framework since 1.6.7, see [the LiveKit documentation](https://docs.livekit.io/agents/models/avatar/plugins/spatius/) for the setup,
-and [LiveKit Agents Integration Server](/livekit-agents/server) for the full reference.
+Your LiveKit Agents worker owns the voice agent and sends its speech audio to Motion Server through `livekit-plugins-spatius`. The Web client joins the same room, while AvatarKit renders the avatar locally from the synchronized audio and motion data.
 
 ## Next steps
 
-<CardGroup cols={3}>
-  <Card title="Quickstart" icon="bolt" href="/quickstarts/livekit-agents">
-    Run the end-to-end LiveKit Agents voice avatar demo.
-  </Card>
-  <Card title="Server" icon="server" href="/livekit-agents/server">
-    Add `livekit-plugins-spatius` to your LiveKit Agents worker.
-  </Card>
-  <Card title="Client" icon="globe" href="/livekit-agents/client">
-    Render the avatar in your Web app with `@spatius/avatarkit-rtc`.
-  </Card>
+<CardGroup cols={2}>
+  <Card title="Agent setup" icon="server" href="/livekit-agents/server" />
+  <Card title="Client" icon="globe" href="/livekit-agents/client" />
 </CardGroup>

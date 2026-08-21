@@ -1,10 +1,10 @@
 ---
 title: "Avatar"
 sidebarTitle: "Avatar"
-description: "Avatar IDs, avatar assets, loading, caching, and how AvatarKit uses the digital-human resource."
+description: "Avatar IDs, avatar assets, and how AvatarKit loads them."
 ---
 
-**Avatar** is digital human - the virtual character rendered by Spatius on your user's screen.
+An **Avatar** is the 3D character rendered by AvatarKit on your user's device.
 
 ## Sources
 
@@ -24,7 +24,7 @@ Avatars you create yourself on [Spatius Studio](https://app.spatius.ai).
 
 ### `avatar-id`
 
-The unique ID of an Avatar asset. The client uses this ID to call `AvatarManager.load(id)` and load the corresponding assets. Method signatures differ slightly across Web, iOS, Android, and Flutter.
+The unique ID of an Avatar. The client passes it to AvatarKit when loading the corresponding avatar assets.
 
 Reference: [Web](/sdk-reference/web-sdk/reference#avatarmanager) | [iOS](/sdk-reference/ios-sdk/api-reference#avatarmanager) | [Android](/sdk-reference/android-sdk/api-reference#avatarmanager) | [Flutter](/sdk-reference/flutter-sdk/api-reference#load-an-avatar)
 
@@ -32,6 +32,6 @@ Reference: [Web](/sdk-reference/web-sdk/reference#avatarmanager) | [iOS](/sdk-re
 
 The Avatar asset package downloaded by the client SDK.
 
-- **Format**: 3DGS (3D Gaussian Splatting) digital human assets.
+- **Format**: 3DGS (3D Gaussian Splatting) avatar assets.
 - **Size**: About 5-10 MB.
 - **Limit**: The Avatar can only be rendered after the download completes.

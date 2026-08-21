@@ -14,7 +14,7 @@ If a cell says **Not documented**, the current docs do not expose a public refer
 | --- | --- | --- | --- | --- |
 | Direct Mode Integration | Documented | Documented | Documented | Documented |
 | Backend Mode client feed | `yieldAudioData()` / `yieldFramesData()` | `yieldAudioData(_:end:)` / `yieldFramesData(_:conversationID:)` | `yieldAudioData(audioData, end)` / `yieldFramesData(animations, conversationId)` | `yieldAudioData()` / `yieldAnimations()` |
-| RTC Adapter path | `@spatius/avatarkit-rtc` | See Agora client setup | See Agora client setup | Not documented |
+| RTC client/provider support | `@spatius/avatarkit-rtc` | `AvatarKitRTC` with a public `RTCProvider` abstraction; Agora provider included | `ai.spatius:avatarkit-rtc` with a public `RTCProvider` abstraction; Agora provider included | Not documented |
 | Region config | `region` in `AvatarSDK.initialize()` | `region` in `Configuration` | `region` in `Configuration` | `region` in `Configuration` |
 | Region default | Automatic selection when unset | Automatic selection when unset | Automatic selection when unset | Automatic selection when unset |
 | Opus audio input | `inputAudioFormat: 'opus'` | `inputAudioFormat: .opus` | `inputAudioFormat = AudioCodec.OPUS` | `inputAudioFormat: AudioCodec.opus` |
@@ -22,15 +22,15 @@ If a cell says **Not documented**, the current docs do not expose a public refer
 | Driving mode enum | `DrivingServiceMode.direct` / `.backend` / `.rtc` | `.direct` / `.backend` / `.rtc` | `DIRECT` / `BACKEND` / `RTC` | `direct` / `backend` |
 | Render quality | `RenderQuality` and `setRenderQuality()` | `RenderQuality` and `setRenderQuality(_:)` | `RenderQuality` and `setRenderQuality()` | Not documented |
 | Render resolution cap | `setRenderResolutionCap()` | `setRenderResolutionCap(enabled:maxHeight:)` | `setRenderResolutionCap(enabled,maxHeight)` | Not documented |
-| Device capability check | `isDeviceSupported()` / `deviceScore()` | `isDeviceSupported()` / `deviceScore()` | `isDeviceSupported()` / `benchmark()` | Not documented |
+| Device capability check | `isDeviceSupported()` / `deviceScore()` | `isDeviceSupported()` / `deviceScore()` | `isDeviceSupported()` / `deviceScore()` | Not documented |
 | Frame starvation behavior | `FrameStarvationMode` | `FrameStarvationMode` | `FrameStarvationMode` | Not documented |
 | Strict sync mode | `FrameStarvationMode.strictSync` | `FrameStarvationMode` enum | `STRICT_SYNC` enum value | Not documented |
 | Avatar bitmap export | `AvatarView.exportBitmap()` | Not documented | Not documented | Not documented |
-| Avatar transform / bounds | `avatarTransform`, `getBoundingRect()` | Not documented | Not documented | Not documented |
+| Avatar transform / bounds | `avatarTransform`, `getBoundingRect()` | `AvatarView.avatarTransform`, `getBoundingRect()` | `AvatarView.avatarTransform`, `getBoundingRect()` | Not documented |
 | `ConnectionState` callback | Direct Mode only | Documented | Documented | Documented |
 | `ConversationState` callback | Documented | Documented | Documented | Documented |
 | Interrupt playback | `interrupt()` | `interrupt()` | `interrupt()` | Not documented |
-| Pause / resume rendering | `pause()` / `resume()` | `pauseRendering()` / `resumeRendering()` | `pauseRendering()` / `resumeRendering()` | Not documented |
+| Pause / resume rendering | `AvatarView.pauseRendering()` / `resumeRendering()` | `AvatarView.pauseRendering()` / `resumeRendering()` | `AvatarView.pauseRendering()` / `resumeRendering()` | Not documented |
 | Cache management | `AvatarManager` cache methods | `AvatarManager` cache methods | `AvatarManager` cache methods | Not documented |
 
 ## Web package split
@@ -52,20 +52,20 @@ If a cell says **Not documented**, the current docs do not expose a public refer
 | Motion data callback | Documented | Documented |
 | Encoded audio callback | Documented | Documented |
 | LiveKit egress | Documented | Documented |
-| Agora egress | Documented | Not documented |
-| Interrupt | `interrupt()` for egress mode | Not documented |
+| Agora egress | Documented | `WithAgoraEgress()` |
+| Interrupt | `interrupt()` for egress mode | `Interrupt()` |
 | Structured SDK errors | `AvatarSDKError` fields | Documented error handling |
 
-## Integration path support
+LiveKit and Agora egress are low-level Server SDK capabilities. They are not additional integration paths.
 
-| Integration path | Web | iOS | Android | Flutter | Python Server SDK | Go Server SDK |
-| --- | --- | --- | --- | --- | --- | --- |
-| Direct Mode Integration | Yes | Yes | Yes | Yes | No | No |
-| LiveKit Agents Integration | Web RTC client | Not documented | Not documented | Not documented | `livekit-plugins-spatius` | No |
-| Agora Convo AI Integration | Web RTC client | AvatarKit RTC client setup | AvatarKit RTC client setup | Not documented | TEN extension / provider setup | Not documented |
-| Backend Mode with own transport | Client feed | Client feed | Client feed | Client feed | Yes | Yes |
-| Backend Mode with LiveKit transport | Web RTC client | Not documented | Not documented | Not documented | LiveKit egress | LiveKit egress |
-| Backend Mode with Agora transport | Web RTC client | AvatarKit RTC client setup | AvatarKit RTC client setup | Not documented | Agora egress | Not documented |
+## Integration support
+
+| Integration | Web | iOS | Android | Flutter | Server-side component |
+| --- | --- | --- | --- | --- | --- |
+| Direct Mode Integration | Yes | Yes | Yes | Yes | Session Token endpoint |
+| LiveKit Agents Integration | Bundled `LiveKitProvider` | `RTCProvider` extension point; native LiveKit provider not bundled | `RTCProvider` extension point; native LiveKit provider not bundled | Not documented | `livekit-plugins-spatius` |
+| Agora Convo AI Integration | Web RTC client | AvatarKit RTC client | AvatarKit RTC client | Not documented | Agora avatar provider or TEN extension |
+| Backend Mode Integration | Client feed | Client feed | Client feed | Client feed | Python or Go Server SDK |
 
 ## Region support
 
@@ -73,32 +73,8 @@ All documented SDKs and integrations use the same region names:
 
 | Region | Status |
 | --- | --- |
-| `us-west` | Default |
+| `us-west` | Supported |
 | `ap-northeast` | Supported |
 | `cn-beijing` | Supported |
 
 See [Regions](/api-reference/regions) for endpoint composition and advanced override notes.
-
-## Reading guidance
-
-Use this page to decide where to look next. Use the SDK reference pages for exact signatures and code examples:
-
-| Need | Page |
-| --- | --- |
-| Web exact APIs | [Web SDK Reference](/sdk-reference/web-sdk/reference) |
-| iOS exact APIs | [iOS SDK Reference](/sdk-reference/ios-sdk/api-reference) |
-| Android exact APIs | [Android SDK Reference](/sdk-reference/android-sdk/api-reference) |
-| Flutter exact APIs | [Flutter SDK Reference](/sdk-reference/flutter-sdk/api-reference) |
-| Python exact APIs | [Python SDK](/sdk-reference/python-sdk/python-sdk) |
-| Go exact APIs | [Golang SDK](/sdk-reference/go-sdk/go-sdk) |
-
-## Next steps
-
-<CardGroup cols={2}>
-  <Card title="Reference Overview" icon="book-open" href="/reference/overview">
-    Understand which Reference section owns each kind of API lookup.
-  </Card>
-  <Card title="Choose your integration path" icon="route" href="/getting-started/how-to-integrate">
-    Decide between Direct Mode, platform integrations, and Backend Mode.
-  </Card>
-</CardGroup>

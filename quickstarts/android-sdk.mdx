@@ -1,92 +1,77 @@
 ---
-title: "Android SDK Quickstart"
-sidebarTitle: "Android SDK"
-description: "Run the Android Direct Mode sample with AvatarKit."
+title: "Android Quickstart"
+sidebarTitle: "Android"
+description: "Run the native Android scenario demo with AvatarKit."
 ---
 
 <Card
-  title="GitHub Repository"
+  title="Android scenario demo"
   icon="github"
-  href="https://github.com/spatius-ai/spatius-avatar-demo/tree/main/direct-mode/clients/android"
+  href="https://github.com/spatius-ai/spatius-scenario-demo/tree/main/android"
   horizontal
 >
-  Kotlin + Compose sample implementing the avatar pipeline: VAD → ASR → LLM → TTS → AvatarKit.
+  Run four complete AvatarKit scenes on Android. Current demo integration: Agora Convo AI.
 </Card>
-
-This quickstart targets the [Direct Mode](/direct-mode/overview) path on Android. The sample app pastes the Session Token in the UI rather than fetching from a backend — convenient for first-run validation.
 
 ## Prerequisites
 
-- Android Studio (latest stable)
-- JDK 17
-- Android API 24+ device or emulator (arm64-v8a, real device recommended)
-- Spatius credentials. See [Credentials](/getting-started/credentials).
-  - **App ID** — from [Spatius Studio](https://app.spatius.ai/apps)
-  - **Avatar ID** — from the [Avatar Library](https://app.spatius.ai/avatars/library)
-  - **Session Token** — see [Session token API](/api-reference/api-reference)
-- An OpenAI API key for the ASR + LLM + TTS pipeline used by the sample.
+- Android Studio with its bundled JDK
+- An Android device or emulator that supports the AvatarKit native libraries
+- Python 3
+- Spatius API Key and App ID from [Spatius Studio](https://app.spatius.ai/apps)
+- Agora App ID, App Certificate, and published Agent Pipeline ID
 
 ## Run it
 
 <Steps>
-<Step title="Clone and configure">
+<Step title="Clone and start the shared backend">
 
 ```bash
-git clone https://github.com/spatius-ai/spatius-avatar-demo.git
-cd spatius-avatar-demo/direct-mode/clients/android
-cp local.properties.example local.properties
+git clone https://github.com/spatius-ai/spatius-scenario-demo.git
+cd spatius-scenario-demo/backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 ```
 
-Fill `local.properties`:
+Set `TRANSPORT=agora` and fill the Spatius and Agora credentials in `.env`. Follow the [backend README](https://github.com/spatius-ai/spatius-scenario-demo/tree/main/backend) to align the ASR resource IDs and TTS sample rate with your published Agora agent, then start the backend:
 
-```properties
-SPATIUS_APP_ID=<your-app-id>
-SPATIUS_AVATAR_ID=<your-avatar-id>
-OPENAI_API_KEY=<your-openai-api-key>
-OPENAI_USE_PROXY=false
+```bash
+python server.py
 ```
 
-`Session Token` is not configured in files — paste it in the app UI at runtime.
+<Warning>
+The demo backend is unauthenticated. Run it only on your local machine or a trusted LAN; do not expose it publicly.
+</Warning>
+
+Keep the printed LAN address—you will enter it on the Android config screen.
 
 </Step>
 
-<Step title="Build">
+<Step title="Install the Android app">
+
+In a second terminal:
 
 ```bash
-JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradlew :app:assembleDebug
+cd spatius-scenario-demo/android
+./gradlew :app:installDebug
 ```
 
-Install with Android Studio or `adb install`.
+You can also open `android/` in Android Studio and run the app from there.
 
 </Step>
 
-<Step title="Start a conversation">
+<Step title="Run a scene">
 
-In the running app:
-
-1. Initialize the avatar.
-2. Paste your Session Token.
-3. Tap **Start Conversation**.
-4. Speak and pause to trigger a round.
+On the config screen, enter the backend LAN address, confirm the credentials, and choose a scene.
 
 </Step>
 </Steps>
 
-## What this validates
-
-| Check | What it tells you |
-| --- | --- |
-| Avatar renders | App ID + Avatar ID are correct, Maven dependency resolved. |
-| Conversation starts | Session Token is valid, Motion Server connection works. |
-| Avatar speaks | Full pipeline (mic → ASR → LLM → TTS → AvatarKit) is wired up end to end. |
-
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Android SDK reference" icon="book" href="/sdk-reference/android-sdk/api-reference">
-    Complete Android API documentation.
-  </Card>
-  <Card title="Browse all demos" icon="github" href="/resources/demo-projects">
-    Web (multi-framework) and iOS samples in addition to Android.
-  </Card>
+  <Card title="Agora client integration" icon="tower-broadcast" href="/agora-convoai/client" />
+  <Card title="Android SDK reference" icon="book" href="/sdk-reference/android-sdk/api-reference" />
 </CardGroup>

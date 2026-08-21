@@ -36,27 +36,29 @@ Mintlify reads `docs.json` and serves only what is referenced from `navigation.t
 
 Top-level structure (Guides tab):
 
-1. **Start Here** — `getting-started/introduction`, `concepts/how-it-works`, `getting-started/credentials`, `getting-started/how-to-integrate`
-2. **Quickstarts** — platform SDK first-runs only (`quickstarts/{overview,web-sdk,ios-sdk,android-sdk,flutter-sdk}`). LiveKit Agents quickstart lives under its own group, not here.
-3. **Platform Integrations** — third-party realtime/agent platforms slot in via plugins. Today contains `LiveKit Agents Integration` (`livekit-agents/{overview,client,server}` plus `quickstarts/livekit-agents`) and `Agora Convo AI / TEN Framework Integration` (`agora-convoai/{overview,convo-ai-agent,ten-extension,client}`).
-4. **Standalone Integrations** — build directly with Spatius SDKs. Contains two nested groups: `Direct Mode` (`direct-mode/*`) and `Backend Mode` (`backend-mode/*` including `with-livekit` as a transport sub-page).
-5. **Concepts** — `concepts/{avatar,avatar-background,audio,lifecycle,state-events}` (mental model + cross-cutting warnings; `how-it-works` lives in Start Here as orientation).
-6. **Examples & Support** — `resources/demo-projects` (matrix) and `faq`.
+1. **Start Here** — `getting-started/introduction`, `concepts/how-it-works`
+2. **Quickstarts** — complete scenario first-runs from `spatius-scenario-demo` for Web, iOS, and Android only (`quickstarts/{web-sdk,ios-sdk,android-sdk}`). There is no Quickstarts Overview page. The current native scenario clients use Agora, but this must be described as a demo implementation choice, never as the complete iOS or Android platform capability. Flutter remains in SDK Reference and integration guides, not Quickstarts.
+3. **Integrations** — starts with `integrations/overview`, followed by `LiveKit Agents` (tagged `Recommended`), `Agora ConvoAI` (tagged `Recommended`), `Direct Mode`, then `Backend Mode`. Direct Mode contains only `Client`; Backend Mode contains `Backend Setup` and `Client`. These concise labels may also be used in the comparison table; integration page titles use the full public names.
+4. **Concepts** — `concepts/{avatar,avatar-background,audio,lifecycle,state-events}` (mental model + cross-cutting warnings; `how-it-works` lives in Start Here as orientation).
+5. **Examples & Support** — `resources/demo-projects` (matrix) and `faq`.
 
 Other tabs:
 
-- **SDK Reference** → all SDK/reference material: client SDKs, server SDKs, Server API pages, shared Regions & Endpoints, and Error Codes. This tab is the single place to look up exact classes, methods, enums, request fields, endpoint regions, and error codes.
+- **SDK Reference** → all SDK/reference material: client SDKs, server SDKs, Server API pages, shared Regions & Endpoints, and Error Handling. This tab is the single place to look up exact classes, methods, enums, request fields, endpoint regions, and error codes.
 - **API Reference** → the public REST Spatius API for programmatic avatar creation. Hand-written pages live in `api-reference/` (overview, authentication, errors); endpoint pages are auto-generated from `openapi/avatar-open-api.json` via the group-level `openapi` key in `docs.json`.
 
-**Key IA boundary:** `backend-mode/with-livekit` lives under Standalone Integrations > Backend Mode even though it mentions LiveKit. It is a transport option for Backend Mode, not a Platform Integration. LiveKit Agents (Platform Integration) and Backend Mode with LiveKit Room transport (Standalone) must never be conflated. The phrase "Server-Side Integrations" was a previous interim grouping and is no longer used anywhere user-facing.
+**Public integration boundary:** Guides expose exactly four integrations under one `Integrations` group: LiveKit Agents Integration, Agora Convo AI Integration (including TEN Framework), Direct Mode Integration, and Backend Mode Integration. The first two carry the `Recommended` navigation tag. Do not recreate separate "Backend Mode with LiveKit," "Backend Mode with Agora," or "your own transport" entries. Server SDK LiveKit/Agora egress remains a low-level SDK capability, not an additional integration path. Backend Mode means the application owns client delivery. The phrases "Realtime Platform Integrations," "Build with Spatius SDKs," and "Server-Side Integrations" are not user-facing navigation categories.
+
+**Integration content hierarchy:** `integrations/overview.mdx` owns cross-path comparison and selection. LiveKit Agents and Agora Convo AI Overviews contain only architecture, one short runtime-boundary explanation, and 2–3 next-step cards. Other installation, credentials, configuration, and runnable code belong in Agent setup, Backend Setup, or Client pages. Package matrices, platform differences, and exact APIs belong in SDK Reference. Do not create separate Direct Mode or Backend Mode Overview pages.
 
 When you rename or move a page, also add an entry to `docs.json > redirects` so existing inbound links keep resolving (`{ "source": "/old/path", "destination": "/new/path" }`). Pure deletions don't need a redirect — only renames do.
 
 ## IA convention: Concepts vs Reference (hybrid)
 
-`concepts/` pages are **mental model + cross-cutting warnings** for the avatar pipeline. They are **not** API exhaustion. The four pages are:
+`concepts/` pages are **mental model + cross-cutting warnings** for the avatar pipeline. They are **not** API exhaustion. The five pages are:
 
 - `concepts/avatar.mdx` — what an Avatar is, how IDs/loading/caching behave
+- `concepts/avatar-background.mdx` — how Studio backgrounds and app UI backgrounds compose
 - `concepts/audio.mdx` — accepted audio format, when to send, how to interrupt
 - `concepts/lifecycle.mdx` — Initialize → Load → Render → Connect, plus Cleanup
 - `concepts/state-events.mdx` — connection/conversation state, errors, reconnect
@@ -65,7 +67,7 @@ Rules for editing concept pages:
 
 - **Do** include task-oriented narrative, mental model framing, shared-state warnings, links between concepts, and links out to `sdk-reference/` for exact signatures.
 - **Don't** put cross-platform code-tab walls (Web / iOS / Android / Flutter snippets), method signatures, return-type tables, or anything that would need to be rewritten when an SDK ships a new version. Those live in `sdk-reference/{web,ios,android,flutter}-sdk/api-reference.mdx` (and `web-sdk/reference.mdx`).
-- **Don't** add "Driving Modes" or "Choose your integration" content here — that lives in `getting-started/how-to-integrate.mdx`.
+- **Don't** add "Driving Modes" or integration selection content here — comparison lives in `integrations/overview.mdx`, and exact setup lives under **Integrations**.
 
 ## Brand and naming (strict)
 
@@ -76,10 +78,11 @@ Use these names verbatim everywhere — including running prose, headings, code 
 | **Spatius** | The product. Never use earlier internal brand names (any variant of the prior org or product spelling). |
 | **Motion Server** | The cloud service. Input: agent audio. Output: motion data. |
 | **motion data** | The driving data stream produced by Motion Server, ~10–15 KB/s, consumed by the on-device avatar to speak. Lowercase except at sentence start. |
-| **Avatar** / **avatar assets** | The digital-human resources (model, textures, metadata). "Avatar" when referring to the entity; "avatar assets" when referring to the downloadable bundle. |
+| **Avatar** / **avatar assets** | The rendered 3D character and its resources (model, textures, metadata). "Avatar" refers to the entity; "avatar assets" refers to the downloadable bundle. |
 | **AvatarKit** | The client-side core SDK that handles rendering and playback. |
 | **`@spatius/avatarkit-rtc`** | The RTC adapter package. Always lowercase, hyphenated, fully scoped. |
-| **LiveKit Agents Integration** | The public name for the **Platform Integration** that uses `livekit-plugins-spatius`. The user-facing name in nav is "LiveKit Agents Integration"; do not call the integration path "LiveKit Integration" or "LiveKit Plugin". |
+| **LiveKit Agents Integration** | The public name for the recommended integration that uses `livekit-plugins-spatius`. The concise navigation label is "LiveKit Agents"; do not call the integration "LiveKit Integration" or "LiveKit Plugin". Its navigation follows the same `Overview` → `Agent setup` → `Client` structure as Agora. |
+| **Agora Convo AI Integration** | The public name for the recommended integration that uses Agora Convo AI or TEN Framework. The concise navigation label is "Agora ConvoAI". |
 | **Direct Mode Integration** | The public name for the path that maps to `DrivingServiceMode.direct` in SDK code. |
 | **Backend Mode Integration** | The public name for the path that maps to `DrivingServiceMode.backend` in SDK code. |
 | **`ConnectionState`** / **`ConversationState`** | The two state enum types. Always in code style with this exact casing. |
@@ -89,10 +92,11 @@ Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "
 ### RTC Adapter naming
 
 - `@spatius/avatarkit-rtc` is the **Web SDK RTC transport adapter**. Treat it as part of the Web SDK family alongside `@spatius/avatarkit`, not as a peer of the iOS / Android / Flutter SDKs.
-- Do not describe `@spatius/avatarkit-rtc` itself as a diagnostic, smoke test, or debug helper. The demo directory `platform-integrations/livekit-room-demo` is the minimal LiveKit example exercising the adapter. Agora client setup is documented under `agora-convoai/client`.
-- **LiveKit Agents** is a Platform Integration; **LiveKit Room** and **Agora Room** are transport providers; the **RTC Adapter** (`@spatius/avatarkit-rtc`) is the Web SDK adapter that renders the avatar stream from that transport.
+- Do not describe `@spatius/avatarkit-rtc` itself as a diagnostic, smoke test, debug helper, or standalone integration. It is a client package used by LiveKit Agents and Agora Convo AI.
+- **LiveKit Agents Integration** and **Agora Convo AI Integration** are the two recommended integrations. The **RTC Adapter** (`@spatius/avatarkit-rtc`) is the Web SDK adapter that renders the avatar stream from their supported RTC rooms.
 - Agora Convo AI client integrations support Web, iOS, and Android. Web uses `@spatius/avatarkit-rtc`; iOS uses `AvatarKitRTC`; Android uses `ai.spatius:avatarkit-rtc`.
-- Backend Mode can use an RTC transport. In that pattern the Web client uses the RTC Adapter; backend wiring still belongs to Backend Mode docs.
+- The iOS and Android RTC SDKs expose a public `RTCProvider` abstraction and currently bundle `AgoraProvider`; they do not yet bundle a native `LiveKitProvider`. Describe this as a packaged-provider boundary, never as iOS or Android supporting only Agora—the core platform SDKs also support Direct Mode and Backend Mode.
+- Server SDK LiveKit/Agora egress is a low-level SDK capability, not an additional integration path. Backend Mode uses the core AvatarKit client feed and does not branch into RTC provider variants.
 
 ## Brand-asset reference
 
@@ -103,13 +107,14 @@ Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "
 | Website | `https://spatius.ai` |
 | Docs | `https://docs.spatius.ai` |
 | GitHub org | `spatius-ai` |
-| Consolidated demo repo | `https://github.com/spatius-ai/spatius-avatar-demo` |
+| Scenario quickstart repo | `https://github.com/spatius-ai/spatius-scenario-demo` |
+| SDK/reference demo repo | `https://github.com/spatius-ai/spatius-avatar-demo` |
 | npm | `@spatius/avatarkit`, `@spatius/avatarkit-rtc` |
 | Python | `livekit-plugins-spatius` |
 | Android (Maven) | `ai.spatius:avatarkit` |
 | iOS | `AvatarKit.xcframework` (downloaded from `spatius-ai/avatarkit-ios-release`) |
 | Flutter | `spatius_avatarkit` |
-| Env vars | `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`, `SPATIUS_REGION` (`us-west` default; `ap-northeast` and `cn-beijing` supported). Vite-built frontends use `VITE_SPATIUS_*`. |
+| Env vars | `SPATIUS_API_KEY`, `SPATIUS_APP_ID`, `SPATIUS_AVATAR_ID`, `SPATIUS_REGION` (`us-west`, `ap-northeast`, and `cn-beijing`). Vite-built frontends use `VITE_SPATIUS_*`. |
 | Logo files | Favicon uses `/images/spatius-logo-mark-black.svg` and `/images/spatius-logo-mark-white.svg`. Navbar logo uses the original wordmark PNGs: `/images/spatius-logo-wordmark-black.png` and `/images/spatius-logo-wordmark-white.png`. |
 
 ## Endpoint discipline
@@ -128,7 +133,7 @@ Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "
 
 ## Page-bottom CTA convention
 
-Every page that has a "what to do next" section uses the heading `## Next steps`. Don't introduce variants like "Get Started", "Go next", "Examples", or "Beyond quickstarts". Each `## Next steps` block contains 2–3 `<Card>`s pointing to logical follow-ups.
+Pages that include a follow-up CTA use the heading `## Next steps`. Don't introduce variants like "Get Started", "Go next", "Examples", or "Beyond quickstarts". Each `## Next steps` block contains 1–3 title-only, self-closing `<Card>`s pointing to logical follow-ups; do not repeat destination descriptions inside the cards.
 
 ## Source-of-truth for SDK behavior
 

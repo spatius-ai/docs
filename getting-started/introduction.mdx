@@ -20,44 +20,9 @@ Spatius turns avatar speech audio into real-time motion data. Your client render
 | **AvatarKit** | The client SDK family that downloads avatar assets, renders the avatar locally, and plays synchronized audio. Available for Web, iOS, Android, and Flutter. |
 | **Motion Server** | The Spatius cloud service that receives avatar speech audio and returns lip-sync motion data, ~10–15 KB/s. |
 
-## Pick your path
-
-Spatius integrations split into two categories.
-
-Not sure which path fits your team? Start with [Choose Your Integration Path](/getting-started/how-to-integrate) to compare latency, production ownership, and developer effort.
-
-### Already using a third-party agent or realtime platform?
-
-<CardGroup cols={2}>
-  <Card title="LiveKit Agents Integration" icon="radio" href="/livekit-agents/overview">
-    Add `livekit-plugins-spatius` to your LiveKit Agents worker. Web client today.
-  </Card>
-  <Card title="Agora Convo AI Integration" icon="tower-broadcast" href="/agora-convoai/overview">
-    Add Spatius as a Convo AI avatar provider and render from an Agora channel.
-  </Card>
-</CardGroup>
-
-### Building directly with Spatius SDKs?
-
-<CardGroup cols={2}>
-  <Card title="Direct Mode" icon="bolt" href="/direct-mode/overview">
-    Your client connects to Motion Server directly. Smallest footprint; your backend only mints Session Tokens.
-  </Card>
-  <Card title="Backend Mode" icon="server" href="/backend-mode/overview">
-    Your backend owns ASR, LLM, TTS, the Server SDK, and the downstream transport.
-  </Card>
-</CardGroup>
-
 ## Next steps
 
-<CardGroup cols={3}>
-  <Card title="Get credentials" icon="key" href="/getting-started/credentials">
-    App ID, Avatar ID, Session Token, API Key — who issues each and where each is used.
-  </Card>
-  <Card title="Choose your integration path" icon="route" href="/getting-started/how-to-integrate">
-    Compare latency, client support, production ownership, and developer effort.
-  </Card>
-  <Card title="Run a quickstart" icon="bolt" href="/quickstarts/overview">
-    Web, iOS, Android, and Flutter first-run quickstarts.
-  </Card>
+<CardGroup cols={2}>
+  <Card title="Compare integrations" icon="plug" href="/integrations/overview" />
+  <Card title="Web quickstart" icon="bolt" href="/quickstarts/web-sdk" />
 </CardGroup>

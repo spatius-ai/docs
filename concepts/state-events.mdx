@@ -1,57 +1,31 @@
 ---
 title: "Client State & Events"
 sidebarTitle: "Client State & Events"
-description: "AvatarKit client state callbacks, including ConversationState, ConnectionState, error events, and recovery context."
+description: "The two client state dimensions to observe: Avatar conversation playback and Direct Mode connectivity."
 ---
 
-`AvatarController` exposes two independent state enums that you can observe through callbacks.
+Treat Avatar playback and network connectivity as two separate dimensions. One can change without the other.
 
 ## `ConversationState`
 
-The current playback state of the digital human.
+`ConversationState` answers: **What is the Avatar doing now?**
 
-| State | Meaning |
-|-------|---------|
-| `idle` | Plays idle animation, the breathing state, with no active response. |
-| `playing` | Plays audio and speaking animation. |
-| `paused` | Audio and visuals are paused, with state and buffers kept. |
+Use it to drive speaking indicators, pause controls, and idle UI. A conversation typically moves between idle, active playback, and paused behavior, but the exact enum cases and intermediate states vary by platform.
 
-Subscribe to state changes through `AvatarController.onConversationState`.
+Do not infer network health from conversation state. An Avatar can be idle while its data path remains connected.
 
-<Note>
-Android also has an intermediate `Active` state. It means avatar speech audio has been received, but playable motion data is not ready yet.
-</Note>
-
-Detailed definitions for each platform: [Web `ConversationState`](/sdk-reference/web-sdk/reference#conversationstate) | [iOS `ConversationState`](/sdk-reference/ios-sdk/api-reference#conversationstate) | [Android `ConversationState`](/sdk-reference/android-sdk/api-reference#conversationstate) | [Flutter `ConversationState`](/sdk-reference/flutter-sdk/api-reference#render-and-control-playback)
+Platform definitions: [Web](/sdk-reference/web-sdk/reference#conversationstate) · [iOS](/sdk-reference/ios-sdk/api-reference#conversationstate) · [Android](/sdk-reference/android-sdk/api-reference#conversationstate) · [Flutter](/sdk-reference/flutter-sdk/api-reference#render-and-control-playback)
 
 ## `ConnectionState`
 
-<Note>
-**Only available in [Direct Mode](/direct-mode/overview)**. In Platform Integrations and Backend Mode integrations, the connection is managed by the agent worker, TEN graph, or developer backend, and is not exposed through `AvatarController.ConnectionState`.
-</Note>
+`ConnectionState` answers: **Can AvatarKit reach Motion Server?**
 
-The WebSocket connection state from AvatarKit to Motion Server in Direct Mode integrations.
+This AvatarKit state applies to **Direct Mode**, where the client owns that connection. It is useful for connection UI, retry decisions, and distinguishing startup from an established session.
 
-| State | Meaning |
-|-------|---------|
-| `disconnected` | No active connection. |
-| `connecting` | Handshake in progress. |
-| `connected` | Connection is active and can receive avatar speech audio. |
-| `failed` | Connection failed. On iOS, Android, and Flutter SDKs, it carries additional error detail. |
+LiveKit Agents, Agora Convo AI, and Backend Mode own connectivity outside the core AvatarKit controller. Observe the RTC provider or your application transport for those paths instead.
 
-Subscribe to state changes through `AvatarController.onConnectionState`.
+Platform definitions: [Web](/sdk-reference/web-sdk/reference#connectionstate) · [iOS](/sdk-reference/ios-sdk/api-reference#connectionstate) · [Android](/sdk-reference/android-sdk/api-reference#connectionstate) · [Flutter](/sdk-reference/flutter-sdk/api-reference#render-and-control-playback)
 
-Detailed definitions for each platform: [Web `ConnectionState`](/sdk-reference/web-sdk/reference#connectionstate) | [iOS `ConnectionState`](/sdk-reference/ios-sdk/api-reference#connectionstate) | [Android `ConnectionState`](/sdk-reference/android-sdk/api-reference#connectionstate) | [Flutter `ConnectionState`](/sdk-reference/flutter-sdk/api-reference#render-and-control-playback)
+## Errors and recovery
 
-## Errors (`onError`)
-
-Subscribe through `AvatarController.onError`. Errors are grouped by category:
-
-| Category | Representative errors | Mode availability |
-|----------|-----------------------|-------------------|
-| **Authentication** | `sessionTokenExpired`, `sessionTokenInvalid`, `appIDUnrecognized`, `insufficientBalance`, `concurrentLimitExceeded` | Direct Mode only. Other integrations handle these on the backend or plugin side. |
-| **Resource loading** | `avatarIDUnrecognized`, `avatarAssetsMissing`, `failedToFetchAvatarMetadata` | All integrations. |
-| **Connection** | `websocketError`, `websocketClosedAbnormally`, `sessionTimeout` | Direct Mode only. |
-| **Server** | `serverError` | All integrations. |
-
-Complete error enum, including WebSocket close codes: [Resources -> Error Codes](/resources/server-error).
+Handle errors according to the lifecycle phase that produced them. See [Client Error Handling](/resources/client-error) for recovery guidance and the platform SDK references for exact error types.

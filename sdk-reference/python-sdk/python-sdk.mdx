@@ -30,7 +30,19 @@ The optional encoder uses `opuslib`, which requires a working `libopus` runtime 
 - `expire_at`
 - audio bytes in a supported input format
 
-The SDK defaults to the `us-west` region. See [Regions](/api-reference/regions) for the current region list.
+The SDK defaults to `auto`: bootstrap selects a region and falls back to `us-west` when automatic selection is unavailable. See [Regions](/api-reference/regions).
+
+## Telemetry
+
+The SDK exports OpenTelemetry metrics and traces by default; it does not export logs. Telemetry resources include the App ID and resolved region. Disable export before creating a session if your application does not want SDK telemetry:
+
+```python
+from spatius import configure_telemetry
+
+configure_telemetry("")
+```
+
+See the [SDK repository](https://github.com/spatius-ai/spatius-sdk-python#telemetry) for endpoint configuration and shutdown behavior.
 
 ## Region configuration
 
@@ -219,7 +231,11 @@ Notes:
 
 ## LiveKit Egress Mode
 
-When configured with `livekit_egress`, audio and motion data are streamed to a LiveKit room instead of being returned through the WebSocket connection. For end-to-end integration details, see the [LiveKit Agent server side guide](/livekit-agents/server).
+<Note>
+LiveKit and Agora egress are low-level Server SDK capabilities. They are not additional integration paths; LiveKit Agents and Agora Convo AI remain the supported packaged integrations.
+</Note>
+
+When configured with `livekit_egress`, audio and motion data are streamed to a LiveKit room instead of being returned through the WebSocket connection.
 
 ```python
 from datetime import datetime, timedelta, timezone
@@ -383,7 +399,7 @@ except AvatarSDKError as error:
 - `invalidRequest` - other client-side request validation errors
 - `unknown` - fallback when the SDK cannot classify the failure
 
-For server-side error details, see [Server Error Codes](/resources/server-error).
+For server-side recovery guidance, see [Server Error Handling](/resources/server-error).
 
 ## SDK Reference
 
@@ -425,7 +441,7 @@ Configuration dataclass for avatar sessions.
 - `transport_frames: Callable[[bytes, bool], None]` - frame callback
 - `on_error: Callable[[Exception], None]` - error callback
 - `on_close: Callable[[], None]` - close callback
-- `region: str` - Spatius region. Defaults to `us-west`; see [Regions](/api-reference/regions).
+- `region: str` - Spatius region. Defaults to `auto`; see [Regions](/api-reference/regions).
 - `console_endpoint_url: str` - optional explicit Console API URL
 - `ingress_endpoint_url: str` - optional explicit ingress WebSocket URL
 - `livekit_egress: Optional[LiveKitEgressConfig]` - LiveKit egress configuration
@@ -454,7 +470,7 @@ Configuration for streaming to an Agora channel.
 
 - `channel_name: str` - Agora channel name
 - `token: str` - Agora token
-- `uid: int` - publisher UID, `0` for auto-assign
+- `uid: int` - publisher UID; `0` lets Agora assign one
 - `publisher_id: str` - publisher identity/name
 
 ### Utility Functions

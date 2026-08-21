@@ -89,14 +89,14 @@ fun setRenderResolutionCap(enabled: Boolean, maxHeight: Int = 1440)
 ```
 </Accordion>
 
-<Accordion title="benchmark()">
+<Accordion title="deviceScore()">
 Measures the device's computational performance for avatar rendering.
 
 ```kotlin
-fun benchmark(): Int
+suspend fun deviceScore(): AvatarSDK.DeviceScore
 ```
 
-**Returns:** A performance score indicating the device's capability.
+The result contains separate `cpuScore` and `gpuScore` values.
 </Accordion>
 
 ### AvatarManager
@@ -120,18 +120,20 @@ fun initialize(context: Context)
 - `context`: Application context
 </Accordion>
 
-<Accordion title="load(id, onProgress)">
+<Accordion title="load(id, useCompressedModel, onProgress)">
 Loads an avatar by ID.
 
 ```kotlin
 suspend fun load(
     id: String,
+    useCompressedModel: Boolean = false,
     onProgress: ((LoadProgress) -> Unit)? = null
 ): Avatar
 ```
 
 **Parameters:**
 - `id`: The avatar identifier
+- `useCompressedModel`: Load the smaller compressed model variant
 - `onProgress`: Optional progress callback
 
 **Returns:** The loaded `Avatar` instance.
@@ -179,19 +181,9 @@ suspend fun getAllCacheSize(): Long
 **Returns:** The total cache size in bytes.
 </Accordion>
 
-<Accordion title="getCacheStats()">
-Get cache statistics.
-
-```kotlin
-suspend fun getCacheStats(): CacheStats
-```
-
-**Returns:** A `CacheStats` object containing total entries, total size, and max size.
-</Accordion>
-
 ### AvatarController
 
-Real-time communication controller that handles WebSocket connections and audio/video data.
+Real-time communication controller that handles connections, audio, and motion data.
 
 ```kotlin
 class AvatarController
@@ -224,10 +216,11 @@ var onError: ((AvatarError) -> Unit)?
 </Accordion>
 
 <Accordion title="volume">
-The volume of playback (0.0 to 1.0).
+Sets or gets the playback volume (0.0 to 1.0).
 
 ```kotlin
-var volume: Float
+fun setVolume(volume: Float)
+fun getVolume(): Float
 ```
 </Accordion>
 
@@ -249,19 +242,19 @@ fun close()
 ```
 </Accordion>
 
-<Accordion title="pauseRendering()">
-Pause the avatar view to pause rendering.
+<Accordion title="pause()">
+Pause Avatar playback.
 
 ```kotlin
-fun pauseRendering()
+fun pause()
 ```
 </Accordion>
 
-<Accordion title="resumeRendering()">
-Resume the avatar view to resume rendering.
+<Accordion title="resume()">
+Resume Avatar playback.
 
 ```kotlin
-fun resumeRendering()
+fun resume()
 ```
 </Accordion>
 
@@ -289,35 +282,35 @@ suspend fun send(audioData: ByteArray, end: Boolean = false): String
 **Returns:** A conversation ID string.
 </Accordion>
 
-<Accordion title="yield(audioData, end, audioFormat)">
-Yields audio from the host.
+<Accordion title="yieldAudioData(audioData, end)">
+Provides response audio received from your backend in Backend Mode.
 
 ```kotlin
-suspend fun yield(
+suspend fun yieldAudioData(
     audioData: ByteArray,
-    end: Boolean = false,
-    audioFormat: AudioFormat? = null
+    end: Boolean = false
 ): String
 ```
 
 **Parameters:**
 - `audioData`: The audio data
 - `end`: Whether this is the end of the audio stream
-- `audioFormat`: The audio format (optional)
 
 **Returns:** A conversation ID string.
 </Accordion>
 
-<Accordion title="yield(animations, reqId)">
-Yields animations from the host.
+<Accordion title="yieldFramesData(animations, conversationId)">
+Provides motion data payloads received from your backend in Backend Mode.
 
 ```kotlin
-fun yield(animations: List<ByteArray>, reqId: String)
+fun yieldFramesData(animations: List<ByteArray>, conversationId: String): Boolean
 ```
 
 **Parameters:**
-- `animations`: List of encoded motion data frames
-- `reqId`: The request ID returned from yield audio
+- `animations`: List of encoded motion data payloads
+- `conversationId`: The identifier returned by the matching `yieldAudioData()` call
+
+**Returns:** Whether the payload completed the current conversation.
 </Accordion>
 
 ### AvatarView
@@ -340,11 +333,19 @@ constructor(context: Context)
 
 ##### Properties
 
-<Accordion title="avatarController">
+<Accordion title="controller">
 The controller for the avatar.
 
 ```kotlin
-val avatarController: AvatarController?
+val controller: AvatarController
+```
+</Accordion>
+
+<Accordion title="avatarTransform">
+Transform for Avatar position and scale within the view.
+
+```kotlin
+var avatarTransform: Transform
 ```
 </Accordion>
 
@@ -362,11 +363,35 @@ fun init(avatar: Avatar, scope: CoroutineScope)
 - `scope`: Coroutine scope, usually obtained via `activity.lifecycleScope`
 </Accordion>
 
-<Accordion title="cleanup()">
+<Accordion title="pauseRendering()">
+Pause rendering for this view.
+
+```kotlin
+fun pauseRendering()
+```
+</Accordion>
+
+<Accordion title="resumeRendering()">
+Resume rendering for this view.
+
+```kotlin
+fun resumeRendering()
+```
+</Accordion>
+
+<Accordion title="getBoundingRect()">
+Returns the rendered Avatar bounds when available.
+
+```kotlin
+fun getBoundingRect(): RectF?
+```
+</Accordion>
+
+<Accordion title="dispose()">
 Clean up all resources. Should be called when no longer in use.
 
 ```kotlin
-fun cleanup()
+fun dispose()
 ```
 </Accordion>
 
@@ -420,7 +445,7 @@ class Avatar
 | Property | Type | Description |
 |----------|------|-------------|
 | `id` | `String` | The avatar identifier. |
-| `pointCount` | `Int` | The avatar point count. |
+| `isFromCache` | `Boolean` | Whether the avatar was loaded from cache. |
 
 ### Configuration
 
@@ -440,7 +465,7 @@ data class Configuration(
     val region: String = "auto",
     val audioFormat: AudioFormat = AudioFormat(16000),
     val drivingServiceMode: DrivingServiceMode = DrivingServiceMode.DIRECT,
-    val logLevel: LogLevel = LogLevel.INFO,
+    val logLevel: LogLevel = LogLevel.OFF,
     val renderQuality: RenderQuality = RenderQuality.ULTRA
 )
 ```
@@ -477,7 +502,7 @@ class AudioFormat(
 
 **Parameters:**
 - `sampleRate`: The audio sample rate in Hz. Supported sample rates are: 8000, 16000, 22050, 24000, 32000, 44100, 48000. Not used when `inputAudioFormat` is `AudioCodec.OPUS`: Opus always decodes at 48 kHz, so the session runs at 48000.
-- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send`. `AudioCodec.PCM` (default) for raw PCM16, `AudioCodec.OPUS` for Opus. Fixed for the whole session; audio that does not match is reported as `AvatarError.InvalidAudioInput`. Direct mode only.
+- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send` or `yieldAudioData`. `AudioCodec.PCM` (default) for raw PCM16, `AudioCodec.OPUS` for Opus. Fixed for the whole session; audio that does not match is reported as `AvatarError.InvalidAudioInput`.
 - `opusUplinkEnabled`: Whether the SDK compresses the direct mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in `BACKEND` mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing to initialize.
 - `opusBitrate`: Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload.
 </Accordion>
@@ -493,8 +518,8 @@ enum class DrivingServiceMode
 | Case | Description |
 |------|-------------|
 | `DIRECT` | The SDK handles the Motion Server connection directly. |
-| `BACKEND` | The host application provides encoded audio and motion data payloads. |
-| `RTC` | The avatar is driven through the companion RTC SDK, `ai.spatius:avatarkit-rtc`. Set it only on that path. It unlocks no API and does not change runtime behavior; it identifies RTC-driven sessions in reporting. |
+| `BACKEND` | The host application provides response audio and motion data. |
+| `RTC` | The avatar is driven through the companion RTC SDK, `ai.spatius:avatarkit-rtc`. It does not connect to a channel by itself; see [Agora Convo AI Client](/agora-convoai/client). |
 
 ### AudioCodec
 
@@ -507,7 +532,7 @@ enum class AudioCodec
 | Case | Description |
 |------|-------------|
 | `PCM` | Raw PCM16, mono. The default. |
-| `OPUS` | Opus. Decoded to PCM locally for rendering and forwarded upstream unchanged. Direct mode only. |
+| `OPUS` | Opus. Decoded to PCM locally; in Direct Mode, forwarded upstream unchanged. |
 
 ### RenderQuality
 
@@ -547,9 +572,6 @@ enum class LogLevel
 | Case | Description |
 |------|-------------|
 | `ALL` | Log all messages. |
-| `VERBOSE` | Log verbose messages. |
-| `DEBUG` | Log debug messages. |
-| `INFO` | Log info messages. |
 | `WARNING` | Log warning messages. |
 | `ERROR` | Log error messages. |
 | `OFF` | Disable logging. |
@@ -580,8 +602,8 @@ enum class ConversationState
 | Case | Description |
 |------|-------------|
 | `Idle` | Idle state, showing breathing animation. |
-| `Active` | Active, waiting for playable content. |
 | `Playing` | The avatar is playing audio/animation. |
+| `Paused` | Playback is paused. |
 
 ### LoadProgress
 

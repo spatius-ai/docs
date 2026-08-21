@@ -36,44 +36,6 @@ The Vite plugin handles the WASM requirements for both development and productio
 
 </Accordion>
 
-<Accordion title="Manual Vite configuration">
-
-Use this only if you cannot use `avatarkitVitePlugin()`:
-
-```typescript title="vite.config.ts"
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  optimizeDeps: {
-    exclude: ['@spatius/avatarkit'],
-  },
-  assetsInclude: ['**/*.wasm'],
-  build: {
-    assetsInlineLimit: 0,
-    rollupOptions: {
-      output: {
-        assetFileNames: (assetInfo) => {
-          if (assetInfo.name?.endsWith('.wasm')) {
-            return 'assets/[name][extname]'
-          }
-          return 'assets/[name]-[hash][extname]'
-        },
-      },
-    },
-  },
-  configureServer(server) {
-    server.middlewares.use((req, res, next) => {
-      if (req.url?.endsWith('.wasm')) {
-        res.setHeader('Content-Type', 'application/wasm')
-      }
-      next()
-    })
-  },
-})
-```
-
-</Accordion>
-
 </Tab>
 <Tab title="Next.js">
 
@@ -91,9 +53,9 @@ export default withAvatarkit({
 
 The Next.js wrapper handles the Webpack and response-header work needed for AvatarKit WASM assets:
 
-- Fixes asset path resolution so WASM files load from `/_next/static/chunks/`
-- Copies `.wasm` files into `static/chunks/` during the client build
-- Adds the `application/wasm` response header for `/_next/static/chunks/*.wasm`
+- Serves runtime assets from `${basePath}/_avatarkit/`
+- Copies `.wasm` files into `.next/static/chunks/` as a standalone fallback
+- Adds the `application/wasm` response header for `/_avatarkit/:path*.wasm`
 - Preserves any existing `webpack` and `headers` configuration
 
 </Accordion>

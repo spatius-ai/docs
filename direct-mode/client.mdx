@@ -1,0 +1,69 @@
+---
+title: "Direct Mode Client"
+sidebarTitle: "Client"
+description: "Connect AvatarKit directly to Motion Server from Web, iOS, Android, or Flutter."
+---
+
+## Before you start
+
+Copy the App ID and API Key from [Apps](https://app.spatius.ai/apps) and the Avatar ID from the [Avatar Library](https://app.spatius.ai/avatars/library). Keep the API Key on your backend and send the client only the App ID, Avatar ID, and a short-lived [Session Token](/api-reference/auth).
+
+## Choose your client
+
+Every client follows the same path: initialize Direct Mode and set the Session Token → load and mount the Avatar → connect and send avatar speech audio → close and dispose.
+
+<Tabs>
+<Tab title="Web">
+
+Install AvatarKit:
+
+```bash
+npm install @spatius/avatarkit
+```
+
+Configure the WebAssembly assets for [Vite or Next.js](/sdk-reference/web-sdk/toolchain) before initializing the SDK.
+
+[Web demo](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/direct-mode/clients/web/quickstart) · [Web SDK Reference](/sdk-reference/web-sdk/reference)
+
+</Tab>
+<Tab title="iOS">
+
+Install AvatarKit with Swift Package Manager, CocoaPods, or `AvatarKit.xcframework`. See [iOS installation](/sdk-reference/ios-sdk/api-reference#installation).
+
+[iOS demo](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/direct-mode/clients/ios) · [iOS SDK Reference](/sdk-reference/ios-sdk/api-reference)
+
+</Tab>
+<Tab title="Android">
+
+Add AvatarKit to `build.gradle.kts`:
+
+```kotlin
+dependencies {
+    implementation("ai.spatius:avatarkit:1.3.3")
+}
+```
+
+[Android demo](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/direct-mode/clients/android) · [Android SDK Reference](/sdk-reference/android-sdk/api-reference)
+
+</Tab>
+<Tab title="Flutter">
+
+Add AvatarKit to `pubspec.yaml`:
+
+```yaml
+dependencies:
+  spatius_avatarkit: ^1.3.3
+```
+
+[Flutter demo](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/direct-mode/clients/flutter) · [Flutter SDK Reference](/sdk-reference/flutter-sdk/api-reference)
+
+</Tab>
+</Tabs>
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Session Token auth" icon="key" href="/api-reference/auth" />
+  <Card title="Audio" icon="waveform" href="/concepts/audio" />
+  <Card title="Demo projects" icon="github" href="/resources/demo-projects" />
+</CardGroup>

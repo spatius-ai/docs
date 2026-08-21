@@ -1,121 +1,86 @@
 ---
-title: "Web SDK Quickstart"
-sidebarTitle: "Web SDK"
-description: "Run the Direct Mode Web quickstart with sample audio first, then optional realtime conversation."
+title: "Web Quickstart"
+sidebarTitle: "Web"
+description: "Run the Web scenario demo with LiveKit Agents or Agora Convo AI."
 ---
 
 <Card
-  title="GitHub Repository"
+  title="Web scenario demo"
   icon="github"
-  href="https://github.com/spatius-ai/spatius-avatar-demo/tree/main/direct-mode/clients/web/quickstart"
+  href="https://github.com/spatius-ai/spatius-scenario-demo/tree/main/web"
   horizontal
 >
-  One Web Direct Mode quickstart with two audio sources: bundled sample audio and optional realtime conversation.
+  Run four complete avatar scenes in the browser.
 </Card>
 
-This quickstart targets the [Direct Mode](/direct-mode/overview) path. It starts with bundled PCM audio so you can validate AvatarKit without any realtime provider key. After that works, switch the same UI to realtime conversation and connect a browser microphone to OpenAI Realtime, Gemini Live, or Doubao E2E.
+The Web demo supports both recommended integrations. Choose `livekit` to run the conversation through LiveKit Agents on your machine, or `agora` to use Agora Convo AI.
 
 ## Prerequisites
 
-- Node.js 18+
-- pnpm
-- Spatius credentials. See [Credentials](/getting-started/credentials) for what each value is and where to get it.
-  - `VITE_SPATIUS_APP_ID` — from [Spatius Studio](https://app.spatius.ai/apps)
-  - `VITE_SPATIUS_AVATAR_ID` — from the [Avatar Library](https://app.spatius.ai/avatars/library)
-  - `VITE_SPATIUS_SESSION_TOKEN` — see [Session token API](/api-reference/api-reference)
-
-Realtime conversation is optional. The quickstart includes adapters for:
-
-| Provider | When needed | Docs |
-| --- | --- | --- |
-| OpenAI Realtime | Only when you select **Realtime conversation** with `VITE_REALTIME_PROVIDER=openai`. | [OpenAI Realtime](https://developers.openai.com/api/docs/guides/realtime) |
-| Gemini Live API | Only when you select **Realtime conversation** with `VITE_REALTIME_PROVIDER=gemini`. | [Gemini Live API](https://ai.google.dev/gemini-api/docs/live-api) |
-| Doubao E2E RealtimeAPI | Only when you select **Realtime conversation** with `VITE_REALTIME_PROVIDER=doubao`. | [Doubao E2E RealtimeAPI](https://www.volcengine.com/docs/6561/1594356) |
-| Azure OpenAI Realtime | Not built in; use the same adapter interface if you want Azure-hosted realtime audio. | [Azure realtime audio](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/realtime-audio-websockets) |
-
-<Warning>
-The realtime path is for local development. Do not ship a long-lived realtime provider API key in browser code. For production, mint short-lived provider tokens from your backend or proxy provider sessions through your backend.
-</Warning>
+- Python 3 and Node.js with pnpm
+- Spatius API Key and App ID from [Spatius Studio](https://app.spatius.ai/apps)
+- One realtime provider:
+  - LiveKit URL, API Key, and API Secret from [LiveKit Cloud](https://cloud.livekit.io)
+  - Or Agora App ID, App Certificate, and published Agent Pipeline ID
 
 ## Run it
 
 <Steps>
-<Step title="Clone the repo and enter the quickstart folder">
+<Step title="Clone the scenario demo">
 
 ```bash
-git clone https://github.com/spatius-ai/spatius-avatar-demo.git
-cd spatius-avatar-demo/direct-mode/clients/web/quickstart
+git clone https://github.com/spatius-ai/spatius-scenario-demo.git
+cd spatius-scenario-demo
 ```
 
 </Step>
 
-<Step title="Install dependencies">
+<Step title="Configure the shared backend">
 
 ```bash
-pnpm install
-```
-
-</Step>
-
-<Step title="Create your .env">
-
-```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Fill `VITE_SPATIUS_APP_ID`, `VITE_SPATIUS_AVATAR_ID`, and `VITE_SPATIUS_SESSION_TOKEN`.
-
-You can leave realtime provider values blank for the first run.
+In `.env`, set `TRANSPORT=livekit` or `TRANSPORT=agora`, then fill the Spatius and matching provider credentials. The [backend README](https://github.com/spatius-ai/spatius-scenario-demo/tree/main/backend) lists every field. For Agora, also follow its required ASR resource-ID and TTS sample-rate setup.
 
 </Step>
 
-<Step title="Run the dev server">
+<Step title="Start the backend">
 
 ```bash
+python server.py
+```
+
+Keep it running. It listens on port `8787` and starts the LiveKit agent worker automatically when `TRANSPORT=livekit`.
+
+<Warning>
+The demo backend is unauthenticated. Run it only on your local machine or a trusted LAN; do not expose it publicly.
+</Warning>
+
+</Step>
+
+<Step title="Start the Web client">
+
+In a second terminal:
+
+```bash
+cd spatius-scenario-demo/web
+pnpm install
 pnpm dev
 ```
 
-</Step>
-
-<Step title="Validate sample audio first">
-
-Open `http://localhost:3000`, keep **Sample audio** selected, then click **Connect avatar** and **Send sample audio**. The avatar should load, connect to Motion Server, and play the bundled PCM audio with lip sync.
-
-</Step>
-
-<Step title="Optional: try realtime conversation">
-
-Set `VITE_REALTIME_PROVIDER` to `openai`, `gemini`, or `doubao`, fill the matching provider values in `.env`, then restart `pnpm dev`.
-
-For Doubao, fill `DOUBAO_E2E_APP_ID` and `DOUBAO_E2E_ACCESS_TOKEN` without the `VITE_` prefix. The quickstart's local Vite proxy reads those values server-side because the browser cannot set Doubao's required WebSocket headers safely.
-
-In the UI, select **Realtime conversation**, click **Connect all**, then hold **Hold to talk** while speaking. Release the button to send your turn.
+Open `http://localhost:5180/spatius-scenario-demo/`, confirm the backend configuration, then choose a scene.
 
 </Step>
 </Steps>
 
-## What this validates
-
-| Mode | What it proves |
-| --- | --- |
-| Sample audio | App ID, Avatar ID, Session Token, avatar loading, Motion Server connection, PCM audio send, and local rendering. |
-| Realtime conversation | Browser microphone capture, realtime provider connection, provider response audio, resampling into AvatarKit's audio format, and Direct Mode rendering. |
-
-## Troubleshooting
-
-- **AvatarKit fails before sample audio plays**: refresh `VITE_SPATIUS_SESSION_TOKEN`. Direct Mode Session Tokens are short-lived and must match the App ID and region used by the client.
-- **Sample audio works but realtime does not connect**: the AvatarKit path is valid. Check the selected provider key, model name, quota, and realtime access for your provider account.
-- **Gemini closes with `1008: Your project has been denied access`**: the API key is valid enough to open the WebSocket, but the Google Cloud or AI Studio project does not have Live API access for that model.
-- **Doubao fails before the realtime session is ready**: confirm `DOUBAO_E2E_APP_ID` and `DOUBAO_E2E_ACCESS_TOKEN` are available to the local dev server. They should not use the `VITE_` prefix because the browser should never receive the Access Token.
-- **The browser asks for microphone permission**: allow microphone access for the local dev origin, then click **Hold to talk** again.
-
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Direct Mode guide" icon="book" href="/direct-mode/web">
-    Full Web SDK integration with your own audio source.
-  </Card>
-  <Card title="Browse all demos" icon="github" href="/resources/demo-projects">
-    Multi-framework Web references plus iOS, Android, Flutter, Backend Mode, and LiveKit examples.
-  </Card>
+  <Card title="LiveKit Agents" icon="radio" href="/livekit-agents/overview" />
+  <Card title="Agora Convo AI" icon="tower-broadcast" href="/agora-convoai/overview" />
 </CardGroup>

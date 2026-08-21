@@ -1,41 +1,12 @@
 ---
 title: "TEN Framework Extension"
 sidebarTitle: "TEN Extension"
-description: "Configure spatius_avatar_python when you run a TEN Framework graph directly."
+description: "Configure spatius_avatar_python in a TEN Framework graph."
 ---
 
-This guide covers the TEN Framework setup path for [Agora Convo AI Integration](/agora-convoai/overview). Use it when you run and configure a TEN Framework graph directly. The `spatius_avatar_python` extension receives agent speech audio inside that graph, sends it to Spatius, and configures Motion Server to publish synchronized audio and motion data into the configured Agora channel.
-
-If you start a managed Agora Convo AI agent through the REST API, use [Convo AI Agent](/agora-convoai/convo-ai-agent) instead. In that path, Spatius is configured through the Convo AI `properties.avatar` provider block.
-
-<Card
-  title="spatius_avatar_python"
-  icon="github"
-  href="https://github.com/TEN-framework/ten-framework/tree/main/ai_agents/agents/ten_packages/extension/spatius_avatar_python"
-  horizontal
->
-  TEN extension source in the TEN Framework repository.
-</Card>
-
-## How it works
-
-1. Your TEN graph runs the voice agent pipeline.
-2. The TTS stage sends PCM audio frames to `spatius_avatar_python` through `pcm_frame`.
-3. `spatius_avatar_python` starts a Motion Server session with `AgoraEgressConfig`.
-4. Motion Server publishes synchronized avatar audio and motion data into the Agora channel.
-5. Your client joins the same channel and renders the avatar with `AgoraProvider`.
-
-The extension also listens for:
-
-| TEN input | Purpose |
-| --- | --- |
-| `audio_frame_in: pcm_frame` | Agent speech audio sent to Spatius. |
-| `data_in: tts_audio_end` | End-of-speech signal. The extension sends EOF to Spatius. |
-| `cmd_in: flush` | Interruption signal. The extension interrupts the current avatar speech. |
-
-For avatar speech audio source and timing guidance, see [Audio](/concepts/audio).
-
 ## Configure
+
+Get the App ID and API Key from [Apps](https://app.spatius.ai/apps) (**Developer → API Key**) and the Avatar ID from the [Avatar Library](https://app.spatius.ai/avatars/library). Keep the Spatius API Key and Agora App Certificate in the TEN environment.
 
 ```json
 {
@@ -47,6 +18,7 @@ For avatar speech audio source and timing guidance, see [Audio](/concepts/audio)
     "agora_appcert": "${env:AGORA_APP_CERTIFICATE|}",
     "agora_channel": "your-agora-channel",
     "agora_uid": "2001",
+    "agora_token": "${env:AGORA_TOKEN|}",
     "region": "us-west",
     "sample_rate": 24000,
     "session_expire_minutes": 30
@@ -54,77 +26,23 @@ For avatar speech audio source and timing guidance, see [Audio](/concepts/audio)
 }
 ```
 
-### Required fields
+Provide either `agora_token` or `agora_appcert`. Keep the App Certificate on the backend, give the avatar publisher its own UID, and match `sample_rate` to the TTS output. See [Regions](/api-reference/regions) for optional region values.
 
-| Field | Required | Description |
-| --- | --- | --- |
-| `params.spatius_api_key` | Yes | Your Spatius API key. Keep it server-side. |
-| `params.spatius_app_id` | Yes | Your Spatius app ID. |
-| `params.spatius_avatar_id` | Yes | Avatar to use. |
-| `params.agora_appid` | Yes | Agora App ID. |
-| `params.agora_channel` | Yes | Agora channel where Motion Server publishes avatar output. |
-| `params.agora_uid` | Yes | Numeric Agora UID used by the avatar publisher. Must parse as an integer. |
-| `params.agora_token` | Conditional | Agora RTC token for the avatar publisher UID. Required unless `params.agora_appcert` is provided. |
-| `params.agora_appcert` | Conditional | Agora App Certificate. If `params.agora_token` is empty, the extension generates an RTC token from this value. |
+## Wire the graph
 
-### Optional fields
+Place `spatius_avatar_python` after the component that produces final avatar speech audio.
 
-| Field | Default | Description |
-| --- | --- | --- |
-| `params.region` | SDK default | Spatius region. See [Regions](/api-reference/regions). |
-| `params.sample_rate` | `24000` | Audio sample rate expected by the extension. Audio frames with other sample rates are rejected by the base extension. |
-| `params.session_expire_minutes` | `30` | Spatius session token TTL. |
-| `dump` | `false` | Write inbound audio to disk for debugging. |
-| `dump_path` | Empty | Directory for audio dumps when `dump` is enabled. |
-| `channel` | Empty | Alias used by the extension to populate `params.agora_channel` when present. |
-
-<Warning>
-Use distinct Agora UIDs for the avatar publisher and every client participant. Configure `params.agora_uid` for the avatar publisher, then issue separate client tokens for browser users.
-</Warning>
-
-## Token behavior
-
-`spatius_avatar_python` accepts either a prebuilt Agora RTC token or an App Certificate:
-
-- If `params.agora_token` is set, the extension uses it directly.
-- If `params.agora_token` is empty and `params.agora_appcert` is set, the extension generates a token for `params.agora_uid`, `params.agora_channel`, and `params.session_expire_minutes`.
-
-For production systems, prefer issuing short-lived Agora tokens from your own backend and passing the avatar publisher token into the TEN graph. Use App Certificate generation inside the extension only when that matches your deployment model and secret-handling policy.
-
-## Graph wiring notes
-
-Place `spatius_avatar_python` after the stage that produces final avatar speech audio. It expects PCM audio frames at the configured sample rate and sends those bytes to Spatius without resampling.
-
-Use the same Agora channel on both sides:
-
-| Component | Channel field |
+| TEN input | Purpose |
 | --- | --- |
-| TEN extension | `params.agora_channel` |
-| Client | `player.connect({ channel })` or the platform equivalent |
+| `audio_frame_in: pcm_frame` | Sends PCM avatar speech audio to Spatius. |
+| `data_in: tts_audio_end` | Marks the end of the current response. |
+| `cmd_in: flush` | Interrupts the current response. |
 
-The extension uses `new_avatar_session()` from the Spatius Python SDK and configures:
-
-```python
-AgoraEgressConfig(
-    channel_name=config.agora_channel,
-    token=agora_token,
-    uid=int(config.agora_uid),
-    publisher_id=config.agora_uid,
-)
-```
-
-When Agora egress is enabled, Motion Server publishes avatar output into the Agora channel. The client should not call `yieldAudioData()` or `yieldFramesData()` manually; `AgoraProvider` owns the channel-to-renderer data flow.
+The extension and every client must join the same Agora channel. Give the avatar publisher, conversational agent, and each client a different UID. Generate client RTC tokens on your backend; never put the Agora App Certificate in the app.
 
 ## Next steps
 
-<CardGroup cols={3}>
-  <Card title="Overview" icon="book" href="/agora-convoai/overview">
-    Review the end-to-end Agora Convo AI architecture.
-  </Card>
-  <Card title="Convo AI Agent" icon="bot" href="/agora-convoai/convo-ai-agent">
-    Configure Spatius in the managed Convo AI start-agent request.
-  </Card>
-  <Card title="Client" icon="globe" href="/agora-convoai/client">
-    Join the Agora channel and render avatar output with `AgoraProvider`.
-  </Card>
+<CardGroup cols={2}>
+  <Card title="Client" icon="globe" href="/agora-convoai/client" />
+  <Card title="Audio" icon="waveform" href="/concepts/audio" />
 </CardGroup>

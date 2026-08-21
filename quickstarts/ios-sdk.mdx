@@ -1,96 +1,76 @@
 ---
-title: "iOS SDK Quickstart"
-sidebarTitle: "iOS SDK"
-description: "Run the iOS Direct Mode sample with AvatarKit."
+title: "iOS Quickstart"
+sidebarTitle: "iOS"
+description: "Run the native iOS scenario demo with AvatarKit."
 ---
 
 <Card
-  title="GitHub Repository"
+  title="iOS scenario demo"
   icon="github"
-  href="https://github.com/spatius-ai/spatius-avatar-demo/tree/main/direct-mode/clients/ios"
+  href="https://github.com/spatius-ai/spatius-scenario-demo/tree/main/ios"
   horizontal
 >
-  SwiftUI sample implementing the avatar pipeline: VAD → ASR → LLM → TTS → AvatarKit.
+  Run four complete AvatarKit scenes on an iOS device. Current demo integration: Agora Convo AI.
 </Card>
-
-This quickstart targets the [Direct Mode](/direct-mode/overview) path on iOS. The sample app pastes the Session Token in the UI rather than fetching from a backend — convenient for first-run validation.
 
 ## Prerequisites
 
-- Xcode 16+
-- iOS 16+ device or simulator (real device recommended for mic input)
-- Spatius credentials. See [Credentials](/getting-started/credentials).
-  - **App ID** — from [Spatius Studio](https://app.spatius.ai/apps)
-  - **Avatar ID** — from the [Avatar Library](https://app.spatius.ai/avatars/library)
-  - **Session Token** — see [Session token API](/api-reference/api-reference)
-- An OpenAI API key for the ASR + LLM + TTS pipeline used by the sample.
+- macOS with Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen)
+- A physical iOS device; AvatarKit and Agora do not include simulator slices in this demo
+- Python 3
+- Spatius API Key and App ID from [Spatius Studio](https://app.spatius.ai/apps)
+- Agora App ID, App Certificate, and published Agent Pipeline ID
 
 ## Run it
 
 <Steps>
-<Step title="Clone and open the sample">
+<Step title="Clone and start the shared backend">
 
 ```bash
-git clone https://github.com/spatius-ai/spatius-avatar-demo.git
-cd spatius-avatar-demo/direct-mode/clients/ios
-brew install xcodegen
+git clone https://github.com/spatius-ai/spatius-scenario-demo.git
+cd spatius-scenario-demo/backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 ```
 
-Generate and open the Xcode project:
+Set `TRANSPORT=agora` and fill the Spatius and Agora credentials in `.env`. Follow the [backend README](https://github.com/spatius-ai/spatius-scenario-demo/tree/main/backend) to align the ASR resource IDs and TTS sample rate with your published Agora agent, then start the backend:
 
 ```bash
+python server.py
+```
+
+<Warning>
+The demo backend is unauthenticated. Run it only on your local machine or a trusted LAN; do not expose it publicly.
+</Warning>
+
+Keep the printed LAN address—you will enter it on the iOS config screen.
+
+</Step>
+
+<Step title="Generate and open the iOS project">
+
+In a second terminal:
+
+```bash
+cd spatius-scenario-demo/ios
 xcodegen generate
-open AvatarDemo.xcodeproj
+open SpatiusScenes.xcodeproj
 ```
 
 </Step>
 
-<Step title="Configure credentials">
+<Step title="Run a scene">
 
-Edit `AvatarDemo/Config.swift`:
-
-```swift
-appID = "<your-app-id>"
-avatarID = "<your-avatar-id>"
-openAIApiKey = "<your-openai-api-key>"
-```
-
-`Session Token` is not stored in `Config.swift` — paste it in the app UI at runtime.
-
-</Step>
-
-<Step title="Build and run">
-
-Use Xcode to build and run on a connected iOS device or simulator. The `AvatarKit.xcframework` is downloaded automatically on first build from the configured release.
-
-</Step>
-
-<Step title="Start a conversation">
-
-In the running app:
-
-1. Paste your Session Token.
-2. Tap **Start Conversation**.
-3. Speak and pause. The avatar should respond with lip-synced speech.
+Build to a connected iOS device. On the config screen, enter the backend LAN address, confirm the credentials, and choose a scene.
 
 </Step>
 </Steps>
 
-## What this validates
-
-| Check | What it tells you |
-| --- | --- |
-| Avatar renders | App ID + Avatar ID are correct, framework is correctly embedded. |
-| Conversation starts | Session Token is valid, Motion Server connection works. |
-| Avatar speaks | Full pipeline (mic → ASR → LLM → TTS → AvatarKit) is wired up end to end. |
-
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="iOS SDK reference" icon="book" href="/sdk-reference/ios-sdk/api-reference">
-    Complete iOS API documentation.
-  </Card>
-  <Card title="Browse all demos" icon="github" href="/resources/demo-projects">
-    Web (multi-framework) and Android samples in addition to iOS.
-  </Card>
+  <Card title="Agora client integration" icon="tower-broadcast" href="/agora-convoai/client" />
+  <Card title="iOS SDK reference" icon="book" href="/sdk-reference/ios-sdk/api-reference" />
 </CardGroup>

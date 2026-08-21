@@ -9,13 +9,13 @@ Spatius currently operates in three regions.
 
 | Region | Notes |
 | --- | --- |
-| `us-west` | Default region used by SDKs and examples. |
+| `us-west` | Default for the Go Server SDK and current server examples; fallback for automatic selection. |
 | `ap-northeast` | Asia Pacific Northeast region. |
 | `cn-beijing` | China Beijing region. |
 
 ## Endpoint URLs
 
-You normally do not need to set endpoint URLs explicitly. Set only `SPATIUS_REGION`; SDKs and plugins compose the right hosts from the region. If unset, SDKs default to `us-west`.
+You normally do not need to set endpoint URLs explicitly. AvatarKit clients and the Python Server SDK select a region automatically when none is provided. The Go Server SDK defaults to `us-west`; integration setup pages state each plugin's default.
 
 | Region | Console API | Motion Server ingress (v2) |
 | --- | --- | --- |

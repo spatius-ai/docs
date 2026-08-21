@@ -1,73 +1,49 @@
 ---
-title: "LiveKit Agents Integration Server"
-sidebarTitle: "Server"
-description: "Use livekit-plugins-spatius in a LiveKit Agents worker."
+title: "Set Up LiveKit Agents Integration"
+sidebarTitle: "Agent setup"
+description: "Add livekit-plugins-spatius to a LiveKit Agents worker."
 ---
 
-This guide covers the server side of [LiveKit Agents Integration](/livekit-agents/overview). Your LiveKit Agents worker uses `livekit-plugins-spatius` to send avatar speech audio to Spatius and receive Spatius-published audio and motion data in the LiveKit room.
+## Before you start
 
----
+Use an existing LiveKit Agents worker and a room that your client can join. Keep its `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` configured. Get the Spatius App ID and API Key from [Apps](https://app.spatius.ai/apps) and the Avatar ID from the [Avatar Library](https://app.spatius.ai/avatars/library).
 
-## Using LiveKit Agents
-
-If you already use [LiveKit Agents](https://docs.livekit.io/agents/) to build your voice agent, add [livekit-plugins-spatius](https://github.com/livekit/agents/tree/main/livekit-plugins/livekit-plugins-spatius). The package hooks into your agent pipeline and sends agent audio to Spatius; Motion Server publishes the lip-synced audio and motion stream into your LiveKit room.
-
-For a working end-to-end project, see [AvatarKit Voice Agent Demo](https://github.com/spatius-ai/spatius-avatar-demo/tree/main/platform-integrations/livekit-agents-demo/livekit-agents-reference-demo).
-
-### Install
+## Install
 
 ```bash
 pip install livekit-plugins-spatius
 ```
 
-### Configure
+## Configure
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `SPATIUS_API_KEY` | Yes | Your Spatius API key |
-| `SPATIUS_APP_ID` | Yes | Your Spatius app ID |
-| `SPATIUS_AVATAR_ID` | Yes | Avatar to use |
-| `SPATIUS_REGION` | No | Region used to compose endpoints. Defaults to `us-west`; `ap-northeast` and `cn-beijing` are also supported. |
-| `SPATIUS_AUDIO_FORMAT` | No | Audio format sent to Spatius. Defaults to `AudioFormat.OGG_OPUS`. |
+Keep the API Key in the worker. Leave `SPATIUS_REGION` unset for `us-west`, or set it to `ap-northeast` or `cn-beijing`.
 
-<Accordion title="Advanced: endpoint overrides">
-For normal production use, set only `SPATIUS_REGION` and the plugin composes the endpoints automatically. Leave it unset for `us-west`, or set it to `ap-northeast` or `cn-beijing` for another supported region. Set endpoint overrides only when proxying or testing against a staging environment.
-
-| Variable | Description |
-| --- | --- |
-| `SPATIUS_CONSOLE_ENDPOINT` | Override Console API URL (default: `https://console.<region>.spatius.ai/v1/console`) |
-| `SPATIUS_INGRESS_ENDPOINT` | Override ingress WebSocket URL (default: `wss://api.<region>.spatius.ai/v2/driveningress`) |
-</Accordion>
-
-<Accordion title="Advanced: LiveKit egress room">
-By default, Motion Server publishes the avatar into the same LiveKit room as the agent. For specialized routing setups, pass `livekit_room_name` to publish the avatar into a different room:
-
-```python
-await avatar.start(
-    session,
-    room=ctx.room,
-    livekit_room_name="avatar-output-room",
-)
+```bash title=".env"
+SPATIUS_API_KEY=your-api-key
+SPATIUS_APP_ID=your-app-id
+SPATIUS_AVATAR_ID=your-avatar-id
+SPATIUS_REGION=us-west
 ```
 
-Use this only when your LiveKit routing intentionally separates the agent room from the room where clients receive avatar audio and motion data. In the default LiveKit Agents Integration flow, leave `livekit_room_name` unset and connect the client to the same room as the agent.
-</Accordion>
+## Add the Avatar session
 
-### Use in your agent
+Create `AvatarSession` before starting the agent session. The avatar publishes into the same LiveKit room.
 
 ```python
-from livekit.agents import AgentSession, JobContext
-from livekit.plugins import spatius
+from livekit.plugins.spatius import AvatarSession
 
-async def entrypoint(ctx: JobContext):
-    session = AgentSession(vad=vad, stt=stt, llm=llm, tts=tts)
-    avatar = spatius.AvatarSession(
-        avatar_id="...",
-    )
+# Add these lines inside your existing LiveKit Agents entrypoint.
+avatar = AvatarSession()
+await avatar.start(session, room=ctx.room)
 
-    await avatar.start(session, room=ctx.room)
-    await session.start(agent=YourAgent(), room=ctx.room)
+# Keep your existing session.start(...) call after avatar.start(...).
 ```
 
-Full API and options: **[the plugin reference](https://docs.livekit.io/reference/python/livekit/plugins/spatius/index.html#livekit.plugins.spatius.AvatarSession)**
-(GitHub: [livekit-plugins-spatius](https://github.com/livekit/agents/tree/main/livekit-plugins/livekit-plugins-spatius)).
+Your voice agent continues to own STT, LLM, and TTS. The plugin sends the agent's speech audio to Motion Server and publishes the avatar output into the room.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Client" icon="globe" href="/livekit-agents/client" />
+  <Card title="Plugin API" icon="book" href="https://docs.livekit.io/reference/python/livekit/plugins/spatius/" />
+</CardGroup>

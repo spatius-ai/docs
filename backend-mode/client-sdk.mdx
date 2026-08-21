@@ -1,50 +1,132 @@
 ---
-title: "Backend Mode Client SDK"
+title: "Backend Mode Client"
 sidebarTitle: "Client"
-description: "Use AvatarKit clients to render messages produced by your Backend Mode."
+description: "Feed audio and motion data delivered by your backend into AvatarKit."
 ---
 
-The Client SDK side of Backend Mode Integration renders encoded audio payloads and motion data payloads from your backend. The client does **not** connect directly to Motion Server. Instead, it receives those payloads over your chosen transport and feeds them into AvatarKit.
+The client receives each response turn from your backend and renders it locally with AvatarKit. It never connects to Motion Server or holds a Spatius API Key.
 
-```mermaid
+<div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 12 }}>
+
+```mermaid actions={false}
+---
+config:
+  "look": "handDrawn"
+  "theme": "base"
+  "themeVariables":
+    "background": "#ffffff"
+    "textColor": "#111827"
+    "lineColor": "#64748b"
+    "primaryColor": "#e8f4fd"
+    "primaryTextColor": "#111827"
+    "primaryBorderColor": "#2196F3"
+---
 flowchart LR
-    A["Your backend<br/>(Server SDK)"] -->|encoded audio payloads + motion data payloads| B["Your transport"]
-    B --> C["AvatarKit Client SDK<br/>Backend Mode path"]
-    C -->|yieldAudioData / yieldFramesData| D["Local avatar rendering"]
+    A["Your backend"] -->|audio + turn ID| B["AvatarKit Client"]
+    A -->|motion data + turn ID| B
+    B -->|audio and motion feed APIs| C["Local rendering"]
 ```
 
-## Responsibilities
+</div>
 
-| Client SDK responsibility | Description |
-| --- | --- |
-| **Initialize AvatarKit** | Configure the client with App ID, avatar, region, and the Backend Mode client setting for your SDK. |
-| **Connect to your backend** | Join your WebSocket, RTC room, or other downstream transport. |
-| **Consume encoded payloads** | Receive encoded audio payloads and motion data payloads provided by the Server SDK. |
-| **Render locally** | Feed messages into AvatarKit with `yieldAudioData()` and `yieldFramesData()`. |
+## Implement the client
 
-<Warning>
-Do not call `start()` and `send()` for the Backend Mode client path. Those are Direct Mode methods. Backend Mode clients receive messages from your backend and call the `yield*` methods.
-</Warning>
+<Steps>
+<Step title="Initialize AvatarKit in Backend Mode">
+
+Use the same App ID, Avatar ID, region, and audio format as the backend session. Backend Mode does not use a Spatius Session Token on the client.
+
+</Step>
+
+<Step title="Connect to your backend">
+
+Use your application's WebSocket or streaming transport. For every response, deliver the audio before its first motion data payload, and include the same turn ID on both message types.
+
+</Step>
+
+<Step title="Feed audio and motion data">
+
+Pass each audio payload to the platform's audio-yield method. Store the conversation ID it returns against your backend turn ID, then use that conversation ID when you pass the matching motion data to AvatarKit.
+
+<Accordion title="Web example">
+
+```typescript
+import {
+  AvatarManager,
+  AvatarSDK,
+  AvatarView,
+  DrivingServiceMode,
+} from '@spatius/avatarkit'
+
+await AvatarSDK.initialize('your-app-id', {
+  drivingServiceMode: DrivingServiceMode.backend,
+  audioFormat: { channelCount: 1, sampleRate: 16000 },
+})
+
+const avatar = await AvatarManager.shared.load('your-avatar-id')
+const avatarView = new AvatarView(
+  avatar,
+  document.getElementById('avatar-container')!,
+)
+const controller = avatarView.controller
+const conversationIds = new Map<string, string>()
+
+const decodeBase64 = (value: string) =>
+  Uint8Array.from(atob(value), (character) => character.charCodeAt(0))
+
+document.getElementById('connect-button')!.addEventListener('click', async () => {
+  // Browsers require audio initialization inside a user gesture.
+  await controller.initializeAudioContext()
+
+  const socket = new WebSocket('wss://your-backend.example/avatar')
+  socket.addEventListener('message', (event) => {
+    const message = JSON.parse(event.data)
+
+    if (message.type === 'audio') {
+      const id = controller.yieldAudioData(
+        decodeBase64(message.payload),
+        message.end,
+      )
+      if (id && !conversationIds.has(message.turnId)) {
+        conversationIds.set(message.turnId, id)
+      }
+    }
+
+    if (message.type === 'motion') {
+      const id = conversationIds.get(message.turnId)
+      if (id) {
+        controller.yieldFramesData(
+          message.payloads.map(decodeBase64),
+          id,
+        )
+      }
+      if (message.end) conversationIds.delete(message.turnId)
+    }
+
+    if (message.type === 'interrupt') {
+      controller.interrupt()
+      conversationIds.clear()
+    }
+  })
+})
+```
+
+</Accordion>
+
+</Step>
+
+<Step title="Clean up">
+
+Interrupt discarded turns, close your application transport, and dispose of the Avatar view when the experience ends. Do not call the Direct Mode `start()` or `send()` methods on this path.
+
+</Step>
+</Steps>
+
+Exact Backend Mode method names are in the [Web](/sdk-reference/web-sdk/reference), [iOS](/sdk-reference/ios-sdk/api-reference), [Android](/sdk-reference/android-sdk/api-reference), and [Flutter](/sdk-reference/flutter-sdk/api-reference) references.
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Web SDK reference" icon="globe" href="/sdk-reference/web-sdk/reference">
-    Backend Mode client methods such as `yieldAudioData()` and `yieldFramesData()`.
-  </Card>
-  <Card title="iOS SDK reference" icon="apple" href="/sdk-reference/ios-sdk/api-reference">
-    iOS AvatarKit API reference.
-  </Card>
-  <Card title="Android SDK reference" icon="android" href="/sdk-reference/android-sdk/api-reference">
-    Android AvatarKit API reference.
-  </Card>
-  <Card title="Flutter SDK reference" icon="mobile" href="/sdk-reference/flutter-sdk/api-reference">
-    Flutter Backend Mode input and rendering API.
-  </Card>
-</CardGroup>
-
-<CardGroup cols={1}>
-  <Card title="Browse all demos" icon="github" href="/resources/demo-projects">
-    Every runnable demo by platform and integration path.
-  </Card>
+  <Card title="Complete Backend Mode demo" icon="github" href="https://github.com/spatius-ai/spatius-avatar-demo/tree/main/backend-mode" />
+  <Card title="Client SDK references" icon="code" href="/reference/overview" />
 </CardGroup>
