@@ -88,10 +88,10 @@ AvatarSDK.setUserId('user-123')
 
 #### setRenderQuality(quality)
 
-Update the global rendering quality tier. The change takes effect on the next rendered frame across active `AvatarView` instances.
+Update the global rendering quality tier. The default is `RenderQuality.ultra`; no setter call is required unless you change the tier at runtime. The change takes effect on the next rendered frame across active `AvatarView` instances.
 
 ```typescript
-AvatarSDK.setRenderQuality(RenderQuality.high)
+AvatarSDK.setRenderQuality(RenderQuality.ultra)
 ```
 
 #### setRenderResolutionCap(enabled, maxHeight?)
@@ -112,7 +112,7 @@ const { cpuScore, gpuScore } = await AvatarSDK.deviceScore()
 
 #### isDeviceSupported()
 
-Check whether the current device can run AvatarKit. In `1.2.0`, this runs the same benchmark path used by `deviceScore()`.
+Check whether the current device can run AvatarKit. This runs the same benchmark path used by `deviceScore()`.
 
 ```typescript
 const supported = await AvatarSDK.isDeviceSupported()
@@ -532,6 +532,8 @@ enum RenderQuality {
   ultra = 'ultra',
 }
 ```
+
+`ultra` is the default and highest-quality tier. Use `high` or `standard` only when you intentionally trade visual quality for lower rendering cost.
 
 ### FrameStarvationMode
 

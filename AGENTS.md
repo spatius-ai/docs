@@ -138,3 +138,5 @@ Pages that include a follow-up CTA use the heading `## Next steps`. Don't introd
 ## Source-of-truth for SDK behavior
 
 When documenting SDK behavior, the authoritative source is the published SDK source — not memory, not the existing docs. Verify method names and semantics against the SDK before asserting them in a concept page.
+
+Do not hardcode concrete SDK or package versions in user-facing documentation. Prefer unversioned package-manager commands, latest-release links, or a `<latest-version>` placeholder when manifest syntax requires a version. Link to published package metadata for compatibility ranges. API/protocol versions, toolchain requirements, and lockfile versions are not subject to this rule.

@@ -71,12 +71,10 @@ Call the connect flow from a user action so the browser can request microphone p
 
 Install `AvatarKitRTC` with Swift Package Manager or CocoaPods:
 
-```swift
-.package(url: "https://github.com/spatius-ai/avatarkit-ios-rtc.git", from: "1.0.0")
-```
+In Xcode, open **File > Add Package Dependencies**, enter `https://github.com/spatius-ai/avatarkit-ios-rtc.git`, and select the latest stable release.
 
 ```ruby
-pod 'AvatarKitRTC', '~> 1.0'
+pod 'AvatarKitRTC'
 ```
 
 Initialize AvatarKit in RTC mode, load the Avatar, and connect:
@@ -125,8 +123,10 @@ The default `connect(_:)` path lets `AgoraProvider` own the engine. If your iOS 
 Add the Android RTC package:
 
 ```kotlin
-implementation("ai.spatius:avatarkit-rtc:1.0.0")
+implementation("ai.spatius:avatarkit-rtc:<latest-version>")
 ```
+
+Use the latest stable release from [Maven Central](https://central.sonatype.com/artifact/ai.spatius/avatarkit-rtc).
 
 Initialize AvatarKit in RTC mode, load the Avatar, then connect the player:
 

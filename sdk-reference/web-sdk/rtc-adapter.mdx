@@ -45,15 +45,7 @@ npm install @spatius/avatarkit @spatius/avatarkit-rtc agora-rtc-sdk-ng
 
 ### Package compatibility
 
-The published peer ranges for `@spatius/avatarkit-rtc@1.1.3` are:
-
-| Peer package | Supported range | Required when |
-| --- | --- | --- |
-| `@spatius/avatarkit` | `>=1.3.7` | Always |
-| `livekit-client` | `^2.15.9` | Using `LiveKitProvider` |
-| `agora-rtc-sdk-ng` | `^4.x` | Using `AgoraProvider` |
-
-Use any release within the declared peer range; no patch-level pin is required.
+`@spatius/avatarkit-rtc` declares peer dependencies on AvatarKit and the selected RTC client. Install the packages together, and treat peer-dependency warnings as compatibility errors. For exact current ranges, check the package's published [`peerDependencies`](https://www.npmjs.com/package/@spatius/avatarkit-rtc?activeTab=code) instead of relying on a version copied into this page.
 
 ## Runtime contract
 

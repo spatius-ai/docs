@@ -6,17 +6,10 @@ description: "AvatarKit Flutter SDK reference for Direct Mode, Backend Mode clie
 
 ## Installation
 
-Add the Flutter package:
-
-```yaml title="pubspec.yaml"
-dependencies:
-  spatius_avatarkit: ^1.3.3
-```
-
-Then install dependencies:
+Add the Flutter package from [pub.dev](https://pub.dev/packages/spatius_avatarkit):
 
 ```bash
-flutter pub get
+flutter pub add spatius_avatarkit
 ```
 
 The package supports iOS and Android Flutter apps.
@@ -56,6 +49,17 @@ Use `DrivingServiceMode.direct` for [Direct Mode](/direct-mode/client). Use `Dri
 | `audioFormat` | See [AudioFormat](#audioformat) below. |
 | `drivingServiceMode` | `direct` or `backend`, as described above. |
 | `logLevel` | SDK log verbosity. |
+| `renderQuality` | Rendering quality tier. Defaults to `RenderQuality.ultra`. |
+
+### RenderQuality
+
+`RenderQuality.ultra` is the default and highest-quality tier. Use `high` or `standard` only when you intentionally trade visual quality for lower rendering cost.
+
+```dart
+enum RenderQuality { standard, high, ultra }
+
+await AvatarSDK.setRenderQuality(RenderQuality.ultra);
+```
 
 ### AudioFormat
 
