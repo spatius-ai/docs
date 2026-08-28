@@ -358,7 +358,7 @@ const renderDiagram = (flow, packet, branchPacket) => {
         <g key={item.id} data-wire={item.id}>
           <path
             d={pathData(item.points)}
-            className={`spatius-tour-wire is-${item.dataType}${flow.showLatency && item.crossing ? ' is-crossing' : ''}${activeIds.has(item.id) ? ' is-active' : ''}`}
+            className={`spatius-tour-wire is-${item.dataType}${item.crossing ? ' is-crossing' : ''}${activeIds.has(item.id) ? ' is-active' : ''}`}
             markerEnd="url(#spatius-tour-flow-arrow)"
           />
           {flow.showLatency && item.stage && (() => {
@@ -395,12 +395,7 @@ const renderDiagram = (flow, packet, branchPacket) => {
       </g>
 
       <line x1="0" y1={flow.height} x2="1280" y2={flow.height} className="spatius-tour-footer-edge" />
-      <g
-        className="spatius-tour-inline-legend"
-        aria-label={flow.showLatency
-          ? 'Diagram legend: Audio orbs are blue, Motion Data orbs are yellow, solid lines indicate low latency, and dashed lines indicate variable latency'
-          : 'Diagram legend: Audio orbs are blue and Motion Data orbs are yellow'}
-      >
+      <g className="spatius-tour-inline-legend" aria-label="Diagram legend: Audio orbs are blue, Motion Data orbs are yellow, solid lines indicate low latency, and dashed lines indicate variable latency">
         <g className="spatius-tour-legend-orb is-audio" transform={`translate(58 ${flow.height + 29})`}>
           <circle r="10" className="spatius-tour-legend-orb-halo" />
           <circle r="5" className="spatius-tour-legend-orb-core" />
@@ -411,14 +406,10 @@ const renderDiagram = (flow, packet, branchPacket) => {
           <circle r="5" className="spatius-tour-legend-orb-core" />
         </g>
         <text x="228" y={flow.height + 35} className="spatius-tour-legend-label">Motion Data</text>
-        {flow.showLatency && (
-          <>
-            <line x1="386" y1={flow.height + 29} x2="430" y2={flow.height + 29} className="spatius-tour-wire" markerEnd="url(#spatius-tour-flow-arrow)" />
-            <text x="446" y={flow.height + 35} className="spatius-tour-legend-label">Low latency</text>
-            <line x1="590" y1={flow.height + 29} x2="634" y2={flow.height + 29} className="spatius-tour-wire is-crossing" markerEnd="url(#spatius-tour-flow-arrow)" />
-            <text x="650" y={flow.height + 35} className="spatius-tour-legend-label">Variable latency</text>
-          </>
-        )}
+        <line x1="386" y1={flow.height + 29} x2="430" y2={flow.height + 29} className="spatius-tour-wire" markerEnd="url(#spatius-tour-flow-arrow)" />
+        <text x="446" y={flow.height + 35} className="spatius-tour-legend-label">Low latency</text>
+        <line x1="590" y1={flow.height + 29} x2="634" y2={flow.height + 29} className="spatius-tour-wire is-crossing" markerEnd="url(#spatius-tour-flow-arrow)" />
+        <text x="650" y={flow.height + 35} className="spatius-tour-legend-label">Variable latency</text>
       </g>
     </svg>
   )
