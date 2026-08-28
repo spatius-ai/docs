@@ -149,6 +149,8 @@ const rtcFlow = (integration) => {
   const livekit = integration === 'livekit'
   const backendCenterX = 190
   const clientCenterX = 995
+  const roomX = 603
+  const roomWidth = 74
   const roomCenterY = 352
   const clientCenterY = 252
   const backendAudioX = verticalDataLane(backendCenterX, 'audio')
@@ -163,14 +165,14 @@ const rtcFlow = (integration) => {
     title: livekit ? 'Realtime audio · LiveKit Agents' : 'Realtime audio · Agora ConvoAI',
     showLatency: true,
     description: livekit
-      ? 'LiveKit Agents sends avatar speech audio to Motion Server. Synchronized audio and motion data travel through the LiveKit room to the RTC SDK, which plays the audio and sends motion data to AvatarKit SDK for local rendering.'
+      ? 'The agent worker sends avatar speech audio to Motion Server. Synchronized audio and motion data travel through the LiveKit room to the RTC SDK, which plays the audio and sends motion data to AvatarKit SDK for local rendering.'
       : 'Agora Convo AI or TEN sends avatar speech audio to Motion Server. Synchronized audio and motion data travel through the Agora channel to the RTC SDK, which plays the audio and sends motion data to AvatarKit SDK for local rendering.',
     height: 560,
     nodes: [
       owner('backend', 30, 70, 320, 180, 'Your backend'),
-      box('voice-agents', 70, 145, 240, 84, livekit ? 'LiveKit Agents' : 'Agora ConvoAI'),
+      box('voice-agents', 70, 145, 240, 84, livekit ? 'Agent Worker' : 'Agora ConvoAI'),
       box('motion-server', 70, 310, 236, 84, 'Motion Server', 'service'),
-      box('room', 470, 170, 74, 250, livekit ? 'LiveKit Room' : 'Agora Channel', 'room'),
+      box('room', roomX, 170, roomWidth, 250, livekit ? 'LiveKit Room' : 'Agora Channel', 'room'),
       owner('client', 840, 110, 310, 370, 'Your app'),
       box('rtc-sdk', 890, 210, 210, 84, 'RTC SDK', 'sdk'),
       box('sdk', 890, 350, 210, 84, 'AvatarKit SDK', 'sdk'),
@@ -179,16 +181,16 @@ const rtcFlow = (integration) => {
       wire('audio', [[backendAudioX, 229], [backendAudioX, 310]], {
         stage: 1, stageAt: [backendAudioX, 280], target: 'motion-server',
       }),
-      wire('pub-audio', [[306, roomAudioY], [470, roomAudioY]], {
+      wire('pub-audio', [[306, roomAudioY], [roomX, roomAudioY]], {
         target: 'room',
       }),
-      wire('motion', [[306, roomMotionY], [470, roomMotionY]], {
+      wire('motion', [[306, roomMotionY], [roomX, roomMotionY]], {
         stage: 2, target: 'room', dataType: 'motion',
       }),
-      wire('wire-audio', [[544, clientAudioY], [890, clientAudioY]], {
+      wire('wire-audio', [[roomX + roomWidth, clientAudioY], [890, clientAudioY]], {
         crossing: true, target: 'rtc-sdk',
       }),
-      wire('wire-motion', [[544, clientMotionY], [890, clientMotionY]], {
+      wire('wire-motion', [[roomX + roomWidth, clientMotionY], [890, clientMotionY]], {
         crossing: true, stage: 3, target: 'rtc-sdk', dataType: 'motion',
       }),
       wire('sdk-motion', [[clientMotionX, 294], [clientMotionX, 350]], {
