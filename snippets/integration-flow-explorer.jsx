@@ -152,7 +152,6 @@ const rtcFlow = (integration) => {
   const roomCenterY = 352
   const clientCenterY = 252
   const backendAudioX = verticalDataLane(backendCenterX, 'audio')
-  const clientAudioX = appVerticalDataLane(clientCenterX, 'audio')
   const clientMotionX = appVerticalDataLane(clientCenterX, 'motion')
   const roomAudioY = horizontalDataLane(roomCenterY, 'audio')
   const roomMotionY = horizontalDataLane(roomCenterY, 'motion')
@@ -164,8 +163,8 @@ const rtcFlow = (integration) => {
     title: livekit ? 'Realtime audio · LiveKit Agents' : 'Realtime audio · Agora ConvoAI',
     showLatency: true,
     description: livekit
-      ? 'LiveKit Agents sends avatar speech audio to Motion Server. Synchronized audio and motion data travel through the LiveKit room and RTC SDK to AvatarKit SDK for local rendering.'
-      : 'Agora Convo AI or TEN sends avatar speech audio to Motion Server. Synchronized audio and motion data travel through the Agora channel and RTC SDK to AvatarKit SDK for local rendering.',
+      ? 'LiveKit Agents sends avatar speech audio to Motion Server. Synchronized audio and motion data travel through the LiveKit room to the RTC SDK, which plays the audio and sends motion data to AvatarKit SDK for local rendering.'
+      : 'Agora Convo AI or TEN sends avatar speech audio to Motion Server. Synchronized audio and motion data travel through the Agora channel to the RTC SDK, which plays the audio and sends motion data to AvatarKit SDK for local rendering.',
     height: 560,
     nodes: [
       owner('backend', 30, 70, 320, 180, 'Your backend'),
@@ -192,14 +191,11 @@ const rtcFlow = (integration) => {
       wire('wire-motion', [[544, clientMotionY], [890, clientMotionY]], {
         crossing: true, stage: 3, target: 'rtc-sdk', dataType: 'motion',
       }),
-      wire('sdk-audio', [[clientAudioX, 294], [clientAudioX, 350]], {
-        target: 'sdk',
-      }),
       wire('sdk-motion', [[clientMotionX, 294], [clientMotionX, 350]], {
         target: 'sdk', dataType: 'motion',
       }),
     ],
-    journey: [['audio'], ['pub-audio', 'motion'], ['wire-audio', 'wire-motion'], ['sdk-audio', 'sdk-motion']],
+    journey: [['audio'], ['pub-audio', 'motion'], ['wire-audio', 'wire-motion'], ['sdk-motion']],
   }
 }
 
@@ -540,8 +536,8 @@ const renderDiagram = (flow, packet, branchPacket) => {
 
       <p className="spatius-flow-status" aria-live="polite" aria-atomic="true">{flow.title}</p>
       <div className="spatius-flow-seo-copy">
-        <p>LiveKit Agents Integration: synchronized audio and motion data pass through the LiveKit room and RTC SDK to AvatarKit SDK.</p>
-        <p>Agora Convo AI Integration: synchronized audio and motion data pass through the Agora channel and RTC SDK to AvatarKit SDK.</p>
+        <p>LiveKit Agents Integration: synchronized audio and motion data pass through the LiveKit room to the RTC SDK; the RTC SDK plays audio and sends motion data to AvatarKit SDK.</p>
+        <p>Agora Convo AI Integration: synchronized audio and motion data pass through the Agora channel to the RTC SDK; the RTC SDK plays audio and sends motion data to AvatarKit SDK.</p>
         <p>Direct Mode Integration: AvatarKit sends client-side avatar speech audio to Motion Server and receives motion data.</p>
         <p>Backend Mode Integration: the backend business layer uses the Server SDK with Motion Server, then passes audio and motion data to the app business layer and AvatarKit.</p>
       </div>
