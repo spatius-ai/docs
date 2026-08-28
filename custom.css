@@ -36,6 +36,429 @@ html.dark .spatius-comparison-recommended,
   background: rgba(173, 175, 244, 0.16);
 }
 
+.spatius-diagram.spatius-flow-explorer {
+  --spatius-tour-surface: transparent;
+  --spatius-tour-box: var(--spatius-diagram-node);
+  --spatius-tour-border: var(--spatius-diagram-stroke);
+  --spatius-tour-ink: var(--spatius-diagram-ink);
+  --spatius-tour-muted: var(--spatius-diagram-muted);
+  --spatius-tour-focus: var(--spatius-diagram-brand);
+  --spatius-tour-node: var(--spatius-diagram-stroke);
+  --spatius-tour-network-line: var(--spatius-diagram-muted);
+  --spatius-tour-network-surface: rgba(56, 189, 248, 0.16);
+  --spatius-tour-owned: var(--spatius-diagram-owned);
+  --spatius-tour-managed: var(--spatius-diagram-managed);
+  --spatius-tour-flow: var(--spatius-diagram-ink);
+  --spatius-tour-audio: #2563eb;
+  --spatius-tour-motion: #946200;
+  container: spatius-flow / inline-size;
+  margin: 0;
+  overflow: visible;
+}
+
+html.dark .spatius-flow-explorer,
+.dark .spatius-flow-explorer,
+[data-theme="dark"] .spatius-flow-explorer {
+  --spatius-tour-audio: #60a5fa;
+  --spatius-tour-motion: #facc15;
+  --spatius-tour-network-surface: rgba(125, 211, 252, 0.16);
+}
+
+.spatius-flow-controls {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.55rem 0.8rem 0;
+}
+
+.spatius-flow-source-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 1rem;
+}
+
+.spatius-flow-latency {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.32rem;
+  padding: 0.5rem 0 0.62rem;
+  color: var(--spatius-tour-ink);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.spatius-flow-latency-title {
+  margin-right: 0.08rem;
+}
+
+.spatius-flow-latency-term {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+}
+
+.spatius-flow-latency-stage {
+  display: inline-flex;
+  width: 1.14rem;
+  height: 1.14rem;
+  align-items: center;
+  justify-content: center;
+  border: 1.25px solid var(--spatius-tour-ink);
+  border-radius: 50%;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.spatius-flow-latency-stage.is-variable {
+  border-style: dashed;
+}
+
+.spatius-flow-latency-plus {
+  color: var(--spatius-tour-muted);
+  font-weight: 600;
+}
+
+.spatius-flow-segmented {
+  display: inline-flex;
+  min-width: 0;
+  gap: 0.25rem;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--spatius-tour-border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.spatius-flow-segmented:not(.spatius-flow-mode-options) {
+  justify-self: start;
+}
+
+.spatius-flow-segmented button {
+  appearance: none;
+  position: relative;
+  min-width: 5rem;
+  padding: 0.5rem 0.72rem 0.62rem;
+  border: 0;
+  border-radius: 0;
+  color: var(--spatius-tour-muted);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  transition: color 140ms ease;
+}
+
+.spatius-flow-segmented button::after {
+  position: absolute;
+  right: 50%;
+  bottom: -1px;
+  left: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--spatius-tour-focus);
+  content: "";
+  transition: right 160ms ease, left 160ms ease;
+}
+
+.spatius-flow-segmented button:hover:not(:disabled) {
+  color: var(--spatius-tour-ink);
+}
+
+.spatius-flow-segmented button:disabled {
+  color: var(--spatius-tour-muted);
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.spatius-flow-segmented button:focus-visible {
+  outline: 3px solid var(--spatius-tour-focus);
+  outline-offset: 2px;
+}
+
+.spatius-flow-segmented button[data-selected="true"] {
+  color: var(--spatius-tour-ink);
+  background: transparent;
+  box-shadow: none;
+}
+
+.spatius-flow-segmented button[data-selected="true"]::after {
+  right: 0.72rem;
+  left: 0.72rem;
+}
+
+.spatius-flow-mode-options {
+  display: grid;
+  width: 100%;
+  gap: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.spatius-flow-mode-options button {
+  min-width: 0;
+}
+
+.spatius-flow-diagram-shell {
+  position: relative;
+}
+
+.spatius-flow-diagram {
+  overflow: hidden;
+}
+
+.spatius-tour-stage {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  color: var(--spatius-tour-ink);
+}
+
+.spatius-tour-stage-surface {
+  fill: var(--spatius-tour-surface);
+}
+
+.spatius-flow-explorer .spatius-tour-stage-surface,
+.spatius-flow-explorer .spatius-tour-network {
+  filter: none;
+}
+
+.spatius-tour-network {
+  fill: var(--spatius-tour-network-surface);
+}
+
+.spatius-tour-network-edge {
+  stroke: var(--spatius-tour-network-line);
+  stroke-width: 2;
+  stroke-dasharray: 6 7;
+}
+
+.spatius-tour-zone-label,
+.spatius-tour-network-label {
+  fill: var(--spatius-tour-ink);
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.spatius-tour-network-label {
+  fill: var(--spatius-tour-muted);
+  font-size: 11px;
+}
+
+.spatius-tour-network-icon circle,
+.spatius-tour-network-icon path {
+  fill: none;
+  stroke: var(--spatius-tour-network-line);
+  stroke-width: 1.5;
+}
+
+.spatius-tour-node rect {
+  fill: var(--spatius-tour-box);
+  stroke: var(--spatius-tour-border);
+  stroke-width: 3;
+  transition: stroke 180ms ease, filter 180ms ease;
+}
+
+.spatius-tour-node.is-owner rect {
+  fill: var(--spatius-tour-owned);
+}
+
+.spatius-tour-node.is-service rect {
+  fill: var(--spatius-tour-managed);
+  stroke: var(--spatius-diagram-brand);
+}
+
+.spatius-tour-node.is-sdk rect {
+  fill: var(--spatius-tour-box);
+  stroke: var(--spatius-tour-border);
+}
+
+.spatius-tour-node.is-room rect {
+  stroke: var(--spatius-tour-node);
+  stroke-width: 3;
+}
+
+.spatius-tour-node.is-lit rect {
+  animation: spatius-tour-node-pulse 260ms ease-out;
+}
+
+.spatius-tour-node-label,
+.spatius-tour-owner-label {
+  fill: var(--spatius-tour-ink);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.spatius-tour-owner-label {
+  font-size: 15px;
+}
+
+.spatius-tour-wire {
+  fill: none;
+  stroke: var(--spatius-tour-flow);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: none;
+}
+
+.spatius-tour-wire.is-crossing {
+  stroke-dasharray: 7 8;
+}
+
+.spatius-tour-footer-edge {
+  stroke: var(--spatius-tour-border);
+  stroke-width: 1.5;
+}
+
+.spatius-tour-legend-label {
+  fill: var(--spatius-tour-ink);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.spatius-tour-legend-orb.is-audio {
+  color: var(--spatius-tour-audio);
+}
+
+.spatius-tour-legend-orb.is-motion {
+  color: var(--spatius-tour-motion);
+}
+
+.spatius-tour-legend-orb-halo {
+  fill: currentColor;
+  opacity: 0.3;
+}
+
+.spatius-tour-legend-orb-core {
+  fill: currentColor;
+}
+
+.spatius-tour-arrow {
+  fill: var(--spatius-tour-flow);
+}
+
+.spatius-tour-wire.is-active {
+  animation: spatius-tour-wire-travel 248ms linear infinite;
+}
+
+.spatius-tour-wire.is-active.is-crossing {
+  animation-duration: 1984ms;
+}
+
+.spatius-tour-stage-number circle {
+  fill: var(--spatius-tour-box);
+  stroke: var(--spatius-tour-border);
+  stroke-width: 2;
+}
+
+.spatius-tour-stage-number.is-variable circle {
+  stroke-dasharray: 4 3;
+}
+
+.spatius-tour-stage-number text {
+  fill: var(--spatius-tour-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.spatius-flow-status,
+.spatius-flow-seo-copy {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.spatius-tour-packet {
+  pointer-events: none;
+}
+
+.spatius-tour-packet.is-audio {
+  color: var(--spatius-tour-audio);
+}
+
+.spatius-tour-packet.is-motion {
+  color: var(--spatius-tour-motion);
+}
+
+.spatius-tour-packet-core {
+  fill: #ffffff;
+}
+
+.spatius-tour-packet-halo {
+  fill: currentColor;
+  opacity: 0.72;
+}
+
+.spatius-tour-packet-glow {
+  fill: currentColor;
+  opacity: 0.42;
+  filter: url(#spatius-tour-packet-glow);
+}
+
+@keyframes spatius-tour-wire-travel {
+  to { stroke-dashoffset: -30; }
+}
+
+@keyframes spatius-tour-node-pulse {
+  0% { filter: drop-shadow(0 0 0 transparent); }
+  42% { filter: drop-shadow(0 0 12px color-mix(in srgb, var(--spatius-tour-node) 70%, transparent)); }
+  100% { filter: drop-shadow(0 0 0 transparent); }
+}
+
+@media (max-width: 720px) {
+  .spatius-flow-mode-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 460px) {
+  .spatius-flow-controls {
+    padding: 0.65rem;
+  }
+
+  .spatius-flow-source-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .spatius-flow-latency {
+    align-self: flex-end;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spatius-flow-segmented button,
+  .spatius-flow-segmented button::after {
+    transition: none;
+  }
+
+  .spatius-tour-wire.is-active,
+  .spatius-tour-node.is-lit rect {
+    animation: none;
+  }
+
+  .spatius-tour-packets {
+    display: none;
+  }
+}
+
 .step-container {
   margin-bottom: 0.25rem !important;
 }
