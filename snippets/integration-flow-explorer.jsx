@@ -275,8 +275,17 @@ const renderNode = (item, lit) => {
   const vertical = item.kind === 'room'
   const radius = item.kind === 'owner' || vertical ? 18 : 12
 
+  // Keep conditional class names as explicit tokens. Mintlify's production
+  // compiler can trim whitespace embedded in conditional template fragments.
   return (
-    <g className={`spatius-tour-node is-${item.kind}${lit ? ' is-lit' : ''}`} data-node={item.id}>
+    <g
+      className={[
+        'spatius-tour-node',
+        `is-${item.kind}`,
+        lit ? 'is-lit' : null,
+      ].filter(Boolean).join(' ')}
+      data-node={item.id}
+    >
       <rect x={item.x} y={item.y} width={item.width} height={item.height} rx={radius} />
       {item.kind === 'owner'
         ? item.label && <text x={item.x + 22} y={item.y + 35} className="spatius-tour-owner-label">{item.label}</text>
@@ -357,7 +366,12 @@ const renderDiagram = (flow, packet, branchPacket) => {
         <g key={item.id} data-wire={item.id}>
           <path
             d={pathData(item.points)}
-            className={`spatius-tour-wire is-${item.dataType}${item.crossing ? ' is-crossing' : ''}${activeIds.has(item.id) ? ' is-active' : ''}`}
+            className={[
+              'spatius-tour-wire',
+              `is-${item.dataType}`,
+              item.crossing ? 'is-crossing' : null,
+              activeIds.has(item.id) ? 'is-active' : null,
+            ].filter(Boolean).join(' ')}
             markerEnd="url(#spatius-tour-flow-arrow)"
           />
           {flow.showLatency && item.stage && (() => {
@@ -365,7 +379,13 @@ const renderDiagram = (flow, packet, branchPacket) => {
               ? { x: item.stageAt[0], y: item.stageAt[1] }
               : pointOnWire(item.points, 0.5)
             return (
-              <g className={`spatius-tour-stage-number ${item.crossing ? 'is-variable' : 'is-low'}`} transform={`translate(${at.x} ${at.y})`}>
+              <g
+                className={[
+                  'spatius-tour-stage-number',
+                  item.crossing ? 'is-variable' : 'is-low',
+                ].join(' ')}
+                transform={`translate(${at.x} ${at.y})`}
+              >
                 <circle r="12" />
                 <text textAnchor="middle" dominantBaseline="central">{item.stage}</text>
               </g>
@@ -382,7 +402,11 @@ const renderDiagram = (flow, packet, branchPacket) => {
         {activeByRunner.flatMap(runner => runner.wires.map(item => {
           const at = pointOnWire(item.points, item.packetState.progress)
           return (
-            <g key={`${runner.id}-${item.id}-${runner.packet.step}`} className={`spatius-tour-packet is-${item.dataType}`} transform={`translate(${at.x} ${at.y})`}>
+            <g
+              key={`${runner.id}-${item.id}-${runner.packet.step}`}
+              className={['spatius-tour-packet', `is-${item.dataType}`].join(' ')}
+              transform={`translate(${at.x} ${at.y})`}
+            >
               <g transform={`scale(${Math.max(0.01, item.packetState.scale)})`}>
                 <circle r="18" className="spatius-tour-packet-glow" />
                 <circle r="10" className="spatius-tour-packet-halo" />
@@ -509,7 +533,7 @@ const renderDiagram = (flow, packet, branchPacket) => {
               <span className="spatius-flow-latency-title" aria-hidden="true">Latency =</span>
               {latencyStages.map((item, index) => (
                 <span key={item.stage} className="spatius-flow-latency-term" aria-hidden="true">
-                  <span className={`spatius-flow-latency-stage is-${item.type}`}>{item.stage}</span>
+                  <span className={['spatius-flow-latency-stage', `is-${item.type}`].join(' ')}>{item.stage}</span>
                   {index < latencyStages.length - 1 && <span className="spatius-flow-latency-plus">+</span>}
                 </span>
               ))}
