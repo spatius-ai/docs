@@ -42,8 +42,8 @@ Keep the API Key on your backend. The App ID and Avatar ID must match the values
 The Backend Mode demo contains a complete Python backend and Web, iOS, Android, and Flutter clients:
 
 ```bash
-git clone https://github.com/spatius-ai/spatius-avatar-demo.git
-cd spatius-avatar-demo/backend-mode
+git clone https://github.com/spatius-ai/spatius-integration-demo.git
+cd spatius-integration-demo/backend-mode
 cp servers/python/.env.example servers/python/.env
 # Fill the required values in servers/python/.env
 ./start.sh
@@ -156,7 +156,7 @@ func StartSession(ctx context.Context) (*spatius.AvatarSession, error) {
 
 Assign the response a turn ID. Send its audio to the client first, then send the same audio to Spatius. Forward every motion data payload from the Server SDK callback to the client with that turn ID. Keep response turns serial unless your delivery layer can route overlapping callbacks correctly.
 
-Your application transport can be WebSocket or HTTP streaming. It must preserve message order and the turn ID. See the [complete Python implementation](https://github.com/spatius-ai/spatius-avatar-demo/blob/main/backend-mode/servers/python/app/session.py) or the [Go SDK lifecycle](/sdk-reference/go-sdk/go-sdk#session-lifecycle).
+Your application transport can be WebSocket or HTTP streaming. It must preserve message order and the turn ID. See the [complete Python implementation](https://github.com/spatius-ai/spatius-integration-demo/blob/main/backend-mode/servers/python/app/session.py) or the [Go SDK lifecycle](/sdk-reference/go-sdk/go-sdk#session-lifecycle).
 
 </Step>
 

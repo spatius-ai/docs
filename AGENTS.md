@@ -108,7 +108,7 @@ Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "
 | Docs | `https://docs.spatius.ai` |
 | GitHub org | `spatius-ai` |
 | Scenario quickstart repo | `https://github.com/spatius-ai/spatius-scenario-demo` |
-| SDK/reference demo repo | `https://github.com/spatius-ai/spatius-avatar-demo` |
+| Integration demo repo | `https://github.com/spatius-ai/spatius-integration-demo` |
 | npm | `@spatius/avatarkit`, `@spatius/avatarkit-rtc` |
 | Python | `livekit-plugins-spatius` |
 | Android (Maven) | `ai.spatius:avatarkit` |
