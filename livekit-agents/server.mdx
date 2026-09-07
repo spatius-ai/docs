@@ -16,30 +16,78 @@ pip install livekit-plugins-spatius
 
 ## Configure
 
-Keep the API Key in the worker. Leave `SPATIUS_REGION` unset for `us-west`, or set it to `ap-northeast` or `cn-beijing`.
+Keep the API Key in the worker. The current plugin selects a region automatically when `SPATIUS_REGION` is unset. Only set it when you need to pin `us-west`, `ap-northeast`, or `cn-beijing`. See [Regions](/api-reference/regions) for endpoint details.
 
 ```bash title=".env"
 SPATIUS_API_KEY=your-api-key
 SPATIUS_APP_ID=your-app-id
 SPATIUS_AVATAR_ID=your-avatar-id
-SPATIUS_REGION=us-west
 ```
+
+Load these values through your worker's existing environment configuration before creating `AvatarSession`. If you use a local `.env` file, keep it out of version control.
 
 ## Add the Avatar session
 
-Create `AvatarSession` before starting the agent session. The avatar publishes into the same LiveKit room.
+Connect the worker to the LiveKit room, start `AvatarSession`, then start the agent session. The avatar publishes into the same room.
+
+<Warning>
+  `AvatarSession.start()` registers playback RPC handlers on the worker's local participant. Call `await ctx.connect()` before `await avatar.start(...)`; otherwise startup fails with `cannot access local participant before connecting`.
+</Warning>
+
+Call this helper from your existing LiveKit Agents entrypoint with your configured `AgentSession` and `Agent`. It preserves your choice of STT, LLM, and TTS.
 
 ```python
+from livekit.agents import Agent, AgentSession, JobContext
+from livekit.agents.voice.room_io import RoomOptions
 from livekit.plugins.spatius import AvatarSession
 
-# Add these lines inside your existing LiveKit Agents entrypoint.
-avatar = AvatarSession()
-await avatar.start(session, room=ctx.room)
 
-# Keep your existing session.start(...) call after avatar.start(...).
+async def start_avatar_session(
+    ctx: JobContext, session: AgentSession, agent: Agent
+) -> None:
+    await ctx.connect()
+
+    # Read Spatius credentials and the avatar ID from the environment.
+    avatar = AvatarSession()
+    await avatar.start(session, room=ctx.room)
+
+    await session.start(
+        agent=agent,
+        room=ctx.room,
+        room_options=RoomOptions(audio_output=False),
+    )
 ```
 
-Your voice agent continues to own STT, LLM, and TTS. The plugin sends the agent's speech audio to Motion Server and publishes the avatar output into the room.
+Merge this sequence into your entrypoint rather than adding a second `session.start()` call. If you already connect to the room, keep that connection before avatar startup.
+
+The plugin sends the agent's speech audio to Motion Server and publishes synchronized audio and motion data into the room. `audio_output=False` disables the agent's direct room audio output so the avatar provides playback. Keep any existing input or text settings when merging `RoomOptions`.
+
+### Choose the avatar per session
+
+`SPATIUS_AVATAR_ID` is a convenient default for a fixed-avatar worker. To choose an avatar per conversation, pass the ID explicitly instead:
+
+```python
+avatar = AvatarSession(avatar_id=validated_avatar_id)
+```
+
+Your business layer can supply the ID in LiveKit dispatch metadata (`ctx.job.metadata`). Parse and validate your application's metadata contract before creating the avatar session. In that flow, omit `SPATIUS_AVATAR_ID` from the worker environment; `SPATIUS_APP_ID` and `SPATIUS_API_KEY` remain worker configuration. The plugin does not require a particular metadata schema.
+
+## Run locally
+
+With dependencies installed and your environment configured, run the current [LiveKit CLI](https://docs.livekit.io/reference/developer-tools/livekit-cli/#setup) from the Python agent project directory:
+
+```bash
+lk agent dev
+```
+
+The CLI detects `agent.py` or `src/agent.py` and reloads the worker when files change. For another entrypoint, pass its path, for example `lk agent dev worker.py`. See [Agent commands](https://docs.livekit.io/reference/developer-tools/livekit-cli/agent/#dev).
+
+The Python CLI's `dev` mode is deprecated and no longer provides in-process hot reload. Use `lk agent dev` instead of `python agent.py dev`.
+
+## Troubleshooting
+
+- **`cannot access local participant before connecting`:** Connect with `await ctx.connect()` before starting the avatar. A registered worker can receive jobs before its job process joins the room. The plugin's final credential or network error message can wrap this connection-order error; check the underlying traceback first.
+- **`no warmed process available`:** The development worker may create its job process on demand. If the next logs show successful process initialization, this warning indicates a cold start, not an avatar failure.
 
 ## Next steps
 
