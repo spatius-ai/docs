@@ -1,0 +1,148 @@
+---
+title: "Generate a Video"
+sidebarTitle: "Overview"
+description: "Turn an existing Avatar and an audio URL into a downloadable MP4."
+---
+
+Submit an Avatar ID and an audio URL, poll the job, and download the MP4 when it is ready. You can also supply a background image and control the output size, framing, color, and idle time.
+
+<Note>
+The Video API is in private beta and requires separate access from the Avatar API. Request access through [Spatius Studio feedback](https://app.spatius.ai/feedback/create). Use the same [App ID and API key](/api-reference/authentication) for both APIs once access is enabled.
+</Note>
+
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /v1/open/videos` | Accept a job and return `jobId`, `status`, and `createdAt`. |
+| `GET /v1/open/video-jobs/{jobId}` | Read progress, failure details, and a fresh download URL when ready. |
+| `GET /v1/open/video-jobs` | List your account's jobs, newest first, with optional status filters. |
+
+## Create, poll, and download
+
+This Bash example requires `curl`, `jq`, and `uuidgen`. Replace the credential and source URL placeholders. The source URL must return a supported audio file with the correct Content-Type.
+
+```bash
+set -euo pipefail
+export SPATIUS_APP_ID='<your-app-id>'
+export SPATIUS_API_KEY='<your-api-key>'
+export SPATIUS_AVATAR_ID='<your-avatar-id>'
+AUDIO_URL='https://example.com/media/speech.wav'
+BASE_URL='https://console.spatius.ai/v1/open'
+REQUEST_ID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+
+BODY=$(jq -n --arg avatar "$SPATIUS_AVATAR_ID" --arg audio "$AUDIO_URL" \
+  --arg request "$REQUEST_ID" \
+  '{avatarId:$avatar,audioUrl:$audio,requestId:$request}')
+
+# Keep REQUEST_ID and BODY unchanged when retrying this creation.
+CREATED=$(curl --fail-with-body --silent --show-error --retry 3 \
+  "$BASE_URL/videos" \
+  -H "X-App-ID: $SPATIUS_APP_ID" -H "X-API-Key: $SPATIUS_API_KEY" \
+  -H 'Content-Type: application/json' --data "$BODY")
+JOB_ID=$(jq -er '.jobId' <<< "$CREATED")
+printf 'Job ID: %s\n' "$JOB_ID"
+
+while true; do
+  DETAIL=$(curl --fail-with-body --silent --show-error --retry 3 \
+    "$BASE_URL/video-jobs/$JOB_ID" \
+    -H "X-App-ID: $SPATIUS_APP_ID" -H "X-API-Key: $SPATIUS_API_KEY")
+  STATUS=$(jq -er '.job.status' <<< "$DETAIL")
+  jq '{status:.job.status,progress:.job.progress,error:.job.error}' <<< "$DETAIL"
+  case "$STATUS" in
+    succeeded)
+      DOWNLOAD_URL=$(jq -er '.videoUrl' <<< "$DETAIL")
+      curl --fail --location --show-error "$DOWNLOAD_URL" --output video.mp4
+      break ;;
+    failed|expired) exit 1 ;;
+    *) sleep 15 ;;
+  esac
+done
+```
+
+Only `avatarId` and `audioUrl` are required. Add `backgroundUrl`, `name`, or `video` settings when needed. The [Create a Video reference](/api-reference/videos/create-a-video) lists every field and response.
+
+## Access and safe retries
+
+Use a public Avatar, an Avatar actively assigned to your account, or one explicitly allowed for your account. Spatius checks Avatar access when accepting the request and again before rendering.
+
+Apps owned by the same account share video jobs, retry keys, and limits. A job owned by another account returns `404`. Video access can allow reads while creation is paused; removing access also revokes reads.
+
+| Creation request | Result |
+| --- | --- |
+| New `requestId`, or no `requestId` | Create a new job. |
+| Same `requestId` and normalized input | Return the existing job's current status without counting another creation. |
+| Same `requestId`, different input | Return `409` with `conflict`. |
+
+An omitted setting and its explicit default are equivalent for retry comparison. Keep the UUID and request body when retrying a timeout or uncertain response. To render again after a terminal failure, use a new UUID. The body field `requestId` is your retry key; `error.requestId` and the response header `X-Request-ID` identify an individual HTTP request for support.
+
+## Media requirements
+
+| Input | Supported Content-Type | Maximum size |
+| --- | --- | --- |
+| Audio | `audio/mpeg`, `audio/mp3`, `audio/wav`, `audio/x-wav`, `audio/wave`, `audio/vnd.wave`, `audio/mp4`, `audio/x-m4a`, `audio/aac`, `audio/ogg` | 500 MiB |
+| Background image | `image/png`, `image/jpeg`, `image/webp` | 50 MiB |
+
+Use public HTTP(S) URLs, including signed URLs. Embedded usernames/passwords and private-network destinations are rejected. Authentication headers are not forwarded to source hosts. Each connection and redirect is checked.
+
+Keep source URLs accessible for the preparation window of up to **30 minutes**; each transfer has a **five-minute** deadline. Empty files, raw PCM, and `application/octet-stream` are not supported. Wrap raw PCM in a WAV container using its actual sample rate and channel count before hosting it. Audio decoding and duration checks happen asynchronously, so acceptance does not guarantee a successful render.
+
+## Presentation settings
+
+| Field in `video` | Default | Allowed values |
+| --- | --- | --- |
+| `width`, `height` | 1024 each | Even integers from 64 to 1920; combined area at most 2,073,600 pixels. |
+| `fit` | `crop` | `crop`, `contain` |
+| `backgroundColor` | `#000000` | Six-digit RGB hex color. |
+| `backgroundFit` | `cover` | `cover`, `contain`, `stretch` |
+| `leadInSeconds`, `leadOutSeconds` | 0 | Finite numbers from 0 to 60; additional idle time. |
+
+Opening and closing transitions are included even when additional idle time is zero. Output duration can therefore exceed audio duration, with timing rounded to video frames. Spatius manages encoding settings.
+
+## Progress and downloads
+
+| Status | Meaning |
+| --- | --- |
+| `queued` | Accepted and waiting to start. |
+| `processing` | Preparing media or rendering. Inspect `job.progress.stage`. |
+| `succeeded` | MP4 ready; the detail response includes `videoUrl` and `videoUrlExpiresAt`. |
+| `failed` | Terminal failure; inspect `job.error`. No new render starts automatically. |
+| `expired` | Output has expired, or a submission remained unresolved for seven days. |
+
+Poll every **15 seconds**. Progress stages describe work, not percentages or completion estimates. [List Video Jobs](/api-reference/video-jobs/list-video-jobs) accepts repeated filters such as `statuses=queued&statuses=processing` and uses the [shared pagination rules](/api-reference/errors#pagination). List responses contain summaries without download links.
+
+Output is currently retained for **seven days after render submission**. Use `job.expiresAt` as the retention deadline. Detail reads return fresh links, currently valid for **15 minutes**, capped by that deadline. Download without App authentication headers and save the MP4 in your own storage if you need it longer.
+
+If a link refresh returns `503`, retry the detail request; the saved job remains successful. After output expiry, the job returns `expired` without a link, while history remains available. Refreshing a link does not extend retention.
+
+## Job errors
+
+Job failures appear under `job.error`, separately from [HTTP request errors](/api-reference/errors). Use `code` to decide what to fix. `retryable` means a new job may succeed after addressing the cause; it does not restart the failed job.
+
+| Code | Action |
+| --- | --- |
+| `source_unavailable` | Check that the media URL remains publicly accessible. |
+| `unsupported_media_type`, `empty_media`, `media_too_large` | Fix the file or Content-Type. |
+| `preparation_timeout` | Use a source that can finish within the preparation deadline. |
+| `app_access_revoked`, `avatar_forbidden` | Restore App or Avatar access. |
+| `session_token_expired`, `checksum_mismatch`, `render_failed` | Check `retryable`; submit a new job when appropriate. |
+| `renderer_rejected`, `invalid_manifest` | Check the request; contact support with the job ID if it persists. |
+
+## Limits
+
+Video access requires explicit account limits. Creation and read counters are independent of the Avatar API, and all Apps owned by one account share them. Accepted jobs count even if they later fail; repeated requests that return an existing job do not count again.
+
+| Video limit | Hard ceiling; your configured limit may be lower |
+| --- | --- |
+| Creations per minute / hour / rolling 24 hours | 20 / 200 / 2,000 |
+| Reads per minute | 1,200 |
+| Reads per second / burst | 20 / 40 |
+
+The Console API checks video access and request rates. It does not impose an active-video-job quota; the video service manages execution concurrency. Back off after `429` responses. The Video API does not reserve Avatar Creations; existing usage accounting still applies.
+
+This version supports URL inputs and polling. Public uploads, developer callbacks, cancellation, text-to-speech, and permanent output storage are not available.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Create a Video" icon="video" href="/api-reference/videos/create-a-video" />
+  <Card title="Get a Video Job" icon="list-check" href="/api-reference/video-jobs/get-a-video-job" />
+</CardGroup>

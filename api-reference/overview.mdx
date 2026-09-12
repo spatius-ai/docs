@@ -4,14 +4,19 @@ sidebarTitle: "Overview"
 description: "Access and manage resources in Spatius Studio programmatically."
 ---
 
-The Spatius API lets your backend create and manage avatars programmatically. Submit a source image, and receive a custom avatar.
+The Spatius API lets your backend create and manage avatars, and generate downloadable videos from an existing Avatar and audio.
+
+| API group | Input | Result |
+| --- | --- | --- |
+| Avatar API | Source image URL | A custom Avatar for SDK integrations. |
+| [Video API](/api-reference/video-generation) | Avatar ID and audio URL | An asynchronous job and a downloadable MP4. |
 
 ```
 https://console.spatius.ai/v1/open
 ```
 
 <Warning>
-The Spatius API is currently in **private beta** and is not available to all users. To request access, submit a feedback ticket at [app.spatius.ai/feedback/create](https://app.spatius.ai/feedback/create). If you receive `forbidden` with "API Avatar creation is disabled" or "Open API access is not configured", your account has not been enrolled yet.
+The Spatius API is currently in **private beta** and is not available to all users. To request access, submit a feedback ticket at [app.spatius.ai/feedback/create](https://app.spatius.ai/feedback/create). If you receive `forbidden` with "API Avatar creation is disabled" or "Open API access is not configured", your account has not been enrolled yet. Video access is enabled separately; Avatar API access alone does not enable video generation.
 </Warning>
 
 ## How avatar creation works
@@ -51,13 +56,14 @@ The source image is validated asynchronously, after the job is accepted. A job w
 
 ## Billing
 
-Each creation job reserves one Avatar Creation when it is accepted. The reservation is captured when preprocessing completes, and released if the job fails before that point. When the balance is insufficient, `POST /avatars` is rejected with `402` and code `insufficient_avatar_units`.
+Each Avatar creation job reserves one Avatar Creation when it is accepted. The reservation is captured when preprocessing completes, and released if the job fails before that point. When the balance is insufficient, `POST /avatars` is rejected with `402` and code `insufficient_avatar_units`.
 
 You can view your current available Avatar Creations at [app.spatius.ai/avatars/creations](https://app.spatius.ai/avatars/creations).
 
 ## Next steps
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
+  <Card title="Generate a Video" icon="video" href="/api-reference/video-generation" />
   <Card title="Authentication" icon="key" href="/api-reference/authentication" />
   <Card title="Errors and Limits" icon="triangle-exclamation" href="/api-reference/errors" />
 </CardGroup>
