@@ -11,7 +11,7 @@ Every Spatius API request must carry two headers:
 | `X-App-ID` | Your Spatius App ID |
 | `X-API-Key` | The API key bound to that App ID |
 
-Both values come from your application in [Spatius Studio](https://app.spatius.ai), the same credentials you use for `SPATIUS_APP_ID` and `SPATIUS_API_KEY`. The pair must match exactly: the API key must be the one bound to the given App ID, and the application's owner account must be active. Spatius API access must also be enabled for the account, and avatar creation can be toggled separately from read access.
+Both values come from your application in [Spatius Studio](https://app.spatius.ai), the same credentials you use for `SPATIUS_APP_ID` and `SPATIUS_API_KEY`. The pair must match exactly: the API key must be the one bound to the given App ID, and the application's owner account must be active. Avatar API and Video API access are enabled separately for the account. Each API can allow reads while creation is paused. Apps owned by one account share its jobs and limits.
 
 <Warning>
 Call the Spatius API from your backend only. Never embed the API key in client-side code, mobile apps, or public repositories.
@@ -36,6 +36,7 @@ curl --request POST 'https://console.spatius.ai/v1/open/avatars' \
 | --- | --- | --- | --- |
 | Either header missing, the pair does not match, or the owner account is inactive | `401` | `unauthorized` | — |
 | API access is not configured for the account | `403` | `forbidden` | `Open API access is not configured` |
+| Video access is not configured, creation is paused, or the Avatar is not allowed | `403` | `forbidden` | See [Video access](/api-reference/video-generation#access-and-safe-retries). |
 | Avatar creation is disabled for the account (creation endpoint only) | `403` | `forbidden` | `API Avatar creation is disabled` |
 
 Authentication failures return the standard [error envelope](/api-reference/errors). A `401` response does not reveal which part of the credential pair was wrong — verify both values in Studio before retrying.

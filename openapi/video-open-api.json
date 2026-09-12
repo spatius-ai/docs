@@ -1,0 +1,775 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Spatius Video API",
+    "version": "1.0.0",
+    "description": "Generate an MP4 from an existing Avatar and an audio URL. Submit a job, poll its status, and download the result. Video API access requires separate account enablement. See the [Video generation guide](/api-reference/video-generation) and [Authentication](/api-reference/authentication)."
+  },
+  "servers": [
+    {
+      "url": "https://console.spatius.ai/v1/open",
+      "description": "Spatius Console API (global)"
+    }
+  ],
+  "security": [
+    {
+      "AppId": [],
+      "ApiKey": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Videos",
+      "description": "Submit asynchronous video generation jobs."
+    },
+    {
+      "name": "Video Jobs",
+      "description": "Read video job history and get fresh MP4 download links."
+    }
+  ],
+  "paths": {
+    "/videos": {
+      "post": {
+        "operationId": "createVideo",
+        "summary": "Create a Video",
+        "tags": [
+          "Videos"
+        ],
+        "description": "Accepts an Avatar ID and public audio URL, saves a job, and immediately returns its ID. Media processing happens asynchronously; poll the job every 15 seconds until it succeeds, fails, or expires.\n\nVideo access must be enabled separately from Avatar creation. Apps owned by one account share video jobs, retry keys, and independent video rate limits. Accepted jobs count toward creation limits even if processing later fails. The Console API does not impose an active-video-job quota; the video service manages execution concurrency.\n\nUse requestId to retry uncertain submissions without creating another render. A retry returns the existing job's current state. Use a new requestId to render again after a terminal failure.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVideoRequest"
+              },
+              "example": {
+                "avatarId": "d385dd22-9200-4806-94a0-dce464ca916d",
+                "audioUrl": "https://example.com/media/speech.wav",
+                "name": "Welcome video",
+                "requestId": "9628ee92-d5d9-4eac-bf2a-39cd3f804f02",
+                "video": {
+                  "width": 1024,
+                  "height": 1024
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Job accepted, or an existing job returned for a retry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateVideoResponse"
+                },
+                "example": {
+                  "jobId": "6f1e2b3c-9a1d-4e5f-8b0a-2c4d6e8f0a1b",
+                  "status": "queued",
+                  "createdAt": "2026-09-12T09:00:00Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/video-jobs/{jobId}": {
+      "get": {
+        "operationId": "getVideoJob",
+        "summary": "Get a Video Job",
+        "tags": [
+          "Video Jobs"
+        ],
+        "description": "Returns a job owned by the authenticated account. Other Apps owned by that account can read it; cross-account reads return 404.\n\nSuccessful, unexpired jobs include a fresh download URL. If refreshing the link fails, the request returns 503 while the saved job remains succeeded. Output expiry returns expired without a link. Download the MP4 before job.expiresAt; refreshing a link does not extend retention.",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Job ID returned by Create a Video."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job detail, with a fresh MP4 URL when available.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetVideoJobResponse"
+                },
+                "example": {
+                  "job": {
+                    "id": "6f1e2b3c-9a1d-4e5f-8b0a-2c4d6e8f0a1b",
+                    "status": "succeeded",
+                    "avatarId": "d385dd22-9200-4806-94a0-dce464ca916d",
+                    "name": "Welcome video",
+                    "progress": {
+                      "stage": "completed"
+                    },
+                    "createdAt": "2026-09-12T09:00:00Z",
+                    "updatedAt": "2026-09-12T09:01:00Z",
+                    "completedAt": "2026-09-12T09:01:00Z",
+                    "expiresAt": "2026-09-19T09:00:05Z"
+                  },
+                  "videoUrl": "https://example.com/output/video.mp4?signature=example",
+                  "videoUrlExpiresAt": "2026-09-12T09:16:00Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/video-jobs": {
+      "get": {
+        "operationId": "listVideoJobs",
+        "summary": "List Video Jobs",
+        "tags": [
+          "Video Jobs"
+        ],
+        "description": "Lists the authenticated account's jobs, newest first. Results contain summaries; use Get a Video Job for download links. Video reads remain available when creation is disabled, as long as video access remains configured.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/PageToken"
+          },
+          {
+            "name": "statuses",
+            "in": "query",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "description": "Optional status filter. Repeat the parameter for multiple states, for example statuses=queued&statuses=processing. Omit to include all states.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/VideoJobStatus"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of video job summaries.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListVideoJobsResponse"
+                },
+                "example": {
+                  "jobs": [
+                    {
+                      "id": "6f1e2b3c-9a1d-4e5f-8b0a-2c4d6e8f0a1b",
+                      "status": "succeeded",
+                      "avatarId": "d385dd22-9200-4806-94a0-dce464ca916d",
+                      "name": "Welcome video",
+                      "progress": {
+                        "stage": "completed"
+                      },
+                      "createdAt": "2026-09-12T09:00:00Z",
+                      "updatedAt": "2026-09-12T09:01:00Z",
+                      "completedAt": "2026-09-12T09:01:00Z",
+                      "expiresAt": "2026-09-19T09:00:05Z"
+                    }
+                  ],
+                  "pagination": {
+                    "nextPageToken": "",
+                    "totalCount": 1
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AppId": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-App-ID",
+        "description": "Your Spatius App ID."
+      },
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "The API key bound to the App ID."
+      }
+    },
+    "parameters": {
+      "PageSize": {
+        "name": "pagination.pageSize",
+        "in": "query",
+        "required": false,
+        "description": "Maximum number of items to return. Defaults to 20; the maximum is 99. A value above 99 falls back to the default of 20 rather than being capped, so request at most 99.",
+        "schema": {
+          "type": "integer",
+          "format": "int32",
+          "default": 20,
+          "maximum": 99,
+          "minimum": 1
+        }
+      },
+      "PageToken": {
+        "name": "pagination.pageToken",
+        "in": "query",
+        "required": false,
+        "description": "Opaque token from the previous page's `nextPageToken`. Omit for the first page. Pass back exactly what the previous response returned rather than constructing a value. A token is only valid for the `pagination.pageSize` it was issued with; keep that value stable while paging, or start again from the first page.",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "schemas": {
+      "VideoJobStatus": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "processing",
+          "succeeded",
+          "failed",
+          "expired"
+        ],
+        "description": "New jobs start queued. Successful output becomes expired after its retention deadline. Failed jobs remain failed."
+      },
+      "VideoSettings": {
+        "type": "object",
+        "description": "Optional presentation settings. Width and height must be even, and their effective product must not exceed 2,073,600 pixels, including defaults for omitted dimensions. Encoding settings are managed by Spatius. Opening and closing transitions are included even when lead-in and lead-out are zero.",
+        "properties": {
+          "width": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 64,
+            "maximum": 1920,
+            "multipleOf": 2,
+            "default": 1024,
+            "description": "Output width in pixels."
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 64,
+            "maximum": 1920,
+            "multipleOf": 2,
+            "default": 1024,
+            "description": "Output height in pixels."
+          },
+          "fit": {
+            "type": "string",
+            "description": "How the Avatar fits the output frame.",
+            "enum": [
+              "crop",
+              "contain"
+            ],
+            "default": "crop"
+          },
+          "backgroundColor": {
+            "type": "string",
+            "description": "Six-digit RGB hex color.",
+            "pattern": "^#[0-9a-fA-F]{6}$",
+            "default": "#000000"
+          },
+          "backgroundFit": {
+            "type": "string",
+            "description": "How the background image fits the output frame.",
+            "enum": [
+              "cover",
+              "contain",
+              "stretch"
+            ],
+            "default": "cover"
+          },
+          "leadInSeconds": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 60,
+            "default": 0,
+            "description": "Additional idle time before the opening transition. Must be finite."
+          },
+          "leadOutSeconds": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 60,
+            "default": 0,
+            "description": "Additional idle time after the closing transition. Must be finite."
+          }
+        }
+      },
+      "CreateVideoRequest": {
+        "type": "object",
+        "required": [
+          "avatarId",
+          "audioUrl"
+        ],
+        "properties": {
+          "avatarId": {
+            "type": "string",
+            "description": "An existing public Avatar, an Avatar actively assigned to your account, or an Avatar explicitly allowed for your account. Access is checked on every creation and before rendering.",
+            "format": "uuid"
+          },
+          "audioUrl": {
+            "type": "string",
+            "description": "Audio source, at most 500 MiB. Use a public HTTP(S) URL without embedded credentials. Signed query parameters are supported. Keep the URL accessible for the preparation window of up to 30 minutes. Each transfer has a five-minute limit. The source must return a supported Content-Type; raw PCM and application/octet-stream are not supported. See [Media requirements](/api-reference/video-generation#media-requirements).",
+            "format": "uri",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^https?://[^/?#@\\s]+([/?#].*)?$"
+          },
+          "backgroundUrl": {
+            "type": "string",
+            "description": "Optional background image, at most 50 MiB. Use a public HTTP(S) URL without embedded credentials. Signed query parameters are supported. Keep the URL accessible for the preparation window of up to 30 minutes. Each transfer has a five-minute limit. The source must return a supported Content-Type; raw PCM and application/octet-stream are not supported. See [Media requirements](/api-reference/video-generation#media-requirements).",
+            "format": "uri",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^https?://[^/?#@\\s]+([/?#].*)?$"
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional job name. When omitted, Spatius generates a name from the job ID.",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Optional retry key, shared across Apps owned by your account. The same requestId and normalized input return the existing job without consuming creation quota again. Different input with the same key returns HTTP 409. Omitted settings and their explicit defaults are equivalent. Omit this field to create a new job on every call.",
+            "format": "uuid"
+          },
+          "video": {
+            "$ref": "#/components/schemas/VideoSettings"
+          }
+        }
+      },
+      "CreateVideoResponse": {
+        "type": "object",
+        "required": [
+          "jobId",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "description": "The accepted job ID.",
+            "format": "uuid"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VideoJobStatus"
+              }
+            ],
+            "description": "New jobs return queued. A retry returns the existing job's current status, which may already be terminal."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Original acceptance time, including on a retry.",
+            "format": "date-time"
+          }
+        }
+      },
+      "VideoJobError": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "retryable"
+        ],
+        "description": "A terminal job failure, separate from an HTTP request error.",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Stable failure code. See [Video job errors](/api-reference/video-generation#job-errors).",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "message": {
+            "type": "string",
+            "description": "Safe, human-readable explanation.",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "retryable": {
+            "type": "boolean",
+            "description": "Whether a new job may succeed after addressing the cause. A terminal failure does not automatically start another render. Use a new requestId when creating the replacement job."
+          }
+        }
+      },
+      "VideoJobProgress": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "type": "string",
+            "description": "Current progress stage. This is not a percentage or a completion-time estimate.",
+            "enum": [
+              "queued",
+              "downloading",
+              "uploading_assets",
+              "submitting",
+              "driving",
+              "rendering",
+              "encoding",
+              "uploading",
+              "completed",
+              "failed",
+              "expired"
+            ]
+          }
+        }
+      },
+      "VideoJob": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "avatarId",
+          "name",
+          "createdAt",
+          "updatedAt"
+        ],
+        "description": "Account-owned job summary. Source URLs, storage keys, service credentials, and internal task identifiers are not returned.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Console job ID.",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VideoJobStatus"
+          },
+          "avatarId": {
+            "type": "string",
+            "description": "Avatar used for this job.",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Job name."
+          },
+          "progress": {
+            "$ref": "#/components/schemas/VideoJobProgress"
+          },
+          "error": {
+            "$ref": "#/components/schemas/VideoJobError"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Job acceptance time.",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last saved job update.",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "description": "Terminal-state timestamp, when available.",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Output retention deadline, when known. Currently seven days after render submission, rather than completion. Job history remains available after expiry.",
+            "format": "date-time"
+          }
+        }
+      },
+      "GetVideoJobResponse": {
+        "type": "object",
+        "required": [
+          "job"
+        ],
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/VideoJob"
+          },
+          "videoUrl": {
+            "type": "string",
+            "description": "Fresh signed MP4 download URL, returned only for succeeded, unexpired output. Download without App authentication headers. The current link lifetime is 15 minutes, capped by job.expiresAt.",
+            "format": "uri"
+          },
+          "videoUrlExpiresAt": {
+            "type": "string",
+            "description": "Effective download-link expiry. Omitted when videoUrl is absent.",
+            "format": "date-time"
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "nextPageToken": {
+            "type": "string",
+            "description": "Pass as `pagination.pageToken` to fetch the next page. Empty when no more pages exist."
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Total number of matching items."
+          }
+        }
+      },
+      "ListVideoJobsResponse": {
+        "type": "object",
+        "required": [
+          "pagination"
+        ],
+        "properties": {
+          "jobs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VideoJob"
+            },
+            "description": "Newest first. Summaries never include download URLs."
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "description": "The single public error envelope returned by every Spatius API endpoint.",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Stable machine-readable error code.",
+                "enum": [
+                  "unauthorized",
+                  "forbidden",
+                  "invalid_request",
+                  "not_found",
+                  "conflict",
+                  "rate_limit_exceeded",
+                  "service_unavailable",
+                  "internal_error"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable explanation specific to this occurrence."
+              },
+              "requestId": {
+                "type": "string",
+                "description": "Unique identifier for this request. Quote it when contacting support."
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "InvalidRequest": {
+        "description": "The request has invalid fields, settings, or pagination.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "invalid_request",
+                "message": "Invalid video request or presentation settings.",
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or mismatched App credentials, or an inactive owner account.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "unauthorized",
+                "message": "Unauthorized.",
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Video access is absent, creation is disabled, or Avatar access is denied. Disabling creation alone preserves reads.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "forbidden",
+                "message": "Video API access is not configured.",
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "The job does not exist or belongs to another account.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "not_found",
+                "message": "Video job not found.",
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "The requestId already identifies different normalized input. Retry the original body or use a new UUID for a new job.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "conflict",
+                "message": "requestId was already used for a different video request",
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "An independent video request limit was exceeded. Back off before retrying.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "rate_limit_exceeded",
+                "message": "Open API rate limit exceeded.",
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "Temporary service or download-link availability failure. Retry with the same requestId and body for creation, or retry the detail read. A link refresh failure preserves saved success.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "service_unavailable",
+                "message": "Video generation is unavailable; retry later.",
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Unexpected server failure. Use bounded backoff and retain the creation requestId when retrying.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "internal_error",
+                "message": "An internal error occurred.",
+                "requestId": "b3f0c2d1-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

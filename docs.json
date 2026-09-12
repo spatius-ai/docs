@@ -179,6 +179,21 @@
               "source": "/openapi/avatar-open-api.json",
               "directory": "api-reference"
             }
+          },
+          {
+            "group": "Video API",
+            "icon": "video",
+            "tag": "Beta",
+            "pages": [
+              "api-reference/video-generation",
+              {
+                "group": "Endpoints",
+                "openapi": {
+                  "source": "/openapi/video-open-api.json",
+                  "directory": "api-reference"
+                }
+              }
+            ]
           }
         ]
       }
@@ -196,7 +211,6 @@
         "href": "https://discord.com/invite/9HGhZfHZh9"
       }
     ],
-
     "primary": {
       "type": "button",
       "label": "Studio",

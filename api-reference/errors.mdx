@@ -1,7 +1,7 @@
 ---
 title: "Spatius API Errors and Limits"
 sidebarTitle: "Errors and Limits"
-description: "Spatius API error envelope, HTTP status mapping, avatar job failure codes, and per-account rate limits."
+description: "Spatius API error envelope, HTTP status mapping, job failure codes, and account limits for Avatar and Video APIs."
 ---
 
 ## Error envelope
@@ -26,20 +26,21 @@ Every Spatius API error returns the same JSON envelope, regardless of which endp
 
 | HTTP status | `code` | Meaning |
 | --- | --- | --- |
-| `400` | `invalid_request` | Malformed request: missing `imageUrl`, an invalid ID in the path, a page token that is invalid or does not match `pageSize`, or no active avatar pipeline configured. |
+| `400` | `invalid_request` | Malformed request: missing required fields, an invalid ID in the path, a page token that is invalid or does not match `pageSize`, or no active avatar pipeline configured. |
 | `401` | `unauthorized` | Missing or mismatched `X-App-ID` / `X-API-Key` pair. See [Authentication](/api-reference/authentication). |
 | `402` | `insufficient_avatar_units` | The account has no Avatar Creations left. View your balance at [app.spatius.ai/avatars/creations](https://app.spatius.ai/avatars/creations). |
-| `403` | `forbidden` | API access is not configured (`Open API access is not configured`), or avatar creation is disabled for the account (`API Avatar creation is disabled`). |
+| `403` | `forbidden` | API access is not configured (`Open API access is not configured`), creation is disabled for the requested API, or the account cannot access the selected Avatar. |
 | `404` | `not_found` | The avatar or job does not exist, or belongs to another account. |
+| `409` | `conflict` | A video `requestId` was reused with different input. Retry the original body or use a new UUID. |
 | `429` | `rate_limit_exceeded` | A rate limit or the rolling 24-hour creation quota was exceeded. |
-| `429` | `concurrency_limit_exceeded` | Too many jobs are queued or processing at once. Wait for an active job to finish. |
+| `429` | `concurrency_limit_exceeded` | Avatar API only: too many jobs are queued or processing at once. Wait for an active job to finish. |
 | `500` | `internal_error` | An unexpected server error. Retry with backoff; quote `requestId` if it persists. |
 | `501` | `unsupported_input` | The request uses an input that this API version does not support yet. |
-| `503` | `service_unavailable` | A transient backend failure, for example reservation contention. Retry the request. |
+| `503` | `service_unavailable` | A transient backend failure, including a video download-link refresh failure. Retry the request; a failed link refresh preserves the successful video job. |
 
 ## Job failure codes
 
-When a creation job reaches `failed`, the job's `error` object carries one of these codes:
+When an Avatar creation job reaches `failed`, the job's `error` object carries one of these codes:
 
 | Code | Message | Meaning |
 | --- | --- | --- |
@@ -52,9 +53,11 @@ When a creation job reaches `failed`, the job's `error` object carries one of th
 
 The `retryable` flag on the error indicates whether resubmitting the same request may succeed.
 
+For video failures, see [Video job errors](/api-reference/video-generation#job-errors). A failed video job requires a new creation request to render again.
+
 ## Rate limits
 
-Limits are enforced per account. Your account may be configured below these hard caps:
+Avatar API limits are enforced per account. Your account may be configured below these hard caps:
 
 | Limit | Hard cap |
 | --- | --- |
@@ -67,9 +70,11 @@ Limits are enforced per account. Your account may be configured below these hard
 
 Read limits apply to the `GET` endpoints; creation limits apply to `POST /avatars`. When a limit is hit, the API returns `429` with `rate_limit_exceeded` (or `concurrency_limit_exceeded` when the concurrency cap is the binding constraint). Back off and retry — for job polling, an interval of 5–10 seconds stays comfortably within the read limits.
 
+Video counters are independent, and the Console API does not impose a video active-job quota. See [Video limits](/api-reference/video-generation#limits).
+
 ## Pagination
 
-Both list endpoints (`GET /avatars` and `GET /avatar-jobs`) paginate the same way. They accept `pagination.pageSize` and `pagination.pageToken`, and return `pagination.nextPageToken` and `pagination.totalCount`.
+All list endpoints (`GET /avatars`, `GET /avatar-jobs`, and `GET /video-jobs`) paginate the same way. They accept `pagination.pageSize` and `pagination.pageToken`, and return `pagination.nextPageToken` and `pagination.totalCount`.
 
 `pageSize` defaults to 20 and has a maximum of 99.
 
