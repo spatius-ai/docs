@@ -183,7 +183,7 @@
           {
             "group": "Video API",
             "icon": "video",
-            "tag": "Beta",
+            "tag": "Experimental",
             "pages": [
               "api-reference/video-generation",
               {
