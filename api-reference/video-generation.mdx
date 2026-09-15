@@ -72,7 +72,13 @@ Apps owned by the same account share video jobs, retry keys, and limits. A job o
 | Same `requestId` and normalized input | Return the existing job's current status without counting another creation. |
 | Same `requestId`, different input | Return `409` with `conflict`. |
 
-An omitted setting and its explicit default are equivalent for retry comparison. Keep the UUID and request body when retrying a timeout or uncertain response. To render again after a terminal failure, use a new UUID. The body field `requestId` is your retry key; `error.requestId` and the response header `X-Request-ID` identify an individual HTTP request for support.
+Omitted `video.width`, `video.height`, and `video.fit` are distinct from explicit values for retry comparison. For example, omitting `video` and sending `video: {width: 1024, height: 1024, fit: "crop"}` with the same `requestId` returns `409`, even when both would produce the same output. Other omitted presentation settings remain equivalent to their documented defaults.
+
+Keep the UUID and request body unchanged when retrying a timeout or uncertain response. To render again after a terminal failure, use a new UUID. The body field `requestId` is your retry key; `error.requestId` and the response header `X-Request-ID` identify an individual HTTP request for support.
+
+<Note>
+Requests accepted before the change to background-based sizing used fixed defaults for omitted dimensions and fit. Replaying one of those requests after the change can return `409` even with the original body. Check the existing job before choosing a new `requestId`, which creates another render.
+</Note>
 
 ## Media requirements
 
@@ -89,11 +95,20 @@ Keep source URLs accessible for the preparation window of up to **30 minutes**; 
 
 | Field in `video` | Default | Allowed values |
 | --- | --- | --- |
-| `width`, `height` | 1024 each | Even integers from 64 to 1920; combined area at most 2,073,600 pixels. |
-| `fit` | `crop` | `crop`, `contain` |
+| `width`, `height` | Derived from the background image when available; otherwise 1024 for each omitted dimension. See the sizing rules below. | Even integers from 64 to 1920; combined area at most 2,073,600 pixels. |
+| `fit` | `contain` when both dimensions are omitted and the background image's dimensions are available; otherwise `crop`. | `crop`, `contain` |
 | `backgroundColor` | `#000000` | Six-digit RGB hex color. |
 | `backgroundFit` | `cover` | `cover`, `contain`, `stretch` |
 | `leadInSeconds`, `leadOutSeconds` | 0 | Finite numbers from 0 to 60; additional idle time. |
+
+### Output sizing
+
+- **Omit both dimensions:** Spatius uses the background image's pixel dimensions when available. It scales oversized images down proportionally to fit the dimension and pixel-area limits, then rounds each dimension down to an even number, with a minimum of 64 pixels. An omitted `fit` becomes `contain`.
+- **Supply one dimension:** When the background image's dimensions are available, Spatius derives the missing dimension from its aspect ratio and applies the same even-number rounding and 64-pixel minimum. An omitted `fit` remains `crop`. The resulting dimensions must meet the limits; an invalid derived size can fail the job during preparation.
+- **Supply both dimensions:** Spatius uses those dimensions. An omitted `fit` remains `crop`.
+- **No background image, or its dimensions cannot be read:** Each omitted dimension falls back to 1024, and an omitted `fit` becomes `crop`.
+
+An explicit `fit` always takes precedence. For example, a 1920 × 1080 background with `width`, `height`, and `fit` omitted produces a 1920 × 1080 video using `contain`. To request a fixed square output, send `video: {width: 1024, height: 1024, fit: "crop"}`.
 
 Opening and closing transitions are included even when additional idle time is zero. Output duration can therefore exceed audio duration, with timing rounded to video frames. Spatius manages encoding settings.
 

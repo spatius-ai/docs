@@ -305,7 +305,7 @@
       },
       "VideoSettings": {
         "type": "object",
-        "description": "Optional presentation settings. Width and height must be even, and their effective product must not exceed 2,073,600 pixels, including defaults for omitted dimensions. Encoding settings are managed by Spatius. Opening and closing transitions are included even when lead-in and lead-out are zero.",
+        "description": "Optional presentation settings. When both dimensions are omitted and the background image dimensions are available, output follows the image size, scaled down proportionally to fit the limits and rounded down to even dimensions with a minimum of 64 pixels. If only one dimension is supplied, the missing dimension follows the background aspect ratio with the same rounding and minimum. Without usable background dimensions, each omitted dimension falls back to 1024. An invalid derived size can fail the job during preparation. Explicit dimensions must be even, from 64 to 1920, with an effective product at most 2,073,600 pixels; request validation substitutes 1024 for an omitted dimension. Omitted width, height, and fit remain distinct from explicit values for retry comparison. Encoding settings are managed by Spatius. Opening and closing transitions are included even when lead-in and lead-out are zero. See [Output sizing](/api-reference/video-generation#output-sizing).",
         "properties": {
           "width": {
             "type": "integer",
@@ -313,8 +313,7 @@
             "minimum": 64,
             "maximum": 1920,
             "multipleOf": 2,
-            "default": 1024,
-            "description": "Output width in pixels."
+            "description": "Output width in pixels. If omitted, derive from the background image according to the output sizing rules; fall back to 1024 when background image dimensions are unavailable. Omission is distinct from an explicit value for retry comparison."
           },
           "height": {
             "type": "integer",
@@ -322,17 +321,15 @@
             "minimum": 64,
             "maximum": 1920,
             "multipleOf": 2,
-            "default": 1024,
-            "description": "Output height in pixels."
+            "description": "Output height in pixels. If omitted, derive from the background image according to the output sizing rules; fall back to 1024 when background image dimensions are unavailable. Omission is distinct from an explicit value for retry comparison."
           },
           "fit": {
             "type": "string",
-            "description": "How the Avatar fits the output frame.",
+            "description": "How the Avatar fits the output frame. If omitted, use contain when both width and height are omitted and background image dimensions are available; otherwise use crop. An explicit value takes precedence and is distinct from omission for retry comparison.",
             "enum": [
               "crop",
               "contain"
-            ],
-            "default": "crop"
+            ]
           },
           "backgroundColor": {
             "type": "string",
@@ -390,7 +387,7 @@
           },
           "backgroundUrl": {
             "type": "string",
-            "description": "Optional background image, at most 50 MiB. Use a public HTTP(S) URL without embedded credentials. Signed query parameters are supported. Keep the URL accessible for the preparation window of up to 30 minutes. Each transfer has a five-minute limit. The source must return a supported Content-Type; raw PCM and application/octet-stream are not supported. See [Media requirements](/api-reference/video-generation#media-requirements).",
+            "description": "Optional background image, at most 50 MiB. Use a public HTTP(S) URL without embedded credentials. Signed query parameters are supported. Keep the URL accessible for the preparation window of up to 30 minutes. Each transfer has a five-minute limit. The source must return a supported Content-Type; raw PCM and application/octet-stream are not supported. See [Media requirements](/api-reference/video-generation#media-requirements). Its pixel dimensions determine omitted output dimensions according to the [Output sizing rules](/api-reference/video-generation#output-sizing).",
             "format": "uri",
             "minLength": 1,
             "maxLength": 4096,
@@ -404,7 +401,7 @@
           },
           "requestId": {
             "type": "string",
-            "description": "Optional retry key, shared across Apps owned by your account. The same requestId and normalized input return the existing job without consuming creation quota again. Different input with the same key returns HTTP 409. Omitted settings and their explicit defaults are equivalent. Omit this field to create a new job on every call.",
+            "description": "Optional retry key, shared across Apps owned by your account. The same requestId and normalized input return the existing job without consuming creation quota again. Different input with the same key returns HTTP 409. Omitted video.width, video.height, and video.fit are distinct from explicit values, even if output is identical. Other omitted presentation settings remain equivalent to their documented defaults. Keep the key and request body unchanged when retrying an uncertain response. Requests accepted before the change to background-based sizing can return 409 on replay even with the original body; check the existing job before submitting a new requestId. Omit this field to create a new job on every call.",
             "format": "uuid"
           },
           "video": {
@@ -703,7 +700,7 @@
         }
       },
       "Conflict": {
-        "description": "The requestId already identifies different normalized input. Retry the original body or use a new UUID for a new job.",
+        "description": "The requestId already identifies different normalized input. Omitted video.width, video.height, and video.fit differ from explicit values. Retry the original body. Requests accepted before the change to background-based sizing can conflict even with the original body; check the existing job before using a new UUID, which creates another render.",
         "content": {
           "application/json": {
             "schema": {
