@@ -742,15 +742,23 @@ enum AvatarError: LocalizedError
 
 | Case | Description |
 |------|-------------|
-| `appIDUnrecognized` | The app ID is not recognized. |
 | `avatarIDUnrecognized` | The avatar ID is not recognized. |
 | `avatarAssetMissing` | The avatar asset is missing. |
-| `failedToDownloadAvatarAssets` | Failed to download avatar assets. |
-| `failedToFetchAvatarMetadata` | Failed to fetch avatar metadata. |
-| `sessionTokenExpired` | The session token has expired. |
 | `sessionTokenInvalid` | The session token is invalid. |
+| `sessionTokenExpired` | The session token has expired. |
+| `insufficientBalance` | Insufficient balance. |
+| `sessionTimeout` | The session timed out. |
+| `concurrentLimitExceeded` | Concurrent connection limit exceeded. |
+| `failedToFetchAvatarMetadata` | Failed to fetch avatar metadata. |
+| `invalidAvatarMetadata` | The avatar metadata is invalid. |
+| `incompatibleAvatarAsset` | The avatar asset format or version is incompatible. |
+| `failedToDownloadAvatarAssets` | Failed to download avatar assets. |
+| `renderNotSupported` | Rendering is not supported on this device (no Metal device). Deterministic — tell the user rather than retry. |
+| `renderInitFailed` | The renderer failed to initialize for another reason. |
+| `invalidAnimationData` | The animation data is invalid. |
+| `invalidAudioInput` | The audio does not match `audioFormat.inputAudioFormat`. |
+| `serverError` | The driving service returned an error. |
 
 | Instance Property | Type | Description |
 |----------|------|-------------|
 | `errorDescription` | `String?` | A localized description of the error. |
-| `failureReason` | `String?` | The reason for the failure. |

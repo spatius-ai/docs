@@ -215,6 +215,24 @@ Callback for error events.
 ```kotlin
 var onError: ((AvatarError) -> Unit)?
 ```
+
+| Case | Description |
+|------|-------------|
+| `AvatarIDUnrecognized` | The avatar ID is not recognized. |
+| `SessionTokenInvalid` | The session token is invalid. |
+| `SessionTokenExpired` | The session token has expired. |
+| `FailedToFetchAvatarMetadata` | Failed to fetch avatar metadata. |
+| `InvalidAvatarMetadata` | The avatar metadata is invalid. |
+| `IncompatibleAvatarAsset` | The avatar asset format or version is incompatible. |
+| `FailedToDownloadAvatarAssets` | Failed to download avatar assets. |
+| `RenderNotSupported` | Rendering is not supported on this device (Vulkan is unavailable). Deterministic — tell the user rather than retry. |
+| `RenderInitFailed` | The renderer failed to initialize for another reason. |
+| `InsufficientBalance` | Insufficient balance. |
+| `SessionTimeout` | The session timed out. |
+| `ConcurrentLimitExceeded` | Concurrent connection limit exceeded. |
+| `InvalidAnimationData` | The animation data is invalid. |
+| `InvalidAudioInput` | The audio does not match `audioFormat.inputAudioFormat`. |
+| `ServerError` | The driving service returned an error. |
 </Accordion>
 
 <Accordion title="volume">
