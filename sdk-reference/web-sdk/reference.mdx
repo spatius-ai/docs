@@ -296,20 +296,6 @@ if (png) {
 }
 ```
 
-#### getCameraConfig() / updateCameraConfig(cameraConfig)
-
-Read or update the camera used by the renderer.
-
-```typescript
-const camera = avatarView.getCameraConfig()
-if (camera) {
-  avatarView.updateCameraConfig({
-    ...camera,
-    fov: 35,
-  })
-}
-```
-
 #### pauseRendering() / resumeRendering()
 
 Pause or resume GPU/canvas rendering without stopping audio playback.
@@ -712,30 +698,27 @@ avatarView.controller.onError = (error: AvatarError) => {
 
 ```typescript
 enum ErrorCode {
-  appIDUnrecognized = 'appIDUnrecognized',
+  // Authentication & authorization
   sessionTokenInvalid = 'sessionTokenInvalid',
   sessionTokenExpired = 'sessionTokenExpired',
   insufficientBalance = 'insufficientBalance',
   concurrentLimitExceeded = 'concurrentLimitExceeded',
+
+  // Resource loading
   avatarIDUnrecognized = 'avatarIDUnrecognized',
   failedToFetchAvatarMetadata = 'failedToFetchAvatarMetadata',
   invalidAvatarMetadata = 'invalidAvatarMetadata',
   failedToDownloadAvatarAssets = 'failedToDownloadAvatarAssets',
   unsupportedAvatarAsset = 'unsupportedAvatarAsset',
+
+  // Rendering
+  renderNotSupported = 'renderNotSupported',
+  renderInitFailed = 'renderInitFailed',
+
+  // Connection
   websocketError = 'websocketError',
-  websocketClosedAbnormally = 'websocketClosedAbnormally',
   websocketClosedUnexpected = 'websocketClosedUnexpected',
   sessionTimeout = 'sessionTimeout',
-  connectionInProgress = 'connectionInProgress',
-  networkLayerNotAvailable = 'networkLayerNotAvailable',
-  playbackStartFailed = 'playbackStartFailed',
-  playbackInitFailed = 'playbackInitFailed',
-  audioOnlyInitFailed = 'audioOnlyInitFailed',
-  noAudio = 'noAudio',
-  invalidAudioInput = 'invalidAudioInput',
-  audioContextNotInitialized = 'audioContextNotInitialized',
-  animationPlayerNotInitialized = 'animationPlayerNotInitialized',
-  serverError = 'serverError',
 }
 ```
 
