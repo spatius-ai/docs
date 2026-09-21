@@ -379,7 +379,7 @@
           },
           "audioUrl": {
             "type": "string",
-            "description": "Audio source in PCM, WAV, or Opus format, at most 500 MiB. Use a public HTTP(S) URL without embedded credentials. Signed query parameters are supported. Keep the URL accessible for the preparation window of up to 30 minutes. Each transfer has a five-minute limit. The source must return a supported Content-Type; application/octet-stream is not supported. See [Media requirements](/api-reference/video-generation#media-requirements).",
+            "description": "Audio source in WAV format only, at most 500 MiB. Use a public HTTP(S) URL without embedded credentials. Signed query parameters are supported. Keep the URL accessible for the preparation window of up to 30 minutes. Each transfer has a five-minute limit. The source must return a supported Content-Type; application/octet-stream is not supported. See [Media requirements](/api-reference/video-generation#media-requirements).",
             "format": "uri",
             "minLength": 1,
             "maxLength": 4096,
