@@ -379,7 +379,7 @@
           },
           "audioUrl": {
             "type": "string",
-            "description": "Audio source, at most 500 MiB. Use a public HTTP(S) URL without embedded credentials. Signed query parameters are supported. Keep the URL accessible for the preparation window of up to 30 minutes. Each transfer has a five-minute limit. The source must return a supported Content-Type; raw PCM and application/octet-stream are not supported. See [Media requirements](/api-reference/video-generation#media-requirements).",
+            "description": "Audio source in PCM, WAV, or Opus format, at most 500 MiB. Use a public HTTP(S) URL without embedded credentials. Signed query parameters are supported. Keep the URL accessible for the preparation window of up to 30 minutes. Each transfer has a five-minute limit. The source must return a supported Content-Type; application/octet-stream is not supported. See [Media requirements](/api-reference/video-generation#media-requirements).",
             "format": "uri",
             "minLength": 1,
             "maxLength": 4096,
@@ -387,7 +387,7 @@
           },
           "backgroundUrl": {
             "type": "string",
-            "description": "Optional background image, at most 50 MiB. Use a public HTTP(S) URL without embedded credentials. Signed query parameters are supported. Keep the URL accessible for the preparation window of up to 30 minutes. Each transfer has a five-minute limit. The source must return a supported Content-Type; raw PCM and application/octet-stream are not supported. See [Media requirements](/api-reference/video-generation#media-requirements). Its pixel dimensions determine omitted output dimensions according to the [Output sizing rules](/api-reference/video-generation#output-sizing).",
+            "description": "Optional background image, at most 50 MiB. Use a public HTTP(S) URL without embedded credentials. Signed query parameters are supported. Keep the URL accessible for the preparation window of up to 30 minutes. Each transfer has a five-minute limit. The source must return a supported Content-Type; application/octet-stream is not supported. See [Media requirements](/api-reference/video-generation#media-requirements). Its pixel dimensions determine omitted output dimensions according to the [Output sizing rules](/api-reference/video-generation#output-sizing).",
             "format": "uri",
             "minLength": 1,
             "maxLength": 4096,

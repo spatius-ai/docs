@@ -82,14 +82,14 @@ Requests accepted before the change to background-based sizing used fixed defaul
 
 ## Media requirements
 
-| Input | Supported Content-Type | Maximum size |
+| Input | Supported formats | Maximum size |
 | --- | --- | --- |
-| Audio | `audio/mpeg`, `audio/mp3`, `audio/wav`, `audio/x-wav`, `audio/wave`, `audio/vnd.wave`, `audio/mp4`, `audio/x-m4a`, `audio/aac`, `audio/ogg` | 500 MiB |
-| Background image | `image/png`, `image/jpeg`, `image/webp` | 50 MiB |
+| Audio | PCM, WAV, Opus | 500 MiB |
+| Background image | PNG (`image/png`), JPEG (`image/jpeg`), WebP (`image/webp`) | 50 MiB |
 
 Use public HTTP(S) URLs, including signed URLs. Embedded usernames/passwords and private-network destinations are rejected. Authentication headers are not forwarded to source hosts. Each connection and redirect is checked.
 
-Keep source URLs accessible for the preparation window of up to **30 minutes**; each transfer has a **five-minute** deadline. Empty files, raw PCM, and `application/octet-stream` are not supported. Wrap raw PCM in a WAV container using its actual sample rate and channel count before hosting it. Audio decoding and duration checks happen asynchronously, so acceptance does not guarantee a successful render.
+Keep source URLs accessible for the preparation window of up to **30 minutes**; each transfer has a **five-minute** deadline. Only PCM, WAV, and Opus audio inputs are supported. Empty files and `application/octet-stream` are not supported. Audio decoding and duration checks happen asynchronously, so acceptance does not guarantee a successful render.
 
 ## Presentation settings
 
