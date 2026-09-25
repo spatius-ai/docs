@@ -1,0 +1,52 @@
+---
+title: "Custom Avatar Creation Pricing"
+sidebarTitle: "Custom Avatar Creation"
+description: "Included Avatar Creations, extra creation packs, and how creation billing works."
+---
+
+Custom avatar creation uses **Avatar Creations**, not the credits consumed by realtime avatar usage or video generation. Creating an Avatar and using it are separate charges.
+
+All prices are in USD; pricing and limits may change during beta.
+
+## Included creations
+
+| Plan | Avatar Creations per month |
+| --- | --- |
+| Free | None included; use public avatars |
+| Starter | 2 |
+| Builder | 4 |
+| Growth | 14 |
+| Scale | 40 |
+| Enterprise | Unlimited custom avatar creation; contact sales for contract details |
+
+See [Realtime Avatar Pricing](/pricing/realtime-avatar) for subscription prices.
+
+<Note>
+Custom avatar slots are unlimited on paid plans during beta. Slots are not Avatar Creations: unlimited slots do not remove the creation allowances or extra creation charges.
+</Note>
+
+## Extra creations
+
+Purchase extra Avatar Creations when you need more than your plan includes.
+
+| Pack | Price | Price per creation |
+| --- | --- | --- |
+| 1 creation | $25 | $25 |
+| 20 creations | $400 | $20 |
+| 100 creations | $1,700 | $17 |
+| 500 creations | $8,000 | $16 |
+
+View your available balance in [Spatius Studio](https://app.spatius.ai/avatars/creations).
+
+## API billing
+
+Each Avatar API creation job reserves one Avatar Creation when accepted. The reservation is captured when preprocessing completes and released if the job fails before that point. An insufficient balance returns `402` with `insufficient_avatar_units`.
+
+Avatar API access is separate from your creation balance and currently requires private beta enrollment. See the [Spatius API overview](/api-reference/overview) for access requirements.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Spatius API" icon="code" href="/api-reference/overview" />
+  <Card title="Realtime Avatar Pricing" icon="bolt" href="/pricing/realtime-avatar" />
+</CardGroup>

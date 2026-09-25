@@ -151,7 +151,7 @@ Video access requires explicit account limits. Creation and read counters are in
 | Reads per minute | 1,200 |
 | Reads per second / burst | 20 / 40 |
 
-The Console API checks video access and request rates. It does not impose an active-video-job quota; the video service manages execution concurrency. Back off after `429` responses. The Video API does not reserve Avatar Creations; existing usage accounting still applies.
+The Console API checks video access and request rates. It does not impose an active-video-job quota; the video service manages execution concurrency. Back off after `429` responses. The Video API does not reserve Avatar Creations; video generation consumes **50 credits per minute**. See [Video Generation Pricing](/pricing/video-generation) for credit estimates.
 
 This version supports URL inputs and polling. Public uploads, developer callbacks, cancellation, text-to-speech, and permanent output storage are not available.
 

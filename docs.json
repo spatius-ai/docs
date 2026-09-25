@@ -89,6 +89,15 @@
             ]
           },
           {
+            "group": "Pricing",
+            "icon": "credit-card",
+            "pages": [
+              "pricing/custom-avatar-creation",
+              "pricing/realtime-avatar",
+              "pricing/video-generation"
+            ]
+          },
+          {
             "group": "Examples & Support",
             "icon": "book",
             "pages": [
