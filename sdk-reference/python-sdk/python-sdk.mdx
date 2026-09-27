@@ -20,17 +20,19 @@ Install the optional Ogg Opus encoder support when you want the SDK to encode ra
 pip install "spatius[opus]"
 ```
 
-The optional encoder uses `opuslib`, which requires a working `libopus` runtime on the host system.
+The optional encoder uses `opuslib-next`, which requires a working `libopus` runtime on the host system.
 
 ## Requirements
 
+- Python 3.10 or later
 - `api_key`
 - `app_id`
 - `avatar_id`
-- `expire_at`
 - audio bytes in a supported input format
 
-The SDK defaults to `auto`: bootstrap selects a region and falls back to `us-west` when automatic selection is unavailable. See [Regions](/api-reference/regions).
+`expire_at` is optional when using `new_avatar_session()` and defaults to one hour from session creation. Pass a timezone-aware UTC `datetime` to set a different token expiry.
+
+The SDK defaults to `auto`: bootstrap selects a region and caches it for five minutes. If selection fails, it uses the last successfully resolved region or `us-west`. See [Regions](/api-reference/regions).
 
 ## Telemetry
 
@@ -68,28 +70,36 @@ from spatius import new_avatar_session
 
 
 async def main():
+    completed = asyncio.Event()
+
+    def on_frames(payload: bytes, last: bool):
+        print(f"Received payload: {len(payload)} bytes, last={last}")
+        if last:
+            completed.set()
+
     session = new_avatar_session(
         api_key="your-api-key",
         app_id="your-app-id",
         avatar_id="your-avatar-id",
         expire_at=datetime.now(timezone.utc) + timedelta(minutes=5),
-        transport_frames=lambda payload, last: print(
-            f"Received payload: {len(payload)} bytes, last={last}"
-        ),
+        transport_frames=on_frames,
         on_error=lambda err: print(f"Session error: {err}"),
         on_close=lambda: print("Session closed"),
     )
 
-    await session.init()
-    connection_id = await session.start()
-    print(f"Connected: {connection_id}")
+    try:
+        await session.init()
+        connection_id = await session.start()
+        print(f"Connected: {connection_id}")
 
-    audio_data = b"..."  # mono PCM s16le audio bytes
-    request_id = await session.send_audio(audio_data, end=True)
-    print(f"Sent audio request: {request_id}")
+        with open("audio.pcm", "rb") as audio_file:
+            audio_data = audio_file.read()  # raw mono PCM s16le at 16000 Hz
+        request_id = await session.send_audio(audio_data, end=True)
+        print(f"Sent audio request: {request_id}")
 
-    await asyncio.sleep(10)
-    await session.close()
+        await asyncio.wait_for(completed.wait(), timeout=30)
+    finally:
+        await session.close()
 
 
 if __name__ == "__main__":
@@ -141,7 +151,54 @@ request_id = await session.send_audio(audio_bytes, end=True)
 await session.close()
 ```
 
+`send_audio()` calls share a request ID until `end=True`; the next call starts a new request. Sending the final audio chunk does not mean Motion Server has finished returning motion data. In WebSocket mode, wait for the callback's `is_last=True` before closing the session. Set an application timeout suitable for the audio duration.
+
+You can also use an async context manager. Entering calls `init()` and `start()`; exiting calls `close()`:
+
+```python
+async with new_avatar_session(
+    api_key="your-api-key",
+    app_id="your-app-id",
+    avatar_id="your-avatar-id",
+    transport_frames=on_frame_received,
+) as session:
+    await session.send_audio(audio_bytes, end=True)
+    # Wait here for your callback to signal completion before leaving the block.
+```
+
 For audio source and timing guidance, see [Audio](/concepts/audio).
+
+## Warm up a worker
+
+Call `prewarm()` before creating sessions to resolve the region and warm TLS connections to the Console API and ingress hosts. Token prefetch is optional and disabled by default:
+
+```python
+from spatius import prewarm
+
+result = await prewarm(
+    app_id="your-app-id",
+    api_key="your-api-key",
+    prefetch_session_token=True,
+)
+print(result.region, result.tls_warmed, result.session_token_prefetched)
+```
+
+Network failures are best-effort and reported in the result. `prewarm()` does not open an Avatar session; still call `init()` and `start()` afterward. A prefetched token is cached for sessions with matching API Key, App ID, and Console endpoint. Its expiry comes from `session_expire_at` (one hour by default), not a later session's `expire_at`. Keep prefetch disabled if your backend requires single-use tokens.
+
+Optional parameters include `region`, `warm_tls` (default `True`), `session_expire_at`, and `timeout` (seconds, default `5`).
+
+## Handshake extension parameters
+
+Use `extra_params` for supported Motion Server extensions. Keys and values must be strings:
+
+```python
+session = new_avatar_session(
+    api_key="your-api-key",
+    app_id="your-app-id",
+    avatar_id="your-avatar-id",
+    extra_params={"server_post_process": "false"},
+)
+```
 
 ## Audio Format
 
@@ -309,7 +366,7 @@ The interrupt uses the most recent request ID, even after `end=True` has been se
 
 ### `transport_frames`
 
-Receives motion data payloads from the server:
+Receives the complete binary protobuf envelope containing motion data, not decoded motion data. Forward the payload unchanged to your Backend Mode client:
 
 ```python
 def on_frame_received(payload: bytes, is_last: bool):
@@ -432,7 +489,7 @@ Configuration dataclass for avatar sessions.
 - `api_key: str` - API key for authentication
 - `app_id: str` - application identifier
 - `use_query_auth: bool` - send WebSocket auth in query params instead of headers
-- `expire_at: datetime` - session expiration time
+- `expire_at: datetime` - token expiry; the factory defaults to one hour from creation
 - `sample_rate: int` - audio sample rate, default `16000`
 - `bitrate: int` - audio bitrate, default `0`
 - `audio_format: AudioFormat` - negotiated input format
@@ -446,6 +503,7 @@ Configuration dataclass for avatar sessions.
 - `ingress_endpoint_url: str` - optional explicit ingress WebSocket URL
 - `livekit_egress: Optional[LiveKitEgressConfig]` - LiveKit egress configuration
 - `agora_egress: Optional[AgoraEgressConfig]` - Agora egress configuration
+- `extra_params: dict[str, str]` - optional handshake extension parameters
 
 ### `LiveKitEgressConfig`
 

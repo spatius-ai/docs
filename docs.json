@@ -140,7 +140,8 @@
             "icon": "server",
             "pages": [
               "sdk-reference/python-sdk/python-sdk",
-              "sdk-reference/go-sdk/go-sdk"
+              "sdk-reference/go-sdk/go-sdk",
+              "sdk-reference/javascript-sdk/javascript-sdk"
             ]
           },
           {

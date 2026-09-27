@@ -42,7 +42,7 @@ Spatius currently operates in:
 - `ap-northeast`
 - `cn-beijing`
 
-Defaults differ by SDK: AvatarKit clients and the Python Server SDK use automatic selection, while the Go Server SDK defaults to `us-west`. Set only `SPATIUS_REGION` when a server-side integration needs an explicit region. `SPATIUS_CONSOLE_ENDPOINT` and `SPATIUS_INGRESS_ENDPOINT` are advanced override variables for staging or proxy setups only.
+AvatarKit clients and the Python, Go, and JavaScript Server SDKs use automatic region selection. The Server SDKs fall back to the last successfully resolved region or `us-west` if selection fails. Set only `SPATIUS_REGION` when a server-side integration needs an explicit region. `SPATIUS_CONSOLE_ENDPOINT` and `SPATIUS_INGRESS_ENDPOINT` are advanced override variables for staging or proxy setups only.
 
 ## Integration decision
 
@@ -100,6 +100,7 @@ Use Reference pages for exact API details:
 | Flutter SDK | `https://docs.spatius.ai/sdk-reference/flutter-sdk/api-reference.md` |
 | Python Server SDK | `https://docs.spatius.ai/sdk-reference/python-sdk/python-sdk.md` |
 | Go Server SDK | `https://docs.spatius.ai/sdk-reference/go-sdk/go-sdk.md` |
+| JavaScript / TypeScript Server SDK (Node.js) | `https://docs.spatius.ai/sdk-reference/javascript-sdk/javascript-sdk.md` |
 | Session Token API | `https://docs.spatius.ai/api-reference/api-reference.md` |
 | Session Token auth flow | `https://docs.spatius.ai/api-reference/auth.md` |
 | Client error codes | `https://docs.spatius.ai/resources/client-error.md` |

@@ -1,7 +1,7 @@
 ---
 title: "Go SDK"
 sidebarTitle: "Go"
-description: "Go Server SDK reference for Backend Mode sessions, audio input, callbacks, LiveKit egress, options, and errors."
+description: "Go Server SDK reference for Backend Mode sessions, audio input, callbacks, RTC egress, options, and errors."
 ---
 
 The Go SDK creates Spatius avatar sessions from backend services. It requests a short-lived session token from the Console API, opens the ingress WebSocket, sends audio, and returns motion data payloads through callbacks.
@@ -14,6 +14,13 @@ go get github.com/spatius-ai/spatius-sdk-go
 
 Repository: [spatius-ai/spatius-sdk-go](https://github.com/spatius-ai/spatius-sdk-go)
 
+Requires Go 1.25 or later and a C toolchain with `pkg-config`, `libopus`, and `libopusfile` development libraries. The SDK links its encoder dependency even for PCM sessions. On Debian or Ubuntu:
+
+```bash
+sudo apt-get install build-essential pkg-config \
+  libopus-dev libopusfile-dev
+```
+
 ## Quick start
 
 ```go
@@ -22,13 +29,21 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	spatius "github.com/spatius-ai/spatius-sdk-go"
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	ctx := context.Background()
+	completed := make(chan struct{}, 1)
 
 	session := spatius.NewAvatarSession(
 		spatius.WithAPIKey("your-api-key"),
@@ -36,10 +51,13 @@ func main() {
 		spatius.WithAvatarID("your-avatar-id"),
 		spatius.WithExpireAt(time.Now().Add(5*time.Minute).UTC()),
 		spatius.WithTransportFrames(func(data []byte, last bool) {
-			// Handle motion data payloads.
+			log.Printf("Motion payload: %d bytes, last=%t", len(data), last)
+			if last {
+				completed <- struct{}{}
+			}
 		}),
 		spatius.WithOnError(func(err error) {
-			// Handle async session errors.
+			log.Printf("Session error: %v", err)
 		}),
 		spatius.WithOnClose(func() {
 			// Handle connection close.
@@ -47,28 +65,38 @@ func main() {
 	)
 
 	if err := session.Init(ctx); err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer session.Close()
 
 	connectionID, err := session.Start(ctx)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	log.Printf("connection id: %s", connectionID)
 
-	audioBytes := []byte{} // Replace with mono PCM audio bytes.
+	audioBytes, err := os.ReadFile("audio.pcm") // Raw mono PCM s16le at 16000 Hz.
+	if err != nil {
+		return err
+	}
 	reqID, err := session.SendAudio(audioBytes, true)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	log.Printf("request id: %s", reqID)
+
+	select {
+	case <-completed:
+		return nil
+	case <-time.After(30 * time.Second):
+		return context.DeadlineExceeded
+	}
 }
 ```
 
 ## Region configuration
 
-The SDK defaults to `us-west` when no region is provided, or when `WithRegion` receives an empty or whitespace-only value. See [Regions](/api-reference/regions) for the current region list. To set a region:
+The SDK defaults to `auto`, including when `WithRegion` receives an empty or whitespace-only value. `Init(ctx)` resolves the recommended region and caches it for five minutes. If resolution fails, it uses the last successfully resolved region or `us-west`. See [Regions](/api-reference/regions). Pin a region to skip automatic selection:
 
 ```go
 session := spatius.NewAvatarSession(
@@ -82,16 +110,36 @@ session := spatius.NewAvatarSession(
 2. Call `Init(ctx)` to exchange the API key and expiry time for a session token.
 3. Call `Start(ctx)` to open the ingress WebSocket and configure the avatar session.
 4. Call `SendAudio(audio, end)` for each audio chunk.
-5. Call `Interrupt()` when playback should stop.
+5. Wait for the final motion data callback, or use `Interrupt()` to stop the latest request in egress mode.
 6. Call `Close()` when the session is done.
 
-`SendAudio` returns the request ID associated with the audio. The callback passed to `WithTransportFrames` receives motion data payloads and a `last` flag.
+`SendAudio` returns the same request ID until `end=true`; the next call starts a new request. To finish after streaming chunks, call `SendAudio(nil, true)`. Calls must be serialized by your application.
+
+The callback passed to `WithTransportFrames` receives the complete binary protobuf envelope containing motion data and a `last` flag. Forward the payload unchanged to your Backend Mode client. A successful send is not output completion: keep the session open until `last=true`, with an application timeout suitable for the audio duration.
+
+`WithExpireAt` is optional and defaults to one hour from session creation. `Start(ctx)` bounds the protocol handshake wait to ten seconds; an earlier context deadline takes precedence.
 
 For audio source and timing guidance, see [Audio](/concepts/audio).
 
+## Warm up a worker
+
+`Prewarm` resolves the region and warms TLS connections before session creation. Token prefetch is optional and disabled by default:
+
+```go
+result := spatius.Prewarm(ctx, "your-app-id",
+	spatius.WithPrewarmAPIKey("your-api-key"),
+	spatius.WithPrewarmSessionTokenPrefetch(true),
+)
+log.Printf("region=%s token_prefetched=%t", result.Region, result.SessionTokenPrefetched)
+```
+
+Warm-up is best-effort and reports results rather than returning an error. It does not open an Avatar session; still call `Init` and `Start` afterward. Prefetched tokens are reused for matching API Key, App ID, and Console endpoint. Their expiry comes from `WithPrewarmSessionExpireAt` (one hour by default), not a later session's `WithExpireAt`. Keep prefetch disabled if your backend requires single-use tokens.
+
+Additional options are `WithPrewarmRegion`, `WithPrewarmEndpointURLs`, `WithPrewarmTLSWarmup` (default `true`), and `WithPrewarmTimeout` (default five seconds). `PrewarmResult` includes the resolved endpoints, `TLSWarmed` hosts, and `SessionTokenPrefetched`.
+
 ## Audio format
 
-PCM 16-bit little-endian is the default input format:
+Raw mono PCM 16-bit little-endian at 16000 Hz is the default input format. Match `WithSampleRate` to your audio; do not include a WAV header:
 
 ```go
 session := spatius.NewAvatarSession(
@@ -111,7 +159,9 @@ session := spatius.NewAvatarSession(
 )
 ```
 
-Passing `nil` to `WithOggOpusEncoder` enables the default encoder config.
+Passing `nil` to `WithOggOpusEncoder` enables the default encoder config: mono PCM input, 20 ms frames, and voice mode. Encoding supports sample rates `8000`, `12000`, `16000`, `24000`, and `48000`. `WithOnEncodedAudio` receives the complete encoded stream when `end=true`.
+
+Without `WithOggOpusEncoder`, Ogg Opus sessions expect pre-encoded bytes. Send one continuous Ogg Opus stream per request ID, with `end=true` on the final chunk.
 
 ## Authentication mode
 
@@ -156,6 +206,56 @@ session := spatius.NewAvatarSession(
 
 Prefer `APIToken` for new integrations. `APIKey` and `APISecret` remain available for older setups.
 
+## Agora egress
+
+Use `WithAgoraEgress` to publish output to an Agora channel:
+
+```go
+session := spatius.NewAvatarSession(
+	spatius.WithAgoraEgress(&spatius.AgoraEgressConfig{
+		ChannelName: "my-channel",
+		Token:       "agora-token",
+		UID:         0,
+		PublisherID: "avatar-publisher",
+	}),
+)
+```
+
+Configure only one egress provider. In egress mode, Motion Server sends audio and motion data to the room or channel instead of `WithTransportFrames`. `Interrupt()` targets the most recent request, including after `end=true`. In Backend Mode, cancellation belongs to your client-delivery layer: stop forwarding discarded turns and interrupt client playback.
+
+## Error handling
+
+Session methods return Go `error` values; asynchronous errors go to `WithOnError`. Some failures expose `*AvatarSDKError`. Use `errors.As` and retain a fallback for ordinary errors:
+
+```go
+func reportError(err error) {
+	var sdkErr *spatius.AvatarSDKError
+	if errors.As(err, &sdkErr) {
+		log.Printf("code=%s phase=%s server_code=%s connection=%s request=%s: %s",
+			sdkErr.Code, sdkErr.Phase, sdkErr.ServerCode,
+			sdkErr.ConnectionID, sdkErr.ReqID, sdkErr.Message)
+		return
+	}
+	log.Printf("Session error: %v", err)
+}
+```
+
+Import the standard `errors` package for this helper. Stable constants include `ErrorCodeSessionTokenExpired`, `ErrorCodeSessionTokenInvalid`, `ErrorCodeAppIDUnrecognized`, `ErrorCodeInvalidRequest`, `ErrorCodeInvalidEgressConfig`, `ErrorCodeEgressUnavailable`, `ErrorCodeProtocolError`, `ErrorCodeConnectionFailed`, and `ErrorCodeUnknown`.
+
+Go does not expose Python's complete error-field set or a `SessionTokenError` type. See [Server Error Handling](/resources/server-error) for recovery guidance.
+
+## Telemetry
+
+The SDK exports OpenTelemetry metrics and traces by default, not logs. Configure export before creating sessions or calling `Prewarm`. To disable it:
+
+```go
+if err := spatius.ConfigureTelemetry(""); err != nil {
+	return err
+}
+```
+
+`ConfigureTelemetry(endpoint)` selects a different collector. Call `ShutdownTelemetry()` at process shutdown to flush and stop export; it is process-wide, not a per-session cleanup method.
+
 ## Options
 
 Core options:
@@ -163,10 +263,12 @@ Core options:
 - `WithAPIKey(apiKey string)` - Console API key.
 - `WithAppID(appID string)` - application ID.
 - `WithAvatarID(avatarID string)` - avatar ID.
-- `WithExpireAt(expireAt time.Time)` - session token expiry.
-- `WithRegion(region string)` - region used to select the Spatius region. Empty or whitespace-only values fall back to `us-west`.
+- `WithExpireAt(expireAt time.Time)` - session token expiry; defaults to one hour from creation.
+- `WithRegion(region string)` - region selection; defaults to `auto`, including empty or whitespace-only values.
 - `WithConsoleEndpointURL(endpointURL string)` - explicit Console API URL.
 - `WithIngressEndpointURL(endpointURL string)` - explicit ingress WebSocket URL.
+- `WithUseQueryAuth(bool)` - send WebSocket credentials in the query string instead of headers.
+- `WithExtraParams(map[string]string)` - handshake extension parameters, for example `map[string]string{"server_post_process": "false"}`.
 
 Audio options:
 
