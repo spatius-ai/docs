@@ -100,7 +100,7 @@ Use Reference pages for exact API details:
 | Flutter SDK | `https://docs.spatius.ai/sdk-reference/flutter-sdk/api-reference.md` |
 | Python Server SDK | `https://docs.spatius.ai/sdk-reference/python-sdk/python-sdk.md` |
 | Go Server SDK | `https://docs.spatius.ai/sdk-reference/go-sdk/go-sdk.md` |
-| JavaScript / TypeScript Server SDK (Node.js, beta) | `https://docs.spatius.ai/sdk-reference/javascript-sdk/javascript-sdk.md` |
+| JavaScript / TypeScript Server SDK (Node.js) | `https://docs.spatius.ai/sdk-reference/javascript-sdk/javascript-sdk.md` |
 | Session Token API | `https://docs.spatius.ai/api-reference/api-reference.md` |
 | Session Token auth flow | `https://docs.spatius.ai/api-reference/auth.md` |
 | Client error codes | `https://docs.spatius.ai/resources/client-error.md` |
