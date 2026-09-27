@@ -118,6 +118,8 @@ words:
   - Xcode
   - opuslib
   - libopus
+  - libopusfile
+  - lowdelay
   - PCMS16LE
   - TEN
   - spatialwalk

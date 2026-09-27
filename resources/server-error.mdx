@@ -1,10 +1,10 @@
 ---
 title: "Server Error Handling"
 sidebarTitle: "Server"
-description: "Error handling boundaries for the Python and Go Server SDKs."
+description: "Error handling boundaries for the Python, Go, and JavaScript Server SDKs."
 ---
 
-Server SDK error handling is language-specific. Do not assume that Python's structured fields or error-code enum also exist in Go.
+All three Server SDKs expose structured errors, but their fields and code coverage differ. Use the types and constants exported by your language's SDK, and retain a fallback for ordinary configuration or transport errors.
 
 ## Python
 
@@ -14,9 +14,15 @@ The complete field list and `AvatarSDKErrorCode` values live in the [Python SDK 
 
 ## Go
 
-The Go SDK returns standard Go `error` values from session operations and sends asynchronous failures to the callback configured with `WithOnError`. Log the full error and preserve the operation that produced it.
+The Go SDK returns `error` values from session operations and sends asynchronous failures to `WithOnError`. Use `errors.As` to inspect `*spatius.AvatarSDKError` when present. It exposes `Code`, `Message`, `Phase`, `ServerCode`, `ConnectionID`, and `ReqID`.
 
-See the [Go SDK reference](/sdk-reference/go-sdk/go-sdk) for its current public surface. Do not branch on Python `AvatarSDKErrorCode` values in Go code unless the installed Go SDK explicitly exports an equivalent typed error.
+The [Go SDK error reference](/sdk-reference/go-sdk/go-sdk#error-handling) lists supported `ErrorCode...` constants. Token exchange and other failures can be ordinary Go errors; do not assume Python's full field set or classifications exist in Go.
+
+## JavaScript / TypeScript
+
+The Node.js SDK exposes `AvatarSDKError` and its `SessionTokenError` subclass. Handle rejected session-method promises with `try` / `catch`, and asynchronous runtime failures with `onError`.
+
+Use `error.code` and `AvatarSDKErrorCode` for program logic. Context fields use camelCase, including `httpStatus`, `serverCode`, `serverDetail`, `connectionId`, `reqId`, `closeCode`, and `closeReason`. Configuration and lifecycle misuse can throw ordinary JavaScript errors. See the [JavaScript SDK error reference](/sdk-reference/javascript-sdk/javascript-sdk#error-handling).
 
 ## Recovery policy
 

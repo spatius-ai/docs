@@ -71,6 +71,15 @@ go get github.com/spatius-ai/spatius-sdk-go
 ```
 
 </Tab>
+<Tab title="JavaScript / TypeScript">
+
+```bash
+npm install @spatius/server-sdk@beta
+```
+
+Requires Node.js 22 or later. The JavaScript Server SDK is in beta and runs only on your backend.
+
+</Tab>
 </Tabs>
 
 </Step>
@@ -148,6 +157,39 @@ func StartSession(ctx context.Context) (*spatius.AvatarSession, error) {
 ```
 
 </Tab>
+<Tab title="JavaScript / TypeScript">
+
+```javascript
+import { newAvatarSession } from "@spatius/server-sdk";
+
+const session = newAvatarSession({
+  apiKey: "your-api-key",
+  appId: "your-app-id",
+  avatarId: "your-avatar-id",
+  region: "us-west",
+  expireAt: new Date(Date.now() + 5 * 60_000),
+  sampleRate: 16000,
+  audioFormat: "pcm_s16le",
+  transportFrames(payload, last) {
+    console.log(`Motion payload: ${payload.length} bytes, last=${last}`);
+  },
+  onError(error) {
+    console.error("Session error:", error.code, error.phase);
+  },
+});
+
+try {
+  await session.init();
+  console.log("Connected:", await session.start());
+} catch (error) {
+  await session.close();
+  throw error;
+}
+// Keep the session open while delivering turns.
+// Close it when the client leaves.
+```
+
+</Tab>
 </Tabs>
 
 </Step>
@@ -156,7 +198,9 @@ func StartSession(ctx context.Context) (*spatius.AvatarSession, error) {
 
 Assign the response a turn ID. Send its audio to the client first, then send the same audio to Spatius. Forward every motion data payload from the Server SDK callback to the client with that turn ID. Keep response turns serial unless your delivery layer can route overlapping callbacks correctly.
 
-Your application transport can be WebSocket or HTTP streaming. It must preserve message order and the turn ID. See the [complete Python implementation](https://github.com/spatius-ai/spatius-integration-demo/blob/main/backend-mode/servers/python/app/session.py) or the [Go SDK lifecycle](/sdk-reference/go-sdk/go-sdk#session-lifecycle).
+Your application transport can be WebSocket or HTTP streaming. It must preserve message order and the turn ID. See the [complete Python implementation](https://github.com/spatius-ai/spatius-integration-demo/blob/main/backend-mode/servers/python/app/session.py), [Go SDK lifecycle](/sdk-reference/go-sdk/go-sdk#session-lifecycle), or [JavaScript audio streaming](/sdk-reference/javascript-sdk/javascript-sdk#audio-streaming).
+
+Send each chunk with `send_audio(chunk)`, `SendAudio(chunk, false)`, or `sendAudio(chunk)`, then mark the final chunk with `end=True` / `true`. Input completion is not output completion: wait for the final motion data callback before closing the session.
 
 </Step>
 
@@ -168,6 +212,8 @@ Stop forwarding a discarded turn when the conversation is cancelled, and close t
 </Steps>
 
 ## Next steps
+
+See the [JavaScript / TypeScript Server SDK reference](/sdk-reference/javascript-sdk/javascript-sdk) for the Node.js API.
 
 <CardGroup cols={3}>
   <Card title="Client" icon="display" href="/backend-mode/client-sdk" />

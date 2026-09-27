@@ -1,0 +1,274 @@
+---
+title: "JavaScript Server SDK"
+sidebarTitle: "JavaScript / TypeScript"
+description: "Node.js Server SDK reference for avatar sessions, audio streaming, motion data callbacks, RTC egress, and errors."
+---
+
+The Spatius JavaScript Server SDK connects Node.js backends to Motion Server. It creates a Session Token, opens a WebSocket session, uploads audio, and returns motion data through a callback. TypeScript declarations are included.
+
+<Warning>
+This SDK is in beta. Run it on your backend, not in a browser, and keep the API Key private. For browser rendering, use the [Web AvatarKit SDK](/sdk-reference/web-sdk/reference).
+</Warning>
+
+## Install
+
+Requires Node.js 22 or later. Both ES modules and CommonJS are supported.
+
+```bash
+npm install @spatius/server-sdk@beta
+```
+
+The `beta` tag selects the current prerelease. See [npm package metadata](https://www.npmjs.com/package/@spatius/server-sdk?activeTab=versions) for available tags and runtime requirements, and [GitHub](https://github.com/spatius-ai/spatius-sdk-js) for source and examples.
+
+## Quick start
+
+Save this as `avatar.mjs`, replace the credential placeholders, and run `node avatar.mjs`. Provide `audio.pcm` containing raw mono signed 16-bit little-endian PCM at 16000 Hz, without a WAV header.
+
+```javascript
+import { readFile } from "node:fs/promises";
+import { newAvatarSession } from "@spatius/server-sdk";
+
+const audio = await readFile("audio.pcm");
+const completed = Promise.withResolvers();
+const session = newAvatarSession({
+  apiKey: "your-api-key",
+  appId: "your-app-id",
+  avatarId: "your-avatar-id",
+  expireAt: new Date(Date.now() + 5 * 60_000),
+  transportFrames(payload, isLast) {
+    // Forward the complete payload to your Backend Mode client.
+    console.log(`Motion payload: ${payload.length} bytes, last=${isLast}`);
+    if (isLast) completed.resolve(undefined);
+  },
+  onError(error) {
+    completed.resolve(error);
+  },
+  onClose() {
+    completed.resolve(new Error("Session closed before output completed"));
+  },
+});
+
+let timer;
+try {
+  await session.init();
+  console.log("Connected:", await session.start());
+  timer = setTimeout(() => completed.resolve(new Error("Output timed out")), 30_000);
+  console.log("Request:", await session.sendAudio(audio, true));
+  const error = await completed.promise;
+  if (error) throw error;
+} finally {
+  clearTimeout(timer);
+  await session.close();
+}
+```
+
+This example waits for the last motion data payload rather than closing immediately after sending audio. Adjust the timeout to your audio duration. Your backend must also deliver response audio to the client; see [Backend Mode Setup](/backend-mode/server-sdk).
+
+## Session lifecycle
+
+| API | Behavior |
+| --- | --- |
+| `newAvatarSession(config)` / `new AvatarSession(config)` | Create an uninitialized session. |
+| `await session.init()` | Resolve the region and obtain a Session Token. |
+| `await session.start()` | Open the WebSocket, complete the protocol handshake, and return the connection ID. |
+| `await session.sendAudio(audio, end?)` | Send a `Uint8Array` or Node.js `Buffer`; return its request ID. `end` defaults to `false`. |
+| `await session.interrupt()` | Interrupt the latest request in egress mode and return its request ID. |
+| `await session.close()` | Close the connection and release session resources; safe to call more than once. |
+| `session.config` | Read the normalized configuration, including the resolved region after initialization. |
+| `session.connectionId` | Connection ID after a successful `start()`. |
+
+Call `init()` and `start()` once for each session. A closed session cannot restart; create a new one to reconnect. Always close sessions in a `finally` block. `Symbol.asyncDispose` is also supported for runtimes or TypeScript builds that support `await using`.
+
+## Region and authentication
+
+The default region is `auto`, including an empty or whitespace-only string. Initialization resolves the recommended region and caches it for five minutes. If resolution fails, the SDK uses the last successfully resolved region or `us-west`.
+
+Set `region: "us-west"`, `"ap-northeast"`, or `"cn-beijing"` to pin a region. Explicit `consoleEndpointUrl` and `ingressEndpointUrl` options are advanced overrides. See [Regions](/api-reference/regions).
+
+By default, WebSocket credentials use `X-App-ID` and `X-Session-Key` headers. `useQueryAuth: true` uses `appId` and `sessionKey` query parameters instead. Query authentication does not make it safe to expose this SDK or the API Key in a browser.
+
+## Audio streaming
+
+`AudioFormat.PCM_S16LE` (`"pcm_s16le"`) is the default: raw mono 16-bit little-endian PCM at the configured `sampleRate` (default `16000`). The SDK does not resample your input.
+
+All chunks share a request ID until `end=true`. The next call starts a new request. Await each send to keep chunks ordered and avoid building an unbounded queue:
+
+```javascript
+for await (const chunk of audioSource) {
+  await session.sendAudio(chunk);
+}
+await session.sendAudio(new Uint8Array(), true);
+```
+
+Finishing the input does not mean output is complete. In WebSocket mode, wait for `transportFrames` with `isLast=true` before closing or completing the response turn.
+
+### Ogg Opus
+
+Set `audioFormat: "ogg_opus"` to send one continuous Ogg Opus stream per request ID. Without `oggOpusEncoder`, `sendAudio()` expects pre-encoded Ogg Opus pages, not raw PCM or individual Opus packets.
+
+Enable the bundled WebAssembly encoder to send raw PCM while uploading Ogg Opus. No native codec installation is required:
+
+```javascript
+const session = newAvatarSession({
+  apiKey: "your-api-key",
+  appId: "your-app-id",
+  avatarId: "your-avatar-id",
+  audioFormat: "ogg_opus",
+  sampleRate: 24000,
+  bitrate: 32000,
+  oggOpusEncoder: { frameDurationMs: 20, application: "audio" },
+  onEncodedAudio(reqId, encodedAudio) {
+    console.log(reqId, encodedAudio.length);
+  },
+});
+```
+
+- Encoder sample rates: `8000`, `12000`, `16000`, `24000`, or `48000` Hz.
+- Frame durations: `10`, `20`, `40`, or `60` ms; default `20`.
+- Applications: `"voip"` (default), `"audio"`, or `"restricted_lowdelay"`.
+- `bitrate`: `0` for automatic selection, or `500`–`512000` bits per second.
+- PCM chunks must contain complete 16-bit samples. `end=true` flushes the encoder and ends the request.
+- `onEncodedAudio` receives one complete encoded stream when input finishes. Enabling it retains the encoded audio in memory until then.
+
+## Callbacks
+
+| Callback | Arguments and meaning |
+| --- | --- |
+| `transportFrames(data, isLast)` | Complete binary protobuf envelope as `Uint8Array`, not decoded motion data. Forward it unchanged to your client. Not invoked in egress mode. |
+| `onEncodedAudio(reqId, audio)` | Completed internally encoded Ogg Opus stream as `Uint8Array`. |
+| `onError(error)` | Asynchronous `AvatarSDKError`, such as a runtime server error or unexpected disconnect. |
+| `onClose()` | Called once when the session closes. |
+
+Callbacks are synchronous; their return values are not awaited. Catch failures in asynchronous work started by a callback. Session method failures must also be handled with `try` / `catch`; do not rely only on `onError`.
+
+## RTC egress
+
+<Note>
+LiveKit and Agora egress are low-level Server SDK capabilities, not additional integration paths. Use [LiveKit Agents Integration](/livekit-agents/overview) or [Agora Convo AI Integration](/agora-convoai/overview) for the packaged workflows.
+</Note>
+
+Set one egress provider to send audio and motion data to its room or channel instead of receiving `transportFrames` callbacks:
+
+<Tabs>
+<Tab title="LiveKit">
+
+```javascript
+const session = newAvatarSession({
+  apiKey: "your-api-key",
+  appId: "your-app-id",
+  avatarId: "your-avatar-id",
+  livekitEgress: {
+    url: "wss://livekit.example.com",
+    apiToken: "livekit-access-token",
+    roomName: "my-room",
+    publisherId: "avatar-publisher",
+  },
+});
+```
+
+Optional fields are `extraAttributes` (string map) and `idleTimeout` (seconds, `0` uses server defaults). Prefer `apiToken`; `apiKey` and `apiSecret` are deprecated LiveKit credentials, distinct from your Spatius API Key.
+
+</Tab>
+<Tab title="Agora">
+
+```javascript
+const session = newAvatarSession({
+  apiKey: "your-api-key",
+  appId: "your-app-id",
+  avatarId: "your-avatar-id",
+  agoraEgress: {
+    channelName: "my-channel",
+    token: "agora-token",
+    uid: 0,
+    publisherId: "avatar-publisher",
+  },
+});
+```
+
+`channelName` is required. `token`, `uid`, and `publisherId` are optional configuration fields; provide the token required by your Agora application. A UID of `0` requests automatic assignment.
+
+</Tab>
+</Tabs>
+
+`interrupt()` requires egress mode and a previously sent request. It targets the latest request even after `end=true`. In Backend Mode, discard cancelled turns in your delivery layer and interrupt playback on the client.
+
+## Warm up a worker
+
+`prewarm()` resolves the region before creating sessions. Enable token prefetch to cache a token for later sessions with matching API Key, App ID, and Console endpoint:
+
+```javascript
+import { prewarm } from "@spatius/server-sdk";
+
+const result = await prewarm({
+  appId: "your-app-id",
+  apiKey: "your-api-key",
+  prefetchSessionToken: true,
+});
+console.log(result.region, result.sessionTokenPrefetched);
+```
+
+Warm-up is best-effort and does not throw on failure. It does not open a session; still call `init()` and `start()`. Options include `region`, endpoint overrides, `timeoutMs`, and `sessionExpireAt` (one hour by default). The result also includes `consoleEndpointUrl` and `ingressEndpointUrl`.
+
+Prefetch is off by default. A cached token keeps the expiry chosen by `sessionExpireAt`, not a later session's `expireAt`. Keep it disabled if your backend requires single-use tokens. Unlike Python and Go, JavaScript does not expose a TLS warm-up option.
+
+## Session configuration
+
+| Option | Default / meaning |
+| --- | --- |
+| `apiKey`, `appId`, `avatarId` | Required backend credentials and Avatar selection. |
+| `expireAt` | `Date`, one hour from session creation. |
+| `region` | `"auto"`. |
+| `sampleRate`, `bitrate` | `16000` Hz and `0`. |
+| `audioFormat` | `AudioFormat.PCM_S16LE` / `"pcm_s16le"`; also accepts `AudioFormat.OGG_OPUS` / `"ogg_opus"`. |
+| `oggOpusEncoder` | Unset; `{}` enables default PCM-to-Ogg encoding. |
+| `useQueryAuth` | Off; credentials use headers. |
+| `timeoutMs` | `10000` ms per HTTP exchange, WebSocket upgrade, or protocol handshake, not the total session duration. |
+| `extraParams` | Optional string map sent during the handshake, such as `{ server_post_process: "false" }`. |
+| `consoleEndpointUrl`, `ingressEndpointUrl` | Advanced endpoint overrides. |
+| `livekitEgress`, `agoraEgress` | Unset; configure at most one provider. |
+| `transportFrames`, `onEncodedAudio`, `onError`, `onClose` | Optional callbacks described above. |
+
+## Error handling
+
+`SessionTokenError` extends `AvatarSDKError`. Catch token errors first if you need separate handling:
+
+```javascript
+import { AvatarSDKError, SessionTokenError } from "@spatius/server-sdk";
+
+try {
+  await session.init();
+  await session.start();
+} catch (error) {
+  if (error instanceof SessionTokenError) {
+    console.error("Token failed:", error.code, error.httpStatus);
+  } else if (error instanceof AvatarSDKError) {
+    console.error(error.code, error.phase, error.connectionId, error.reqId);
+  } else {
+    throw error; // Configuration or lifecycle errors can be ordinary JS errors.
+  }
+}
+```
+
+Structured errors expose `code`, `message`, and `phase`, plus optional `httpStatus`, `serverCode`, `serverTitle`, `serverDetail`, `connectionId`, `reqId`, `rawBody`, `closeCode`, `closeReason`, and `cause`.
+
+Use `AvatarSDKErrorCode` for program logic. Values include `sessionTokenExpired`, `sessionTokenInvalid`, `appIDUnrecognized`, `appIDMismatch`, `avatarNotFound`, `billingRequired`, `creditsExhausted`, `sessionDurationExceeded`, `unsupportedSampleRate`, `invalidEgressConfig`, `egressUnavailable`, `idleTimeout`, `upstreamError`, `invalidRequest`, `connectionFailed`, `connectionClosed`, `protocolError`, `serverError`, and `unknown`.
+
+See [Server Error Handling](/resources/server-error) for recovery guidance. Never log API Keys or Session Tokens.
+
+## Telemetry
+
+The SDK exports OpenTelemetry metrics and traces by default, not logs. Configure it before using sessions or `prewarm()`:
+
+```javascript
+import { configureTelemetry, shutdownTelemetry } from "@spatius/server-sdk";
+
+configureTelemetry(""); // Disable SDK telemetry export.
+// Run your application, then at process shutdown:
+await shutdownTelemetry();
+```
+
+`configureTelemetry(endpoint)` sets another collector. `shutdownTelemetry()` flushes and stops the process-wide providers; do not call it after each session.
+
+## Changelog
+
+See [GitHub releases](https://github.com/spatius-ai/spatius-sdk-js/releases).
