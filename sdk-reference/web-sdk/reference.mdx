@@ -267,6 +267,8 @@ For square or portrait display windows, keep this inner stage at 16:9, center it
 | `renderSize` | `{ width, height }` | Current canvas backing-buffer size in pixels |
 | `onFirstRendering` | `() => void` | Callback fired when the first frame renders |
 
+`AvatarView` initializes its renderer asynchronously. The constructor returning is not a readiness signal. For Direct Mode, wait for `onFirstRendering` before starting the controller; for RTC integrations, wait before creating or connecting an `AvatarPlayer`.
+
 **Transform coordinates**
 
 | Field | Range | Description |

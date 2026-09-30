@@ -42,6 +42,9 @@ export async function startAvatar(
 
   const avatar = await AvatarManager.shared.load('your-spatius-avatar-id')
   const avatarView = new AvatarView(avatar, container)
+  await new Promise<void>((resolve) => {
+    avatarView.onFirstRendering = resolve
+  })
 
   const provider = new LiveKitProvider()
   const player = new AvatarPlayer(provider, avatarView)
