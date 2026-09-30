@@ -59,6 +59,18 @@ await AvatarSDK.initialize(appId, {
 })
 ```
 
+Create the `AvatarView` and wait for its `onFirstRendering` callback before constructing or connecting an `AvatarPlayer`. `AvatarView` initializes its renderer asynchronously; the constructor returning is not a readiness signal.
+
+```typescript
+const avatarView = new AvatarView(avatar, container)
+await new Promise<void>((resolve) => {
+  avatarView.onFirstRendering = resolve
+})
+
+const player = new AvatarPlayer(new LiveKitProvider(), avatarView)
+await player.connect(connection)
+```
+
 The adapter owns the RTC-to-renderer data flow. Do not manually call `yieldAudioData()` or `yieldFramesData()` while it is active.
 
 ## Providers

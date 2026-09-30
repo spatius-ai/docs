@@ -50,9 +50,18 @@ Mount the loaded Avatar into an Avatar view. The view owns the render surface an
 
 Treat the view and its controller as one lifecycle unit. Recreate or release them together when the Avatar changes.
 
+`new AvatarView(...)` starts asynchronous renderer initialization. The constructor returning does not mean that the view can accept motion data yet. Set `onFirstRendering` immediately after construction and wait for that callback before starting a controller, creating an RTC player, or joining an RTC room.
+
+```typescript
+const avatarView = new AvatarView(avatar, container)
+await new Promise<void>((resolve) => {
+  avatarView.onFirstRendering = resolve
+})
+```
+
 ## Connect
 
-Connect only after the Avatar is ready to render. The selected integration determines the connection owner:
+Connect only after `onFirstRendering` has fired and the Avatar is ready to render. The selected integration determines the connection owner:
 
 - In Direct Mode, AvatarKit connects to Motion Server.
 - In the recommended integrations, the client joins the configured RTC room while the agent runtime owns the Motion Server session.
