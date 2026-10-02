@@ -11,7 +11,7 @@ description: "Complete API reference for @spatius/avatarkit (Web)."
 | `AvatarSDK` | SDK initialization and global configuration | `initialize()`, `setSessionToken()`, `setRenderQuality()`, `deviceScore()` |
 | `AvatarManager` | Avatar asset loading and caching | `load()`, `cancelLoad()`, `retrieve()`, `clear()`, `clearAll()` |
 | `AvatarView` | 3D rendering view | constructor, `dispose()`, `exportBitmap()`, `avatarTransform`, `getBoundingRect()` |
-| `AvatarController` | Runtime communication and playback control | `start()`, `send()`, `yieldAudioData()`, `yieldFramesData()`, `pause()`, `resume()`, `interrupt()` |
+| `AvatarController` | Runtime communication and playback control | `start()`, `send()`, `yieldAudioData()`, `yieldFramesData()`, `pause()`, `resume()`, `interrupt()`, `setAudioFormat()` |
 
 <Note>
 **App ID** is required on every integration and identifies your Spatius application (it scopes which avatars you can load). **Session Token** is only required for **Direct Mode** (`DrivingServiceMode.direct`), where it authenticates the Motion Server WebSocket; LiveKit Agents, Agora Convo AI, and Backend Mode do not need it.
@@ -53,12 +53,10 @@ await AvatarSDK.initialize('your-app-id', {
   drivingServiceMode: DrivingServiceMode.direct,    // optional, default: direct
   logLevel: LogLevel.warning,                       // optional, default: off
   renderQuality: RenderQuality.ultra,               // optional, default: ultra
-  audioFormat: {                                    // optional
-    channelCount: 1,
-    sampleRate: 16000,
-  },
 })
 ```
+
+The audio format is not part of `initialize()`; set it per view through the [`AvatarView` constructor](#constructor).
 
 #### setSessionToken(token)
 
@@ -221,12 +219,26 @@ import { AvatarView } from '@spatius/avatarkit'
 
 ```typescript
 const avatarView = new AvatarView(avatar, container)
+
+// Or, with this view's audio format:
+// new AvatarView(avatar, container, {
+//   audioFormat: { channelCount: 1, sampleRate: 24000 },
+// })
 ```
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `avatar` | `Avatar` | Loaded avatar object |
 | `container` | `HTMLElement` | Container element (canvas auto-fills the container) |
+| `options` | `AvatarViewOptions` | Optional per-view options (see below) |
+
+```typescript
+interface AvatarViewOptions {
+  audioFormat?: AudioFormat  // Default: { channelCount: 1, sampleRate: 16000 }
+}
+```
+
+The audio format belongs to the view, so two views on one page can use different sample rates. See [AudioFormat](#audioformat) for the fields, and [`setAudioFormat()`](#common-methods) to change it on a live view.
 
 <Warning>
 **Container requirement:** the container element must have non-zero `width` and `height`. The canvas fills the container and auto-resizes via `ResizeObserver`.
@@ -357,7 +369,7 @@ controller.onError = (error: AvatarError) => {
 
 // Animation type changes
 controller.onAnimationState = (type: AnimationType) => {
-  // 'idle' | 'mono'
+  // 'idle' | 'fallback'
 }
 
 // Only fires when frameStarvationMode is FrameStarvationMode.strictSync
@@ -373,6 +385,7 @@ controller.onPlaybackStall = (stalled: boolean) => {
 | `frameStarvationMode` | `FrameStarvationMode` | Controls what happens when motion data cannot keep up with the audio clock. Defaults to `FrameStarvationMode.audioIndependent`. |
 | `onFrameRateInfo` | `(info: FrameRateInfo) => void` | Optional callback for aggregated frame-rate metrics. |
 | `frameRateMonitorEnabled` | `boolean` | Enables frame-rate monitoring. Defaults to `false`. |
+| `audioFormat` | `AudioFormat` | The audio format currently in effect for this view (read-only). Change it with `setAudioFormat()`. |
 
 ### `DrivingServiceMode.direct` methods
 
@@ -476,6 +489,33 @@ controller.setVolume(0.5)              // 0.0 to 1.0
 controller.getVolume()                 // returns current volume
 ```
 
+#### setAudioFormat(patch)
+
+Change the audio format of a live view without re-initializing the SDK or reloading the avatar. This is a partial update: fields you leave out keep their current value. `channelCount` is fixed at 1 and cannot be changed.
+
+```typescript
+controller.setAudioFormat({ sampleRate: 24000 })
+
+// Then, inside a user-gesture handler, before the next send():
+await controller.initializeAudioContext()
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sampleRate` | `number` | Optional. One of 8000 / 16000 / 22050 / 24000 / 32000 / 44100 / 48000. |
+| `opusBitrate` | `number` | Optional. Uplink Opus bitrate in bits/sec. |
+| `opusUplinkEnabled` | `boolean` | Optional. Whether the Direct Mode uplink is compressed to Opus. |
+| `inputAudioFormat` | `'pcm' \| 'opus'` | Optional. Codec of the audio you feed into the SDK. |
+
+**`setAudioFormat()` behavior:**
+
+- Whichever field changes, the call interrupts current playback and discards the audio context. In Direct Mode it also disconnects from Motion Server, reported through `onConnectionState` as `disconnected`.
+- You must call `initializeAudioContext()` again from a user gesture before the next `send()`. Audio fed after the call is interpreted in the new format.
+- Switching `inputAudioFormat` to `'opus'` pins the sample rate at 48000. Switching back to `'pcm'` keeps the current rate unless you pass a `sampleRate` in the same call.
+- An unsupported `sampleRate`, or a `sampleRate` passed together with Opus input, logs an error and leaves the format unchanged.
+- Passing values identical to the current format does nothing: no interrupt and no disconnect.
+- Read the format now in effect from `controller.audioFormat`.
+
 ---
 
 ## Types and Enums
@@ -487,7 +527,6 @@ interface Configuration {
   region?: string                            // Default: automatic selection
   drivingServiceMode?: DrivingServiceMode    // Default: DrivingServiceMode.direct
   logLevel?: LogLevel                        // Default: LogLevel.off
-  audioFormat?: AudioFormat                  // Default: { channelCount: 1, sampleRate: 16000 }
   customEndpoint?: string                    // Advanced override
   renderQuality?: RenderQuality              // Default: RenderQuality.ultra
 }
@@ -539,7 +578,7 @@ enum FrameStarvationMode {
 ```typescript
 enum AnimationType {
   idle = 'idle',
-  mono = 'mono',
+  fallback = 'fallback',
 }
 ```
 
@@ -597,7 +636,7 @@ Multiply by 100 when rendering as a percentage in your UI.
 
 ### AudioFormat
 
-The SDK takes audio as **mono PCM16** by default, and can also take Opus.
+The SDK takes audio as **mono PCM16** by default, and can also take Opus. The format is set per view through `AvatarViewOptions.audioFormat` and can be changed later with [`setAudioFormat()`](#common-methods).
 
 ```typescript
 interface AudioFormat {
@@ -618,8 +657,8 @@ interface AudioFormat {
 
 | Field | What it does |
 |-------|--------------|
-| `inputAudioFormat` | The codec of the audio you feed into the SDK via `send()` / `yieldAudioData()`. Fixed for the whole session; do not vary it per call. Under `'opus'` the configured `sampleRate` does not apply: Opus always decodes at 48 kHz, and the SDK reports that rate for the session. |
-| `opusUplinkEnabled` | Whether the SDK compresses the Direct Mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in Backend Mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing to initialize. |
+| `inputAudioFormat` | The codec of the audio you feed into the SDK via `send()` / `yieldAudioData()`. Do not vary it per call; to switch codecs, call `setAudioFormat()`. Under `'opus'` the configured `sampleRate` does not apply: Opus always decodes at 48 kHz, and the SDK reports that rate for the session. |
+| `opusUplinkEnabled` | Whether the SDK compresses the Direct Mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in Backend Mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing. |
 | `opusBitrate` | Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload. |
 
 Under `inputAudioFormat: 'opus'` the SDK accepts either shape TTS providers produce, and detects which from the bytes:
@@ -721,6 +760,19 @@ enum ErrorCode {
   websocketError = 'websocketError',
   websocketClosedUnexpected = 'websocketClosedUnexpected',
   sessionTimeout = 'sessionTimeout',
+  connectionInProgress = 'connectionInProgress',
+
+  // Playback
+  networkLayerNotAvailable = 'networkLayerNotAvailable',
+  playbackStartFailed = 'playbackStartFailed',
+  playbackInitFailed = 'playbackInitFailed',
+  noAudio = 'noAudio',
+  invalidAudioInput = 'invalidAudioInput',
+  audioContextNotInitialized = 'audioContextNotInitialized',
+  animationPlayerNotInitialized = 'animationPlayerNotInitialized',
+
+  // Server
+  serverError = 'serverError',
 }
 ```
 
@@ -755,6 +807,8 @@ await currentAvatarView.controller.start()
 - Audio playback data and animation resources
 - Canvas elements and the render system
 - Event listeners and callbacks
+
+If the Motion Server connection is still open, `dispose()` reports `disconnected` through `onConnectionState` before clearing callbacks.
 
 <Warning>
 Always call `dispose()` when the view is no longer needed. Failing to do so may cause memory leaks.

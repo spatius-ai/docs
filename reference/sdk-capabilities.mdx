@@ -17,6 +17,8 @@ If a cell says **Not documented**, the current docs do not expose a public refer
 | RTC client/provider support | `@spatius/avatarkit-rtc` | `AvatarKitRTC` with a public `RTCProvider` abstraction; Agora provider included | `ai.spatius:avatarkit-rtc` with a public `RTCProvider` abstraction; Agora provider included | Not documented |
 | Region config | `region` in `AvatarSDK.initialize()` | `region` in `Configuration` | `region` in `Configuration` | `region` in `Configuration` |
 | Region default | Automatic selection when unset | Automatic selection when unset | Automatic selection when unset | Automatic selection when unset |
+| Audio format scope | `new AvatarView(avatar, container, { audioFormat })` | `AvatarView(avatar:audioFormat:)` | `AvatarView.init(avatar, scope, audioFormat)` | `AvatarWidget(audioFormat:)` |
+| Change audio format on a live view | `controller.setAudioFormat(patch)` | `controller.setAudioFormat(sampleRate:inputAudioFormat:opusBitrate:opusUplinkEnabled:)` | `controller.setAudioFormat(sampleRate, opusBitrate, inputAudioFormat, opusUplinkEnabled)` | `controller.setAudioFormat(...)` |
 | Opus audio input | `inputAudioFormat: 'opus'` | `inputAudioFormat: .opus` | `inputAudioFormat = AudioCodec.OPUS` | `inputAudioFormat: AudioCodec.opus` |
 | Direct Mode Opus uplink | On by default (`opusUplinkEnabled`) | On by default (`opusUplinkEnabled`) | On by default (`opusUplinkEnabled`) | On by default (`opusUplinkEnabled`) |
 | Driving mode enum | `DrivingServiceMode.direct` / `.backend` / `.rtc` | `.direct` / `.backend` / `.rtc` | `DIRECT` / `BACKEND` / `RTC` | `direct` / `backend` |

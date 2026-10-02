@@ -60,13 +60,13 @@ import {
 
 await AvatarSDK.initialize('your-app-id', {
   drivingServiceMode: DrivingServiceMode.backend,
-  audioFormat: { channelCount: 1, sampleRate: 16000 },
 })
 
 const avatar = await AvatarManager.shared.load('your-avatar-id')
 const avatarView = new AvatarView(
   avatar,
   document.getElementById('avatar-container')!,
+  { audioFormat: { channelCount: 1, sampleRate: 16000 } },
 )
 const controller = avatarView.controller
 const conversationIds = new Map<string, string>()
