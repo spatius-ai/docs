@@ -516,7 +516,7 @@ data class Configuration
 
 ##### Initializers
 
-<Accordion title="Configuration(region, drivingServiceMode, logLevel, renderQuality, extraParams)">
+<Accordion title="Configuration(region, drivingServiceMode, logLevel, renderQuality)">
 Creates a new configuration with the specified parameters.
 
 ```kotlin
@@ -524,8 +524,7 @@ data class Configuration(
     val region: String = "auto",
     val drivingServiceMode: DrivingServiceMode = DrivingServiceMode.DIRECT,
     val logLevel: LogLevel = LogLevel.OFF,
-    val renderQuality: RenderQuality = RenderQuality.ULTRA,
-    val extraParams: Map<String, String> = emptyMap()
+    val renderQuality: RenderQuality = RenderQuality.ULTRA
 )
 ```
 
@@ -534,7 +533,6 @@ data class Configuration(
 - `drivingServiceMode`: The driving service mode
 - `logLevel`: The log level
 - `renderQuality`: Render quality tier
-- `extraParams`: Application-defined metadata sent unchanged in the session handshake when the SDK connects to Motion Server. Defaults to empty. The map is copied when `AvatarSDK.initialize()` is called, so later changes to the map you passed have no effect. Not used when requesting or setting a session token.
 
 The audio format is set per view; see [`AvatarView.init`](#avatarview) and [AudioFormat](#audioformat).
 </Accordion>

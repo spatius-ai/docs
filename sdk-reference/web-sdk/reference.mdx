@@ -529,11 +529,8 @@ interface Configuration {
   logLevel?: LogLevel                        // Default: LogLevel.off
   customEndpoint?: string                    // Advanced override
   renderQuality?: RenderQuality              // Default: RenderQuality.ultra
-  extraParams?: Readonly<Record<string, string>>  // Optional application-defined metadata
 }
 ```
-
-`extraParams` is application-defined metadata that the SDK sends unchanged in the session handshake when it connects to Motion Server. It is copied when `initialize()` is called, so changing the object afterwards has no effect. It is not used when requesting or setting a Session Token.
 
 `region` selects the Spatius deployment region. Supported values are `'us-west'`, `'ap-northeast'`, and `'cn-beijing'`. When unset, the SDK selects the closest serving region at initialization; passing a value forces that region. If automatic selection cannot be reached, the SDK falls back to a default region and continues initializing. See [Regions](/api-reference/regions) for endpoint details and override options.
 

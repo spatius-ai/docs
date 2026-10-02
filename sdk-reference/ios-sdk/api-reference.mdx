@@ -583,7 +583,7 @@ struct Configuration
 
 ##### Initializers
 
-<Accordion title="init(region:drivingServiceMode:logLevel:renderQuality:extraParams:)">
+<Accordion title="init(region:drivingServiceMode:logLevel:renderQuality:)">
 Creates a new configuration with the specified parameters.
 
 ```swift
@@ -591,8 +591,7 @@ init(
     region: String = "auto",
     drivingServiceMode: DrivingServiceMode = .direct,
     logLevel: LogLevel = .off,
-    renderQuality: RenderQuality = .ultra,
-    extraParams: [String: String] = [:]
+    renderQuality: RenderQuality = .ultra
 )
 ```
 
@@ -601,7 +600,6 @@ init(
 - `drivingServiceMode`: The driving service mode
 - `logLevel`: The log level
 - `renderQuality`: Render quality tier
-- `extraParams`: Application-defined metadata sent unchanged in the session handshake when the SDK connects to Motion Server. Defaults to empty. Not used for session tokens.
 </Accordion>
 
 | Instance Property | Type | Description |
@@ -610,7 +608,6 @@ init(
 | `drivingServiceMode` | `DrivingServiceMode` | Driving service mode for AvatarKit. |
 | `logLevel` | `LogLevel` | Log level for AvatarKit. |
 | `renderQuality` | `RenderQuality` | Render quality tier for AvatarKit. |
-| `extraParams` | `[String: String]` | Application-defined metadata sent unchanged in the session handshake when connecting to Motion Server. Defaults to `[:]`. Not used for session tokens. |
 
 ### AudioFormat
 
