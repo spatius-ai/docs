@@ -32,11 +32,13 @@ Reset the buffer when a turn is interrupted or a new turn begins.
 
 ## Input format
 
-The canonical input is **mono 16-bit PCM (`s16le`)** at the sample rate configured for the session. Convert source audio first when its channels, encoding, or sample rate do not match.
+The canonical input is **mono 16-bit PCM (`s16le`)** at the sample rate configured for the avatar view. Convert source audio first when its channels, encoding, or sample rate do not match.
+
+The audio format belongs to each avatar view, not to SDK initialization, so two views can run different sample rates. It can also be changed on a live view; a change interrupts the current turn and, in Direct Mode, disconnects, so reconnect before sending audio in the new format.
 
 Some SDK entry points also accept Opus. Format support and configuration differ by platform and integration, so use the exact SDK reference rather than mixing PCM and Opus within one session:
 
-[Web](/sdk-reference/web-sdk/reference#configuration) · [iOS](/sdk-reference/ios-sdk/api-reference#audioformat) · [Android](/sdk-reference/android-sdk/api-reference#audioformat) · [Flutter](/sdk-reference/flutter-sdk/api-reference#initialize)
+[Web](/sdk-reference/web-sdk/reference#audioformat) · [iOS](/sdk-reference/ios-sdk/api-reference#audioformat) · [Android](/sdk-reference/android-sdk/api-reference#audioformat) · [Flutter](/sdk-reference/flutter-sdk/api-reference#audioformat)
 
 ## End input or interrupt
 

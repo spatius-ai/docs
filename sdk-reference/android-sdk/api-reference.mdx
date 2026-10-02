@@ -235,6 +235,15 @@ var onError: ((AvatarError) -> Unit)?
 | `ServerError` | The driving service returned an error. |
 </Accordion>
 
+<Accordion title="audioFormat">
+The audio format currently in effect for this view. Read-only; change it with `setAudioFormat()`. With Opus input, `sampleRate` reads 48000.
+
+```kotlin
+var audioFormat: AudioFormat
+    private set
+```
+</Accordion>
+
 <Accordion title="volume">
 Sets or gets the playback volume (0.0 to 1.0).
 
@@ -333,6 +342,31 @@ fun yieldFramesData(animations: List<ByteArray>, conversationId: String): Boolea
 **Returns:** Whether the payload completed the current conversation.
 </Accordion>
 
+<Accordion title="setAudioFormat(sampleRate, opusBitrate, inputAudioFormat, opusUplinkEnabled)">
+Changes the audio format of this view without reinitializing the SDK. Only the parameters you pass change; `null` keeps the current value.
+
+```kotlin
+fun setAudioFormat(
+    sampleRate: Int? = null,
+    opusBitrate: Int? = null,
+    inputAudioFormat: AudioCodec? = null,
+    opusUplinkEnabled: Boolean? = null,
+)
+```
+
+**Parameters:**
+- `sampleRate`: The new sample rate in Hz. Accepted: 8000, 16000, 22050, 24000, 32000, 44100, 48000.
+- `opusBitrate`: The new uplink Opus bitrate in bits/sec.
+- `inputAudioFormat`: The new codec of the audio you feed into the SDK.
+- `opusUplinkEnabled`: Whether the SDK compresses the Direct Mode uplink to Opus.
+
+Any change interrupts the current playback and, in Direct Mode, disconnects. Call `start()` to reconnect; audio you feed after the call is interpreted in the new format. The SDK recreates the `AudioTrack` for the next conversation automatically; no audio-side work is needed. Passing values identical to the current format does nothing.
+
+- Switching `inputAudioFormat` to `AudioCodec.OPUS` sets the sample rate to 48000. Switching back to `AudioCodec.PCM` keeps the current rate unless you pass `sampleRate` in the same call.
+- With PCM input at a rate the Opus uplink does not support (anything other than 8000, 16000, 24000, or 48000), the SDK sends raw PCM. Changing back to a supported rate restores the Opus uplink you requested.
+- An unsupported `sampleRate`, or a `sampleRate` passed with Opus input, logs an error and leaves the format unchanged. It is not reported through `onError`.
+</Accordion>
+
 ### AvatarView
 
 3D rendering view that automatically creates and manages AvatarController.
@@ -371,16 +405,21 @@ var avatarTransform: Transform
 
 ##### Methods
 
-<Accordion title="init(avatar, scope)">
+<Accordion title="init(avatar, scope, audioFormat)">
 Initialize view with avatar.
 
 ```kotlin
-fun init(avatar: Avatar, scope: CoroutineScope)
+fun init(
+    avatar: Avatar,
+    scope: CoroutineScope,
+    audioFormat: AudioFormat = AudioFormat(16000)
+)
 ```
 
 **Parameters:**
 - `avatar`: The avatar to display
 - `scope`: Coroutine scope, usually obtained via `activity.lifecycleScope`
+- `audioFormat`: The audio format for this view. Defaults to 16 kHz PCM. Each view has its own format, so two views can run different sample rates. Change it later with `controller.setAudioFormat()`.
 </Accordion>
 
 <Accordion title="pauseRendering()">
@@ -477,30 +516,32 @@ data class Configuration
 
 ##### Initializers
 
-<Accordion title="Configuration(region, audioFormat, drivingServiceMode, logLevel, renderQuality)">
+<Accordion title="Configuration(region, drivingServiceMode, logLevel, renderQuality, extraParams)">
 Creates a new configuration with the specified parameters.
 
 ```kotlin
 data class Configuration(
     val region: String = "auto",
-    val audioFormat: AudioFormat = AudioFormat(16000),
     val drivingServiceMode: DrivingServiceMode = DrivingServiceMode.DIRECT,
     val logLevel: LogLevel = LogLevel.OFF,
-    val renderQuality: RenderQuality = RenderQuality.ULTRA
+    val renderQuality: RenderQuality = RenderQuality.ULTRA,
+    val extraParams: Map<String, String> = emptyMap()
 )
 ```
 
 **Parameters:**
 - `region`: The region to connect to. Defaults to `"auto"`: the SDK selects the closest serving region at initialization and reuses the cached choice on later launches. Pass `"us-west"`, `"ap-northeast"`, or `"cn-beijing"` to force that region. If automatic selection cannot be reached, the SDK falls back to a default region and continues initializing.
-- `audioFormat`: The audio format configuration
 - `drivingServiceMode`: The driving service mode
 - `logLevel`: The log level
 - `renderQuality`: Render quality tier
+- `extraParams`: Application-defined metadata sent unchanged in the session handshake when the SDK connects to Motion Server. Defaults to empty. The map is copied when `AvatarSDK.initialize()` is called, so later changes to the map you passed have no effect. Not used when requesting or setting a session token.
+
+The audio format is set per view; see [`AvatarView.init`](#avatarview) and [AudioFormat](#audioformat).
 </Accordion>
 
 ### AudioFormat
 
-Audio format configuration for AvatarKit.
+Audio format of an `AvatarView`. Pass it to `AvatarView.init(...)` and change it later with `controller.setAudioFormat()`.
 
 ```kotlin
 class AudioFormat
@@ -521,8 +562,8 @@ class AudioFormat(
 ```
 
 **Parameters:**
-- `sampleRate`: The audio sample rate in Hz. Supported sample rates are: 8000, 16000, 22050, 24000, 32000, 44100, 48000. Not used when `inputAudioFormat` is `AudioCodec.OPUS`: Opus always decodes at 48 kHz, so the session runs at 48000.
-- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send` or `yieldAudioData`. `AudioCodec.PCM` (default) for raw PCM16, `AudioCodec.OPUS` for Opus. Fixed for the whole session; audio that does not match is reported as `AvatarError.InvalidAudioInput`.
+- `sampleRate`: The audio sample rate in Hz. Supported sample rates are: 8000, 16000, 22050, 24000, 32000, 44100, 48000. Not used when `inputAudioFormat` is `AudioCodec.OPUS`: Opus always decodes at 48 kHz, so the view runs at 48000.
+- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send` or `yieldAudioData`. `AudioCodec.PCM` (default) for raw PCM16, `AudioCodec.OPUS` for Opus. Applies to all audio fed to the view until you change it with `controller.setAudioFormat()`; audio that does not match is reported as `AvatarError.InvalidAudioInput`.
 - `opusUplinkEnabled`: Whether the SDK compresses the direct mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in `BACKEND` mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing to initialize.
 - `opusBitrate`: Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload.
 </Accordion>

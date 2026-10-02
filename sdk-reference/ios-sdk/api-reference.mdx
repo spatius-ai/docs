@@ -379,6 +379,35 @@ func yieldFramesData(_ frames: [Data], conversationID: String) -> Bool
 **Returns:** Whether the payload completed the current conversation.
 </Accordion>
 
+<Accordion title="audioFormat">
+The audio format currently in effect for this view. Set by `AvatarView(avatar:audioFormat:)` and changed with `setAudioFormat(sampleRate:inputAudioFormat:opusBitrate:opusUplinkEnabled:)`.
+
+```swift
+var audioFormat: AudioFormat { get }
+```
+</Accordion>
+
+<Accordion title="setAudioFormat(sampleRate:inputAudioFormat:opusBitrate:opusUplinkEnabled:)">
+Changes the audio format of this view without tearing down the SDK. Only the parameters you pass change; `nil` keeps the current value.
+
+```swift
+func setAudioFormat(
+    sampleRate: Int? = nil,
+    inputAudioFormat: AudioCodec? = nil,
+    opusBitrate: Int? = nil,
+    opusUplinkEnabled: Bool? = nil
+)
+```
+
+**Parameters:**
+- `sampleRate`: The new sample rate in Hz. Accepted: 8000, 16000, 22050, 24000, 32000, 44100, 48000. Not accepted with Opus input.
+- `inputAudioFormat`: The new input codec. Switching to `.opus` pins the sample rate at 48000. Switching back to `.pcm` keeps the current rate unless `sampleRate` is passed in the same call.
+- `opusBitrate`: The new target bitrate for the SDK-encoded uplink.
+- `opusUplinkEnabled`: Whether the Direct Mode uplink is Opus-compressed.
+
+Any change interrupts the current playback and, in Direct Mode, disconnects from Motion Server. Call `start()` to reconnect; audio sent after the call is interpreted in the new format. The audio engine reconnects automatically, so no audio-side work is needed. An unsupported sample rate, or a `sampleRate` passed with Opus input, logs an error and leaves the format unchanged. Passing values identical to the current format does nothing.
+</Accordion>
+
 <Accordion title="pointCount">
 The point count of the current avatar.
 
@@ -387,11 +416,29 @@ var pointCount: Int { get }
 ```
 </Accordion>
 
-<Accordion title="volume">
-The volume of playback.
+<Accordion title="setVolume(_:)">
+Sets the audio playback volume.
 
 ```swift
-var volume: Float
+func setVolume(_ volume: Float)
+```
+
+- `volume`: From `0.0` (mute) to `1.0` (maximum). Defaults to `1.0`.
+</Accordion>
+
+<Accordion title="getVolume()">
+Returns the current audio playback volume, from `0.0` to `1.0`.
+
+```swift
+func getVolume() -> Float
+```
+</Accordion>
+
+<Accordion title="getAudioTime()">
+Playback time of the current audio round, in seconds. Resets to `0` at the start of each round and returns `0` when nothing is playing.
+
+```swift
+func getAudioTime() -> Double
 ```
 </Accordion>
 
@@ -405,15 +452,16 @@ A UIView subclass for rendering avatars.
 
 ##### Initializers
 
-<Accordion title="init(avatar:)">
+<Accordion title="init(avatar:audioFormat:)">
 Creates a new avatar view with the specified avatar.
 
 ```swift
-init(avatar: Avatar)
+init(avatar: Avatar, audioFormat: AudioFormat = AudioFormat())
 ```
 
 **Parameters:**
 - `avatar`: The avatar to display
+- `audioFormat`: The audio format for this view. Defaults to 16 kHz PCM. The format is per view, not global: two views in one process can use different sample rates. Change it later with `controller.setAudioFormat(sampleRate:inputAudioFormat:opusBitrate:opusUplinkEnabled:)`.
 </Accordion>
 
 ##### Instance Properties
@@ -535,38 +583,38 @@ struct Configuration
 
 ##### Initializers
 
-<Accordion title="init(region:audioFormat:drivingServiceMode:logLevel:renderQuality:)">
+<Accordion title="init(region:drivingServiceMode:logLevel:renderQuality:extraParams:)">
 Creates a new configuration with the specified parameters.
 
 ```swift
 init(
     region: String = "auto",
-    audioFormat: AudioFormat = .init(),
     drivingServiceMode: DrivingServiceMode = .direct,
     logLevel: LogLevel = .off,
-    renderQuality: RenderQuality = .ultra
+    renderQuality: RenderQuality = .ultra,
+    extraParams: [String: String] = [:]
 )
 ```
 
 **Parameters:**
 - `region`: The region to connect to. Defaults to `"auto"`: the SDK selects the closest serving region at initialization and reuses the cached choice on later launches. Pass `"us-west"`, `"ap-northeast"`, or `"cn-beijing"` to force that region. If automatic selection cannot be reached, the SDK falls back to a default region and continues initializing.
-- `audioFormat`: The audio format configuration
 - `drivingServiceMode`: The driving service mode
 - `logLevel`: The log level
 - `renderQuality`: Render quality tier
+- `extraParams`: Application-defined metadata sent unchanged in the session handshake when the SDK connects to Motion Server. Defaults to empty. Not used for session tokens.
 </Accordion>
 
 | Instance Property | Type | Description |
 |----------|------|-------------|
 | `region` | `String` | The region to connect to. Defaults to `"auto"`: the SDK selects the closest serving region at initialization and reuses the cached choice on later launches. Pass `"us-west"`, `"ap-northeast"`, or `"cn-beijing"` to force that region. If automatic selection cannot be reached, the SDK falls back to a default region and continues initializing. |
-| `audioFormat` | `AudioFormat` | Audio format for AvatarKit. |
 | `drivingServiceMode` | `DrivingServiceMode` | Driving service mode for AvatarKit. |
 | `logLevel` | `LogLevel` | Log level for AvatarKit. |
 | `renderQuality` | `RenderQuality` | Render quality tier for AvatarKit. |
+| `extraParams` | `[String: String]` | Application-defined metadata sent unchanged in the session handshake when connecting to Motion Server. Defaults to `[:]`. Not used for session tokens. |
 
 ### AudioFormat
 
-Audio format configuration for AvatarKit.
+Audio format configuration for an `AvatarView`. Pass it to `AvatarView(avatar:audioFormat:)`; change it later with `controller.setAudioFormat(sampleRate:inputAudioFormat:opusBitrate:opusUplinkEnabled:)`.
 
 ```swift
 struct AudioFormat
@@ -588,9 +636,9 @@ init(
 
 **Parameters:**
 - `sampleRate`: The audio sample rate in Hz. Defaults to 16000. Supported: 8000, 16000, 22050, 24000, 32000, 44100, 48000. Not used when `inputAudioFormat` is `.opus`: Opus always decodes at 48 kHz, so the session runs at 48000.
-- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send` or `yieldAudioData`. `.pcm` (default) for raw PCM16, `.opus` for Opus. Fixed for the whole session; audio that does not match is reported as `AvatarError.invalidAudioInput`.
+- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send` or `yieldAudioData`. `.pcm` (default) for raw PCM16, `.opus` for Opus. Applies until changed with `controller.setAudioFormat(sampleRate:inputAudioFormat:opusBitrate:opusUplinkEnabled:)`; audio that does not match is reported as `AvatarError.invalidAudioInput`.
 - `opusBitrate`: Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload.
-- `opusUplinkEnabled`: Whether the SDK compresses the direct mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in `.backend` mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing to initialize.
+- `opusUplinkEnabled`: Whether the SDK compresses the direct mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in `.backend` mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing.
 </Accordion>
 
 | Instance Property | Type | Description |
@@ -756,7 +804,7 @@ enum AvatarError: LocalizedError
 | `renderNotSupported` | Rendering is not supported on this device (no Metal device). Deterministic — tell the user rather than retry. |
 | `renderInitFailed` | The renderer failed to initialize for another reason. |
 | `invalidAnimationData` | The animation data is invalid. |
-| `invalidAudioInput` | The audio does not match `audioFormat.inputAudioFormat`. |
+| `invalidAudioInput` | The audio does not match `controller.audioFormat.inputAudioFormat`. |
 | `serverError` | The driving service returned an error. |
 
 | Instance Property | Type | Description |
