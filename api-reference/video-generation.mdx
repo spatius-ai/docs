@@ -82,14 +82,14 @@ Requests accepted before the change to background-based sizing used fixed defaul
 
 ## Media requirements
 
-| Input | Supported Content-Type | Maximum size |
-| --- | --- | --- |
-| Audio (WAV) | `audio/wav`, `audio/x-wav`, `audio/wave`, `audio/vnd.wave` | 500 MiB |
-| Background image | `image/png`, `image/jpeg`, `image/webp` | 50 MiB |
+| Input | Supported Content-Type | Maximum size | Maximum duration |
+| --- | --- | --- | --- |
+| Audio (WAV) | `audio/wav`, `audio/x-wav`, `audio/wave`, `audio/vnd.wave` | 500 MiB | 20 minutes |
+| Background image | `image/png`, `image/jpeg`, `image/webp` | 50 MiB | — |
 
 Use public HTTP(S) URLs, including signed URLs. Embedded usernames/passwords and private-network destinations are rejected. Authentication headers are not forwarded to source hosts. Each connection and redirect is checked.
 
-Keep source URLs accessible for the preparation window of up to **30 minutes**; each transfer has a **five-minute** deadline. Only WAV audio inputs are supported. Empty files and `application/octet-stream` are not supported. Audio decoding and duration checks happen asynchronously, so acceptance does not guarantee a successful render.
+Keep source URLs accessible for the preparation window of up to **30 minutes**; each transfer has a **five-minute** deadline. Only WAV audio inputs up to **20 minutes** long are supported. Empty files and `application/octet-stream` are not supported. Audio decoding and duration checks happen asynchronously, so acceptance does not guarantee a successful render.
 
 ## Presentation settings
 
@@ -151,7 +151,7 @@ Video access requires explicit account limits. Creation and read counters are in
 | Reads per minute | 1,200 |
 | Reads per second / burst | 20 / 40 |
 
-The Console API checks video access and request rates. It does not impose an active-video-job quota; the video service manages execution concurrency. Back off after `429` responses. The Video API does not reserve Avatar Creations; video generation consumes **50 credits per minute**. See [Video Generation Pricing](/pricing/video-generation) for credit estimates.
+The Console API checks video access and request rates. It does not impose an active-video-job quota; the video service manages execution concurrency. Back off after `429` responses. The Video API does not reserve Avatar Creations; video generation consumes **250 credits per minute**. See [Video Generation Pricing](/pricing/video-generation) for credit estimates.
 
 This version supports URL inputs and polling. Public uploads, developer callbacks, cancellation, text-to-speech, and permanent output storage are not available.
 
