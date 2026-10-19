@@ -248,6 +248,8 @@ await room.disconnect()
 
 Attach before joining the channel. The host-owned client must use the H.264 codec and remains responsible for joining, subscribing, audio playback, and leaving.
 
+`attach()` turns on two Agora Web SDK parameters, `ENABLE_VIDEO_SEI` and `ENABLE_FULL_LINK_AV_SYNC`. The avatar needs them. They are set on the `AgoraRTC` module, so they apply to every Agora client on the page, and `detach()` does not turn them off.
+
 Do not mix `connect()` with `attach()` on the same player.
 
 ## Native client access

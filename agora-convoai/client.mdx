@@ -115,6 +115,8 @@ Add `NSMicrophoneUsageDescription` to the app and request microphone permission 
 
 <Note>
 The default `connect(_:)` path lets `AgoraProvider` own the engine. If your iOS app already owns an `AgoraRtcEngineKit`, call `attach(to:)` before joining the channel instead. The two paths are mutually exclusive; do not create a second engine only for avatar playback.
+
+Your app keeps owning that engine: it creates it, sets the client role, joins and leaves the channel, and destroys it. `detach()` hands it back without leaving the channel. `attach(to:)` does change two engine settings, and `detach()` does not restore them: it enables SEI (`rtc.video.enable_sei`), which the avatar needs, and sets the audio scenario to `.chorus`. If your app needs a different audio scenario, set it after calling `attach(to:)`.
 </Note>
 
 </Tab>
@@ -179,6 +181,12 @@ suspend fun disconnectAvatar() {
 ```
 
 Declare `android.permission.RECORD_AUDIO` and request the runtime permission before calling `publishAudio()`.
+
+<Note>
+The default `connect(...)` path lets `AgoraProvider` own the engine. If your Android app already owns an `RtcEngine`, call `player.attach(engine)` before joining the channel instead. The two paths are mutually exclusive; do not create a second engine only for avatar playback.
+
+Your app keeps owning that engine: it creates it, sets the client role, joins and leaves the channel, and destroys it. `detach()` hands it back without leaving the channel. `attach(engine)` does change two engine settings, and `detach()` does not restore them: it enables SEI (`rtc.video.enable_sei`), which the avatar needs, and sets the audio scenario to `AUDIO_SCENARIO_CHORUS`. If your app needs a different audio scenario, set it after calling `attach(engine)`.
+</Note>
 
 </Tab>
 </Tabs>
