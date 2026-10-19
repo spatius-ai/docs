@@ -64,6 +64,38 @@ async function disconnectAvatar() {
 
 Call the connect flow from a user action so the browser can request microphone permission.
 
+The default `connect()` path lets `AgoraProvider` create and own the Agora client. If your app already owns one, attach the player to it before joining the channel instead. The client must use the H.264 codec. The two paths are mutually exclusive.
+
+```typescript
+import AgoraRTC from 'agora-rtc-sdk-ng'
+import { AgoraProvider, AvatarPlayer } from '@spatius/avatarkit-rtc'
+
+const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'h264' })
+const player = new AvatarPlayer(new AgoraProvider(), avatarView)
+
+// Attach before joining the channel.
+await player.attach(client)
+
+// Your app subscribes to and plays the agent's audio.
+client.on('user-published', async (user, mediaType) => {
+  if (mediaType !== 'audio') return
+  await client.subscribe(user, 'audio')
+  user.audioTrack?.play()
+})
+
+await client.join(agoraAppId, channel, clientToken, clientUid)
+
+async function disconnectAvatar() {
+  await player.detach()
+  await client.leave()
+  avatarView.dispose()
+}
+```
+
+<Note>
+Your app keeps owning the client: it joins and leaves the channel, subscribes to remote tracks, and plays remote audio. `detach()` hands it back without leaving the channel. `attach()` turns on two Agora Web SDK parameters, `ENABLE_VIDEO_SEI` and `ENABLE_FULL_LINK_AV_SYNC`, which the avatar needs. They are set on the `AgoraRTC` module, so they apply to every Agora client on the page, and `detach()` does not turn them off.
+</Note>
+
 [Web RTC Adapter Reference](/sdk-reference/web-sdk/rtc-adapter)
 
 </Tab>
