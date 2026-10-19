@@ -113,10 +113,39 @@ func disconnectAvatar() async {
 
 Add `NSMicrophoneUsageDescription` to the app and request microphone permission before calling `publishAudio()`.
 
-<Note>
-The default `connect(_:)` path lets `AgoraProvider` own the engine. If your iOS app already owns an `AgoraRtcEngineKit`, call `attach(to:)` before joining the channel instead. The two paths are mutually exclusive; do not create a second engine only for avatar playback.
+The default `connect(_:)` path lets `AgoraProvider` own the engine. If your iOS app already owns an `AgoraRtcEngineKit`, attach the player to it before joining the channel instead. The two paths are mutually exclusive; do not create a second engine only for avatar playback.
 
-Your app keeps owning that engine: it creates it, sets the client role, joins and leaves the channel, and destroys it. `detach()` hands it back without leaving the channel. `attach(to:)` does change two engine settings, and `detach()` does not restore them: it enables SEI (`rtc.video.enable_sei`), which the avatar needs, and sets the audio scenario to `.chorus`. If your app needs a different audio scenario, set it after calling `attach(to:)`.
+```swift
+import AgoraRtcKit
+
+let engineConfig = AgoraRtcEngineConfig()
+engineConfig.appId = agoraAppID
+engineConfig.channelProfile = .liveBroadcasting
+let engine = AgoraRtcEngineKit.sharedEngine(with: engineConfig, delegate: yourEngineDelegate)
+
+let player = AvatarPlayer(provider: AgoraProvider(), avatarView: avatarView)
+
+// Attach before joining the channel.
+try player.attach(to: engine)
+
+engine.setClientRole(.broadcaster)
+let options = AgoraRtcChannelMediaOptions()
+options.clientRoleType = .broadcaster
+options.autoSubscribeAudio = true
+options.autoSubscribeVideo = true
+options.publishCameraTrack = false
+options.publishMicrophoneTrack = true
+engine.joinChannel(byToken: clientToken, channelId: channel, uid: clientUID, mediaOptions: options)
+
+func disconnectAvatar() async {
+    await player.detach()
+    engine.leaveChannel(nil)
+    AgoraRtcEngineKit.destroy()
+}
+```
+
+<Note>
+Your app keeps owning the engine: it creates it, sets the client role, joins and leaves the channel, and destroys it. `detach()` hands it back without leaving the channel. `attach(to:)` does change two engine settings, and `detach()` does not restore them: it enables SEI (`rtc.video.enable_sei`), which the avatar needs, and sets the audio scenario to `.chorus`. If your app needs a different audio scenario, set it after calling `attach(to:)`.
 </Note>
 
 </Tab>
@@ -182,10 +211,47 @@ suspend fun disconnectAvatar() {
 
 Declare `android.permission.RECORD_AUDIO` and request the runtime permission before calling `publishAudio()`.
 
-<Note>
-The default `connect(...)` path lets `AgoraProvider` own the engine. If your Android app already owns an `RtcEngine`, call `player.attach(engine)` before joining the channel instead. The two paths are mutually exclusive; do not create a second engine only for avatar playback.
+The default `connect(...)` path lets `AgoraProvider` own the engine. If your Android app already owns an `RtcEngine`, attach the player to it before joining the channel instead. The two paths are mutually exclusive; do not create a second engine only for avatar playback.
 
-Your app keeps owning that engine: it creates it, sets the client role, joins and leaves the channel, and destroys it. `detach()` hands it back without leaving the channel. `attach(engine)` does change two engine settings, and `detach()` does not restore them: it enables SEI (`rtc.video.enable_sei`), which the avatar needs, and sets the audio scenario to `AUDIO_SCENARIO_CHORUS`. If your app needs a different audio scenario, set it after calling `attach(engine)`.
+```kotlin
+import io.agora.rtc2.ChannelMediaOptions
+import io.agora.rtc2.Constants
+import io.agora.rtc2.RtcEngine
+import io.agora.rtc2.RtcEngineConfig
+
+val engine = RtcEngine.create(RtcEngineConfig().apply {
+    mContext = context
+    mAppId = agoraAppId
+    mEventHandler = yourEngineEventHandler
+    mChannelProfile = Constants.CHANNEL_PROFILE_LIVE_BROADCASTING
+})
+
+val player = AvatarPlayer(
+    provider = AgoraProvider(context),
+    avatarView = avatarView,
+)
+
+// Attach before joining the channel.
+player.attach(engine)
+
+engine.setClientRole(Constants.CLIENT_ROLE_BROADCASTER)
+engine.joinChannel(clientToken, channel, clientUid.toInt(), ChannelMediaOptions().apply {
+    clientRoleType = Constants.CLIENT_ROLE_BROADCASTER
+    autoSubscribeAudio = true
+    autoSubscribeVideo = true
+    publishCameraTrack = false
+    publishMicrophoneTrack = true
+})
+
+suspend fun disconnectAvatar() {
+    player.detach()
+    engine.leaveChannel()
+    RtcEngine.destroy()
+}
+```
+
+<Note>
+Your app keeps owning the engine: it creates it, sets the client role, joins and leaves the channel, and destroys it. `detach()` hands it back without leaving the channel. `attach(engine)` does change two engine settings, and `detach()` does not restore them: it enables SEI (`rtc.video.enable_sei`), which the avatar needs, and sets the audio scenario to `AUDIO_SCENARIO_CHORUS`. If your app needs a different audio scenario, set it after calling `attach(engine)`.
 </Note>
 
 </Tab>

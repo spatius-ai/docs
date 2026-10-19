@@ -248,6 +248,29 @@ await room.disconnect()
 
 Attach before joining the channel. The host-owned client must use the H.264 codec and remains responsible for joining, subscribing, audio playback, and leaving.
 
+```typescript
+import AgoraRTC from 'agora-rtc-sdk-ng'
+import { AgoraProvider, AvatarPlayer } from '@spatius/avatarkit-rtc'
+
+const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'h264' })
+const player = new AvatarPlayer(new AgoraProvider(), avatarView)
+
+await player.attach(client)
+
+// Your application subscribes to and plays the agent's audio.
+client.on('user-published', async (user, mediaType) => {
+  if (mediaType !== 'audio') return
+  await client.subscribe(user, 'audio')
+  user.audioTrack?.play()
+})
+
+await client.join(agoraAppId, channel, clientToken, clientUid)
+
+// Later
+await player.detach()
+await client.leave()
+```
+
 `attach()` turns on two Agora Web SDK parameters, `ENABLE_VIDEO_SEI` and `ENABLE_FULL_LINK_AV_SYNC`. The avatar needs them. They are set on the `AgoraRTC` module, so they apply to every Agora client on the page, and `detach()` does not turn them off.
 
 Do not mix `connect()` with `attach()` on the same player.
