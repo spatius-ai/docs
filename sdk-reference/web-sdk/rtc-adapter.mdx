@@ -150,6 +150,7 @@ new AvatarPlayer(
 | Property | Type | Description |
 | --- | --- | --- |
 | `isConnected` | `boolean` | Whether the player is connected or attached. |
+| `conversationState` | `RTCConversationState` | Whether the Avatar is idle or speaking on screen. Starts as `idle`. See [Conversation state](#conversation-state). |
 | `sessionSummary` | SDK-owned object | Cumulative playback diagnostics for this player lifetime. |
 
 Treat the shape of `sessionSummary` as diagnostics data, not application state.
@@ -211,6 +212,7 @@ enum ConnectionState {
 | `'error'` | `Error` | The provider reported an error. |
 | `'connection-state-changed'` | Connection state string | The provider state changed. |
 | `'stalled'` | None | The motion data stream stalled and the avatar returned to idle. |
+| `'conversation-state-changed'` | `RTCConversationState` | The Avatar started or stopped speaking on screen. |
 
 ```typescript
 const recover = () => {
@@ -220,6 +222,37 @@ const recover = () => {
 player.on('stalled', recover)
 player.off('stalled', recover)
 ```
+
+### Conversation state
+
+The package exports `RTCConversationState`:
+
+```typescript
+enum RTCConversationState {
+  Idle = 'idle',
+  Speaking = 'speaking',
+}
+```
+
+Use it to drive speaking indicators and idle UI. The state follows what is on screen, not what has arrived over the network:
+
+- It becomes `speaking` on the first rendered frame of a response, including the transition into speech.
+- It returns to `idle` once the transition back to idle has finished playing.
+- A stalled stream, a disconnect, or a call to `disconnect()` or `detach()` while the Avatar is speaking returns it to `idle` once.
+
+`'conversation-state-changed'` fires once per change, never per frame. Read `player.conversationState` for the current value.
+
+```typescript
+import { RTCConversationState } from '@spatius/avatarkit-rtc'
+
+player.on('conversation-state-changed', (state: RTCConversationState) => {
+  setSpeaking(state === RTCConversationState.Speaking)
+})
+```
+
+<Note>
+In RTC mode, use `RTCConversationState` from `AvatarPlayer`. AvatarKit's own `AvatarController` conversation state callback does not fire when `@spatius/avatarkit-rtc` drives the Avatar.
+</Note>
 
 ## Host-owned RTC clients
 

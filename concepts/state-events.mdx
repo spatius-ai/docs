@@ -16,6 +16,8 @@ Do not infer network health from conversation state. An Avatar can be idle while
 
 Platform definitions: [Web](/sdk-reference/web-sdk/reference#conversationstate) · [iOS](/sdk-reference/ios-sdk/api-reference#conversationstate) · [Android](/sdk-reference/android-sdk/api-reference#conversationstate) · [Flutter](/sdk-reference/flutter-sdk/api-reference#render-and-control-playback)
 
+In LiveKit Agents and Agora Convo AI client integrations, the RTC package drives the Avatar and AvatarKit's `ConversationState` callback does not fire. Read `RTCConversationState` from `AvatarPlayer` instead. It has two values, idle and speaking, and follows what is on screen. See [Web](/sdk-reference/web-sdk/rtc-adapter#conversation-state) and [iOS and Android](/agora-convoai/client#show-when-the-avatar-is-speaking).
+
 ## `ConnectionState`
 
 `ConnectionState` answers: **Can AvatarKit reach Motion Server?**

@@ -183,13 +183,14 @@ Your app keeps owning the engine: it creates it, sets the client role, joins and
 </Tab>
 <Tab title="Android">
 
-Add the Android RTC package:
+Add the Android RTC package and Agora's Android SDK:
 
 ```kotlin
 implementation("ai.spatius:avatarkit-rtc:<latest-version>")
+implementation("io.agora.rtc:full-sdk:4.5.2")
 ```
 
-Use the latest stable release from [Maven Central](https://central.sonatype.com/artifact/ai.spatius/avatarkit-rtc).
+Use the latest stable release from [Maven Central](https://central.sonatype.com/artifact/ai.spatius/avatarkit-rtc). The RTC package does not bring in Agora's SDK, so your app must declare it. Use Agora 4.5.2: Agora 4.6.x is not supported.
 
 Initialize AvatarKit in RTC mode, load the Avatar, then connect the player:
 
@@ -290,6 +291,59 @@ Your app keeps owning the engine: it creates it, sets the client role, joins and
 </Tabs>
 
 The packaged `AgoraProvider` coordinates audio and motion data. On the default `connect` path, it also owns the RTC lifecycle. Do not also call Backend Mode feed methods.
+
+## Show when the Avatar is speaking
+
+`AvatarPlayer` reports whether the Avatar is idle or speaking on screen. Use it to drive speaking indicators and idle UI. The state turns to speaking on the first rendered frame of a response and returns to idle once the transition back to idle has finished playing, or when the stream stalls or the player disconnects or detaches. The event fires once per change, never per frame, and the current value is always readable from the player.
+
+AvatarKit's own conversation state callback does not fire in RTC mode, so read the state from `AvatarPlayer` instead.
+
+<Tabs>
+<Tab title="Web">
+
+```typescript
+import { RTCConversationState } from '@spatius/avatarkit-rtc'
+
+player.on('conversation-state-changed', (state: RTCConversationState) => {
+  setSpeaking(state === RTCConversationState.Speaking)
+})
+
+// Current value: player.conversationState
+```
+
+</Tab>
+<Tab title="iOS">
+
+```swift
+player.subscribe { event in
+    if case .conversationStateChanged(let state) = event {
+        setSpeaking(state == .speaking)
+    }
+}
+
+// Current value: player.conversationState (.idle or .speaking)
+```
+
+</Tab>
+<Tab title="Android">
+
+```kotlin
+import ai.spatius.avatarkit.rtc.AvatarPlayerEvent
+import ai.spatius.avatarkit.rtc.RTCConversationState
+
+player.subscribe { event ->
+    if (event is AvatarPlayerEvent.ConversationStateChanged) {
+        setSpeaking(event.state == RTCConversationState.SPEAKING)
+    }
+}
+
+// Current value: player.conversationState (IDLE or SPEAKING)
+```
+
+`AvatarPlayerEvent` is a sealed class. If your app handles it with an exhaustive `when`, add a `ConversationStateChanged` branch or an `else` branch.
+
+</Tab>
+</Tabs>
 
 ## Next steps
 
