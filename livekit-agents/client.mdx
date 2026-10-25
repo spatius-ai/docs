@@ -67,6 +67,8 @@ export async function startAvatar(
 
 The adapter creates and owns the LiveKit `Room` in this path. If your app must supply an existing room, follow the advanced `attach()` flow in the [RTC Adapter reference](/sdk-reference/web-sdk/rtc-adapter#host-owned-rtc-clients).
 
+To show when the Avatar is speaking, listen for `'conversation-state-changed'` on the player. AvatarKit's own conversation state callback does not fire in RTC mode. See [Conversation state](/sdk-reference/web-sdk/rtc-adapter#conversation-state).
+
 ## Next steps
 
 <CardGroup cols={3}>
