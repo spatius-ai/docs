@@ -6,8 +6,8 @@
  * The docs have no cookie banner. GA4 loads only after the visitor accepted
  * analytics cookies on www.spatius.ai or in Studio, which share the
  * `spatius_analytics_consent` cookie on `.spatius.ai`. While consent is
- * undecided, links to Studio carry the visit's source in `sw_landing_*`
- * parameters; Studio reports it if consent is granted there.
+ * undecided, links to Studio carry the visit's source and landing page in
+ * `sw_landing_*` parameters; Studio reports them if consent is granted there.
  *
  * Mintlify includes this file on every page and runs it once per visit.
  */
@@ -19,6 +19,8 @@
   const OWNED_ROOT_DOMAINS = ['spatius.ai', 'spatialwalk.cn']
   const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']
   const SAFE_VALUE_PATTERN = /^[\w.-][\w .:/-]{0,99}$/
+  // Plain page paths only; anything else is left out of the handoff.
+  const LANDING_PAGE_PATH_PATTERN = /^\/[\w.~/-]{0,199}$/
   // Medium `organic` puts the visit in GA4's Organic Search channel.
   const SEARCH_ENGINE_HOSTS = [
     ['google', /^(?:www\.)?google\.[a-z]{2,3}(?:\.[a-z]{2})?$/],
@@ -124,6 +126,7 @@
     targetUrl.searchParams.set('sw_landing_source', landingAttribution.source)
     targetUrl.searchParams.set('sw_landing_medium', landingAttribution.medium)
     if (landingAttribution.campaign) targetUrl.searchParams.set('sw_landing_campaign', landingAttribution.campaign)
+    if (landingAttribution.page) targetUrl.searchParams.set('sw_landing_page', landingAttribution.page)
     // The browser follows the href in place when this handler returns; restore
     // the link afterwards so copied links do not carry the source.
     anchor.href = targetUrl.toString()
@@ -135,6 +138,13 @@
 
   function readLandingAttribution(landingHref, referrer) {
     const landingUrl = new URL(landingHref)
+    const source = readLandingSource(landingUrl, referrer)
+    // The landing page without its query lets GA4 join the visit to Search Console.
+    if (!source || !LANDING_PAGE_PATH_PATTERN.test(landingUrl.pathname)) return source
+    return { ...source, page: `${landingUrl.origin}${landingUrl.pathname}` }
+  }
+
+  function readLandingSource(landingUrl, referrer) {
     const utmSource = safeValue(landingUrl.searchParams.get('utm_source'))
     if (utmSource) {
       const campaign = safeValue(landingUrl.searchParams.get('utm_campaign'))
