@@ -102,7 +102,7 @@ static var renderResolutionConfig: RenderResolutionConfig { get }
 </Accordion>
 
 <Accordion title="autoRenderQualityEnabled">
-Whether automatic render quality adjustment is on. See `setAutoRenderQuality(_:options:)`.
+Whether automatic render quality adjustment is on. See `setAutoRenderQuality(enabled:options:)`.
 
 ```swift
 static var autoRenderQualityEnabled: Bool { get }
@@ -139,15 +139,15 @@ static func setRenderQuality(_ quality: RenderQuality)
 ```
 
 - Call it after `initialize(appID:configuration:)`. A call made before that is ignored and an error is logged; pass the initial tier as `Configuration.renderQuality` instead.
-- Calling `setRenderQuality(_:)` turns automatic adjustment (`setAutoRenderQuality(_:options:)`) off.
+- Calling `setRenderQuality(_:)` turns automatic adjustment (`setAutoRenderQuality(enabled:options:)`) off.
 </Accordion>
 
-<Accordion title="setAutoRenderQuality(_:options:)">
+<Accordion title="setAutoRenderQuality(enabled:options:)">
 Let the SDK lower the render quality tier when the GPU cannot keep up. Off by default.
 
 ```swift
 static func setAutoRenderQuality(
-    _ enabled: Bool,
+    enabled: Bool,
     options: AutoRenderQualityOptions = AutoRenderQualityOptions()
 )
 ```
@@ -156,14 +156,14 @@ static func setAutoRenderQuality(
 AvatarSDK.onRenderQualityChanged = { quality, reason in
     print("Render quality: \(quality), \(reason)")
 }
-AvatarSDK.setAutoRenderQuality(true, options: AutoRenderQualityOptions(maxQuality: .high))
+AvatarSDK.setAutoRenderQuality(enabled: true, options: AutoRenderQualityOptions(maxQuality: .high))
 ```
 
 - The SDK judges the load only from frames rendered while the Avatar is idle; speaking frames depend on the network and are not used. It lowers the tier one step at a time when the GPU render time exceeds `loadThreshold` of the 40 ms frame budget (25 fps).
 - Besides the three tiers, the SDK uses one intermediate step between each pair of tiers. The reported tier is the highest tier not above the current step. `onRenderQualityChanged` is called only when that tier changes, with `.autoDowngrade` or `.autoUpgrade`.
 - Quality stays between `minQuality` and `maxQuality`; with `allowUpgrade` it is raised again when the load drops. A current tier outside that range is moved into it as soon as automatic adjustment is turned on.
 - Call it after `initialize(appID:configuration:)`. A call made before that, a `loadThreshold` outside 0.6–1.0, or a `minQuality` above `maxQuality` is ignored and an error is logged.
-- `setAutoRenderQuality(false)` and `setRenderQuality(_:)` both turn automatic adjustment off and keep the current tier.
+- `setAutoRenderQuality(enabled: false)` and `setRenderQuality(_:)` both turn automatic adjustment off and keep the current tier.
 
 See [AutoRenderQualityOptions](#autorenderqualityoptions) for the options.
 </Accordion>
@@ -792,7 +792,7 @@ enum RenderQuality
 
 ### AutoRenderQualityOptions
 
-Options for `AvatarSDK.setAutoRenderQuality(_:options:)`.
+Options for `AvatarSDK.setAutoRenderQuality(enabled:options:)`.
 
 ```swift
 struct AutoRenderQualityOptions
