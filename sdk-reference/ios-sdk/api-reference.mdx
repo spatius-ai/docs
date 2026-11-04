@@ -14,9 +14,16 @@ In Xcode, open **File > Add Package Dependencies**, enter `https://github.com/sp
 </Tab>
 <Tab title="CocoaPods">
 
-```ruby
+AvatarKit is published to its own [CocoaPods spec repository](https://github.com/spatius-ai/avatarkit-specs), because the public CocoaPods trunk stops accepting new versions. Add it as a source at the top of your `Podfile`, and keep the CocoaPods CDN for third-party dependencies:
+
+```ruby title="Podfile"
+source 'https://github.com/spatius-ai/avatarkit-specs.git'
+source 'https://cdn.cocoapods.org/'
+
 pod 'SpatiusAvatarKit'
 ```
+
+Then run `pod install --repo-update`.
 
 The pod is named `SpatiusAvatarKit`, but the module name is unchanged: import it as `import AvatarKit`.
 
@@ -78,6 +85,38 @@ static var version: String { get }
 ```
 </Accordion>
 
+<Accordion title="renderResolutionEnabled">
+Whether the bounds set by `setRenderResolutionConfig(enabled:config:)` are applied.
+
+```swift
+static var renderResolutionEnabled: Bool { get }
+```
+</Accordion>
+
+<Accordion title="renderResolutionConfig">
+The bounds last passed to `setRenderResolutionConfig(enabled:config:)`.
+
+```swift
+static var renderResolutionConfig: RenderResolutionConfig { get }
+```
+</Accordion>
+
+<Accordion title="autoRenderQualityEnabled">
+Whether automatic render quality adjustment is on. See `setAutoRenderQuality(_:options:)`.
+
+```swift
+static var autoRenderQualityEnabled: Bool { get }
+```
+</Accordion>
+
+<Accordion title="onRenderQualityChanged">
+Called on the main thread each time automatic adjustment changes the reported render quality tier. A step within the same tier does not call it, and it is not called for `setRenderQuality(_:)`.
+
+```swift
+static var onRenderQualityChanged: ((RenderQuality, RenderQualityChangeReason) -> Void)?
+```
+</Accordion>
+
 ##### Type Methods
 
 <Accordion title="initialize(appID:configuration:)">
@@ -93,18 +132,80 @@ static func initialize(appID: String, configuration: Configuration)
 </Accordion>
 
 <Accordion title="setRenderQuality(_:)">
-Update the global rendering quality tier.
+Update the global rendering quality tier. The change takes effect on the next rendered frame across all active `AvatarView` instances.
 
 ```swift
 static func setRenderQuality(_ quality: RenderQuality)
 ```
+
+- Call it after `initialize(appID:configuration:)`. A call made before that is ignored and an error is logged; pass the initial tier as `Configuration.renderQuality` instead.
+- Calling `setRenderQuality(_:)` turns automatic adjustment (`setAutoRenderQuality(_:options:)`) off.
 </Accordion>
 
-<Accordion title="setRenderResolutionCap(enabled:maxHeight:)">
-Cap render backing-buffer height while preserving the view's CSS/layout size.
+<Accordion title="setAutoRenderQuality(_:options:)">
+Let the SDK lower the render quality tier when the GPU cannot keep up. Off by default.
+
+```swift
+static func setAutoRenderQuality(
+    _ enabled: Bool,
+    options: AutoRenderQualityOptions = AutoRenderQualityOptions()
+)
+```
+
+```swift
+AvatarSDK.onRenderQualityChanged = { quality, reason in
+    print("Render quality: \(quality), \(reason)")
+}
+AvatarSDK.setAutoRenderQuality(true, options: AutoRenderQualityOptions(maxQuality: .high))
+```
+
+- The SDK judges the load only from frames rendered while the Avatar is idle; speaking frames depend on the network and are not used. It lowers the tier one step at a time when the GPU render time exceeds `loadThreshold` of the 40 ms frame budget (25 fps).
+- Besides the three tiers, the SDK uses one intermediate step between each pair of tiers. The reported tier is the highest tier not above the current step. `onRenderQualityChanged` is called only when that tier changes, with `.autoDowngrade` or `.autoUpgrade`.
+- Quality stays between `minQuality` and `maxQuality`; with `allowUpgrade` it is raised again when the load drops. A current tier outside that range is moved into it as soon as automatic adjustment is turned on.
+- Call it after `initialize(appID:configuration:)`. A call made before that, a `loadThreshold` outside 0.6–1.0, or a `minQuality` above `maxQuality` is ignored and an error is logged.
+- `setAutoRenderQuality(false)` and `setRenderQuality(_:)` both turn automatic adjustment off and keep the current tier.
+
+See [AutoRenderQualityOptions](#autorenderqualityoptions) for the options.
+</Accordion>
+
+<Accordion title="setRenderResolutionConfig(enabled:config:)">
+Keep the drawable height of every `AvatarView`, in physical pixels, within `[minHeight, maxHeight]`. Aspect ratio and the view's layout size are unchanged; Core Animation scales the drawable to fit. The quality tier's render scale still applies on top. Off by default.
+
+```swift
+static func setRenderResolutionConfig(
+    enabled: Bool,
+    config: RenderResolutionConfig = RenderResolutionConfig()
+)
+```
+
+```swift
+AvatarSDK.setRenderResolutionConfig(
+    enabled: true,
+    config: RenderResolutionConfig(minHeight: 1080, maxHeight: 1440)
+)
+```
+
+- `minHeight`: a view shorter than this renders at `minHeight` and is scaled down. Small views render noticeably sharper, at extra GPU cost.
+- `maxHeight`: a view taller than this renders at `maxHeight` and is scaled up, which saves GPU work on high-density screens.
+- A bound left `nil` is not applied.
+- A non-positive bound, or a `minHeight` above `maxHeight`, makes the call ignored: an error is logged and the current setting is kept.
+- Takes effect on the next layout pass of every active view. Read the current setting from `renderResolutionEnabled` and `renderResolutionConfig`.
+</Accordion>
+
+<Accordion title="setRenderResolutionCap(enabled:maxHeight:) (deprecated)">
+<Warning>
+**Deprecated.** Use `setRenderResolutionConfig(enabled:config:)` with `RenderResolutionConfig(maxHeight:)` instead. `setRenderResolutionCap(enabled:maxHeight:)` and the `renderResolutionCapEnabled` and `renderResolutionMaxHeight` properties keep working and will be removed in the next GA release.
+</Warning>
+
+Cap the drawable height while preserving the view's layout size. A non-positive `maxHeight` makes the call ignored: an error is logged and the current setting is kept.
 
 ```swift
 static func setRenderResolutionCap(enabled: Bool, maxHeight: Int = 1440)
+```
+
+```swift
+// Replacement
+AvatarSDK.setRenderResolutionConfig(enabled: true, config: RenderResolutionConfig(maxHeight: 1080))
 ```
 </Accordion>
 
@@ -161,6 +262,8 @@ func load(
 - `onProgress`: Optional progress callback
 
 **Returns:** The loaded `Avatar` instance.
+
+A cached avatar is used only when every cached file is present and matches the size recorded when it was downloaded; otherwise the avatar is downloaded again.
 </Accordion>
 
 <Accordion title="cancelLoading(id:)">
@@ -192,7 +295,7 @@ func retrieve(id: String) -> Avatar?
 **Parameters:**
 - `id`: The avatar identifier
 
-**Returns:** The cached `Avatar` if available, otherwise `nil`.
+**Returns:** The cached `Avatar` if available, otherwise `nil`. Also returns `nil` when a cached file is missing or does not match the size recorded when it was downloaded; call `load(id:useCompressedModel:onProgress:)` to download the avatar again.
 </Accordion>
 
 <Accordion title="derive(assetPath:)">
@@ -687,6 +790,60 @@ enum RenderQuality
 | `high` | Balanced quality and rendering cost. |
 | `ultra` | Highest quality. Default. |
 
+### AutoRenderQualityOptions
+
+Options for `AvatarSDK.setAutoRenderQuality(_:options:)`.
+
+```swift
+struct AutoRenderQualityOptions
+```
+
+```swift
+init(
+    minQuality: RenderQuality = .standard,
+    maxQuality: RenderQuality = .ultra,
+    allowUpgrade: Bool = false,
+    loadThreshold: Float = 0.8
+)
+```
+
+| Instance Property | Type | Description |
+|----------|------|-------------|
+| `minQuality` | `RenderQuality` | Lowest tier the SDK may use. Must not be above `maxQuality`. Defaults to `.standard`. |
+| `maxQuality` | `RenderQuality` | Highest tier the SDK may use. Defaults to `.ultra`. |
+| `allowUpgrade` | `Bool` | Raise the tier again, up to `maxQuality`, once the GPU load drops. Defaults to `false`. |
+| `loadThreshold` | `Float` | How busy the GPU must be before the tier is lowered, as a fraction of the 40 ms frame budget. Range 0.6 to 1.0. Defaults to `0.8`. |
+
+### RenderQualityChangeReason
+
+Why `AvatarSDK.onRenderQualityChanged` was called.
+
+```swift
+enum RenderQualityChangeReason
+```
+
+| Case | Description |
+|------|-------------|
+| `autoDowngrade` | Automatic adjustment lowered the tier. |
+| `autoUpgrade` | Automatic adjustment raised the tier. Only with `allowUpgrade`. |
+
+### RenderResolutionConfig
+
+Height bounds for the drawable of every `AvatarView`, in physical pixels, used by `AvatarSDK.setRenderResolutionConfig(enabled:config:)`. Width follows the view's aspect ratio.
+
+```swift
+struct RenderResolutionConfig
+```
+
+```swift
+init(minHeight: Int? = nil, maxHeight: Int? = nil)
+```
+
+| Instance Property | Type | Description |
+|----------|------|-------------|
+| `minHeight` | `Int?` | Lower bound. A view shorter than this renders at `minHeight` and is scaled down. `nil` applies no lower bound. |
+| `maxHeight` | `Int?` | Upper bound. A view taller than this renders at `maxHeight` and is scaled up. `nil` applies no upper bound. |
+
 ### FrameStarvationMode
 
 Controls playback behavior when motion data cannot keep up with the audio clock.
@@ -800,6 +957,7 @@ enum AvatarError: LocalizedError
 | `failedToDownloadAvatarAssets` | Failed to download avatar assets. |
 | `renderNotSupported` | Rendering is not supported on this device (no Metal device). Deterministic — tell the user rather than retry. |
 | `renderInitFailed` | The renderer failed to initialize for another reason. |
+| `renderBlankCanvas` | The view reported its first frame, but one second later nothing visible had been drawn (every sampled pixel fully transparent). Delivered through `AvatarController.onError`, at most once per view. An Avatar moved entirely out of the view or scaled to nothing by `avatarTransform` is reported the same way. |
 | `invalidAnimationData` | The animation data is invalid. |
 | `invalidAudioInput` | The audio does not match `controller.audioFormat.inputAudioFormat`. |
 | `serverError` | The driving service returned an error. |

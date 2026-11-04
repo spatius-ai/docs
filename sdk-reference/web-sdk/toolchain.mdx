@@ -30,7 +30,7 @@ export default defineConfig({
 The Vite plugin handles the WASM requirements for both development and production:
 
 - Serves `.wasm` files as `application/wasm` in the Vite dev server
-- Copies AvatarKit WASM files into `dist/assets/` during builds
+- Copies both AvatarKit WASM files (the SIMD and non-SIMD builds) into `dist/assets/` during builds
 - Generates a `_headers` file for Cloudflare Pages deployments
 - Configures Vite options such as `optimizeDeps`, `assetsInclude`, and `assetsInlineLimit`
 
@@ -77,6 +77,17 @@ export default withAvatarkit(withOtherPlugin({
 
 </Tab>
 </Tabs>
+
+## Other Build Tools
+
+We recommend the Vite plugin or the Next.js wrapper. Copying the files yourself is easy to get wrong and has to be redone on every SDK upgrade.
+
+If you cannot use either, publish **both** WASM files from `node_modules/@spatius/avatarkit/dist/` in the same directory where your app serves `avatar_core_wasm-<hash>.js`, and serve them with `Content-Type: application/wasm`:
+
+- `avatar_core_wasm-<hash>.wasm`, used by browsers without WebAssembly SIMD
+- `avatar_core_wasm_simd-<hash>.wasm`, used by all other browsers
+
+Keep the file names unchanged. Each browser downloads only one of the two files. If the SIMD file is missing, the SDK still works, but it falls back to the slower build and logs an error naming the missing file.
 
 ## Verify Setup
 

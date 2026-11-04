@@ -8,7 +8,7 @@ description: "Complete API reference for @spatius/avatarkit (Web)."
 
 | Class | Purpose | Key methods |
 |-------|---------|-------------|
-| `AvatarSDK` | SDK initialization and global configuration | `initialize()`, `setSessionToken()`, `setRenderQuality()`, `deviceScore()` |
+| `AvatarSDK` | SDK initialization and global configuration | `initialize()`, `setSessionToken()`, `setRenderQuality()`, `setAutoRenderQuality()`, `setRenderResolutionConfig()`, `deviceScore()` |
 | `AvatarManager` | Avatar asset loading and caching | `load()`, `cancelLoad()`, `retrieve()`, `clear()`, `clearAll()` |
 | `AvatarView` | 3D rendering view | constructor, `dispose()`, `exportBitmap()`, `avatarTransform`, `getBoundingRect()` |
 | `AvatarController` | Runtime communication and playback control | `start()`, `send()`, `yieldAudioData()`, `yieldFramesData()`, `pause()`, `resume()`, `interrupt()`, `setAudioFormat()` |
@@ -38,8 +38,12 @@ import { AvatarSDK } from '@spatius/avatarkit'
 | `sessionToken` | `string \| null` | Current Session Token |
 | `userId` | `string \| null` | Current user ID (telemetry) |
 | `version` | `string` | SDK version |
-| `renderResolutionCapEnabled` | `boolean` | Whether render output resolution capping is enabled |
-| `renderResolutionMaxHeight` | `number` | Maximum backing-buffer height used when capping is enabled |
+| `renderResolutionEnabled` | `boolean` | Whether the bounds set by `setRenderResolutionConfig()` are applied |
+| `renderResolutionConfig` | `RenderResolutionConfig` | Bounds last passed to `setRenderResolutionConfig()` |
+| `autoRenderQualityEnabled` | `boolean` | Whether automatic render quality adjustment is on (see `setAutoRenderQuality()`) |
+| `onRenderQualityChanged` | `((quality: RenderQuality, reason: RenderQualityChangeReason) => void) \| null` | Called each time automatic adjustment changes the render quality tier |
+| `renderResolutionCapEnabled` | `boolean` | **Deprecated.** Use `renderResolutionEnabled`. Will be removed in the next GA release. |
+| `renderResolutionMaxHeight` | `number` | **Deprecated.** Use `renderResolutionConfig.maxHeight`. Will be removed in the next GA release. |
 
 ### Static methods
 
@@ -53,6 +57,7 @@ await AvatarSDK.initialize('your-app-id', {
   drivingServiceMode: DrivingServiceMode.direct,    // optional, default: direct
   logLevel: LogLevel.warning,                       // optional, default: off
   renderQuality: RenderQuality.ultra,               // optional, default: ultra
+  renderBackend: RenderBackend.auto,                // optional, default: auto
 })
 ```
 
@@ -92,12 +97,65 @@ Update the global rendering quality tier. The default is `RenderQuality.ultra`; 
 AvatarSDK.setRenderQuality(RenderQuality.ultra)
 ```
 
-#### setRenderResolutionCap(enabled, maxHeight?)
+- Call it after `initialize()`. A call made before `initialize()` is ignored and an error is logged; pass the initial tier as `Configuration.renderQuality` instead.
+- Calling `setRenderQuality()` turns automatic adjustment (`setAutoRenderQuality()`) off.
 
-Cap the render backing-buffer height while keeping the same CSS size. This is useful on high-DPI displays where rendering above the source avatar asset resolution adds cost without visible benefit.
+#### setAutoRenderQuality(enabled, options?)
+
+Let the SDK lower the render quality tier when the GPU cannot keep up. Off by default.
 
 ```typescript
+AvatarSDK.onRenderQualityChanged = (quality, reason) => {
+  console.log('Render quality:', quality, reason)
+}
+
+AvatarSDK.setAutoRenderQuality(true, { maxQuality: RenderQuality.high })
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `minQuality` | `RenderQuality` | `RenderQuality.standard` | Lowest tier the SDK may use. |
+| `maxQuality` | `RenderQuality` | `RenderQuality.ultra` | Highest tier the SDK may use. |
+| `allowUpgrade` | `boolean` | `false` | Raise the tier again, up to `maxQuality`, once the load drops. |
+| `loadThreshold` | `number` | `0.8` | How busy the GPU must be before the tier is lowered, as a fraction of the 40 ms frame budget (25 fps). Range 0.6 to 1.0. |
+
+**`setAutoRenderQuality()` behavior:**
+
+- The SDK judges the load only from frames rendered while the Avatar is idle; speaking frames depend on the network and are not used. It lowers the tier one step at a time when the GPU render time exceeds `loadThreshold` of the 40 ms frame budget.
+- With WebGL, which cannot measure GPU time, the SDK lowers the tier when the idle frame rate falls below 25 fps × `loadThreshold`, unless its own per-frame CPU work is the cause. Page scripts that keep the main thread busy also lower the idle frame rate and can trigger a lower tier.
+- Besides the three tiers, the SDK uses one intermediate step between each pair of tiers. The reported tier is the highest tier not above the current step. `onRenderQualityChanged` is called only when that tier changes, with `RenderQualityChangeReason.autoDowngrade` or `RenderQualityChangeReason.autoUpgrade`. It is not called for `setRenderQuality()`.
+- A current tier outside `minQuality`–`maxQuality` is moved into that range as soon as automatic adjustment is turned on.
+- Call it after `initialize()`. A call made before `initialize()`, a `loadThreshold` outside 0.6–1.0, or a `minQuality` above `maxQuality` is ignored and an error is logged.
+- `setAutoRenderQuality(false)` and `setRenderQuality()` both turn automatic adjustment off and keep the current tier. Read the current state from `AvatarSDK.autoRenderQualityEnabled`.
+
+#### setRenderResolutionConfig(enabled, config?)
+
+Keep the render backing-buffer height of every `AvatarView` within `[minHeight, maxHeight]`, in physical pixels. The CSS size and aspect ratio of the view are unchanged; the browser scales the canvas to fit. The quality tier's render scale still applies on top. Off by default.
+
+```typescript
+AvatarSDK.setRenderResolutionConfig(true, { minHeight: 1080, maxHeight: 1440 })
+```
+
+- `minHeight`: a view shorter than this renders at `minHeight` and is scaled down. Small views render noticeably sharper, at extra GPU cost.
+- `maxHeight`: a view taller than this renders at `maxHeight` and is scaled up, which saves GPU work on high-DPI displays.
+- A bound you leave out is not applied.
+- A non-positive bound, or a `minHeight` above `maxHeight`, makes the call ignored: an error is logged and the current setting is kept.
+- The change takes effect on the next layout pass across active `AvatarView` instances. Read the current setting from `AvatarSDK.renderResolutionEnabled` and `AvatarSDK.renderResolutionConfig`.
+
+#### setRenderResolutionCap(enabled, maxHeight?)
+
+<Warning>
+**Deprecated.** Use `setRenderResolutionConfig(enabled, { maxHeight })` instead. `setRenderResolutionCap()` and the `renderResolutionCapEnabled` and `renderResolutionMaxHeight` properties keep working and will be removed in the next GA release.
+</Warning>
+
+Cap the render backing-buffer height while keeping the same CSS size. `maxHeight` defaults to 1440. A non-positive `maxHeight` makes the call ignored: an error is logged and the current setting is kept.
+
+```typescript
+// Deprecated
 AvatarSDK.setRenderResolutionCap(true, 1080)
+
+// Replacement
+AvatarSDK.setRenderResolutionConfig(true, { maxHeight: 1080 })
 ```
 
 #### deviceScore()
@@ -529,6 +587,7 @@ interface Configuration {
   logLevel?: LogLevel                        // Default: LogLevel.off
   customEndpoint?: string                    // Advanced override
   renderQuality?: RenderQuality              // Default: RenderQuality.ultra
+  renderBackend?: RenderBackend              // Default: RenderBackend.auto
 }
 ```
 
@@ -560,7 +619,56 @@ enum RenderQuality {
 }
 ```
 
-`ultra` is the default and highest-quality tier. Use `high` or `standard` only when you intentionally trade visual quality for lower rendering cost.
+`ultra` is the default and highest-quality tier. Use `high` or `standard` only when you intentionally trade visual quality for lower rendering cost, or let the SDK choose with `setAutoRenderQuality()`.
+
+### RenderBackend
+
+Graphics API used to draw the Avatar, set with `Configuration.renderBackend`.
+
+```typescript
+enum RenderBackend {
+  auto = 'auto',      // Default: WebGPU when the browser provides it, otherwise WebGL2
+  webgpu = 'webgpu',  // Try WebGPU first
+  webgl = 'webgl',    // Try WebGL2 first
+}
+```
+
+If the preferred API is unavailable or fails to start, the SDK uses the other one, so the setting never stops an Avatar from rendering on a device that supports either. The setting applies to views created after `initialize()`. Rendering fails with `ErrorCode.renderNotSupported` only when neither WebGPU nor WebGL2 is available.
+
+### AutoRenderQualityOptions
+
+Options for `AvatarSDK.setAutoRenderQuality()`; the option table under `setAutoRenderQuality()` above describes each field.
+
+```typescript
+interface AutoRenderQualityOptions {
+  minQuality?: RenderQuality   // Default: RenderQuality.standard
+  maxQuality?: RenderQuality   // Default: RenderQuality.ultra
+  allowUpgrade?: boolean       // Default: false
+  loadThreshold?: number       // Default: 0.8, range 0.6 to 1.0
+}
+```
+
+### RenderQualityChangeReason
+
+Passed to `AvatarSDK.onRenderQualityChanged`.
+
+```typescript
+enum RenderQualityChangeReason {
+  autoDowngrade = 'auto_downgrade',  // Automatic adjustment lowered the tier
+  autoUpgrade = 'auto_upgrade',      // Automatic adjustment raised the tier (only with allowUpgrade)
+}
+```
+
+### RenderResolutionConfig
+
+Height bounds for the render backing buffer, in physical pixels, used by `AvatarSDK.setRenderResolutionConfig()`. Width follows the view's aspect ratio. A bound left out is not applied.
+
+```typescript
+interface RenderResolutionConfig {
+  minHeight?: number
+  maxHeight?: number
+}
+```
 
 ### FrameStarvationMode
 
@@ -755,6 +863,7 @@ enum ErrorCode {
   // Rendering
   renderNotSupported = 'renderNotSupported',
   renderInitFailed = 'renderInitFailed',
+  renderBlankCanvas = 'renderBlankCanvas',
 
   // Connection
   websocketError = 'websocketError',
@@ -775,6 +884,8 @@ enum ErrorCode {
   serverError = 'serverError',
 }
 ```
+
+`renderBlankCanvas` is delivered through `onError` when the view reported its first frame, but one second later nothing visible had been drawn (every sampled pixel fully transparent). It is reported at most once per view. An Avatar moved entirely out of the view or scaled to nothing by `avatarTransform` is reported the same way.
 
 See [Client Error Handling](/resources/client-error) for recovery guidance and [Server Error Handling](/resources/server-error) for Console API and Motion Server errors.
 
@@ -833,6 +944,8 @@ If the WebSocket connection fails within 15 seconds, the SDK automatically enter
 | iOS Safari | 14+ | WebGL |
 | Android Chrome | 90+ | WebGL |
 
+By default the SDK uses WebGPU when the browser provides it and WebGL2 otherwise. Set `Configuration.renderBackend` to prefer one; see [RenderBackend](#renderbackend).
+
 ---
 
 ## Common Issues
@@ -841,6 +954,7 @@ If the WebSocket connection fails within 15 seconds, the SDK automatically enter
 |-------|-------|----------|
 | Audio not working | `initializeAudioContext()` not in a user gesture | Call it inside a `click` or `touchstart` handler. |
 | Avatar not rendering | Container has zero dimensions | Set explicit `width` and `height` on the container. |
+| `renderBlankCanvas` error | The Avatar is outside the view or scaled to nothing | Check that `avatarTransform` keeps the Avatar inside the view and that `scale` is above 0. |
 | WASM MIME type error | Build tool misconfigured | Use the Vite plugin or Next.js wrapper. See [Toolchain Setup](/sdk-reference/web-sdk/toolchain). |
 | Session Token invalid | Token expired or not set | Refresh token from backend; call `setSessionToken()` before `start()`. |
 | WebSocket connection failed | Network or auth issue | Check network connectivity and Session Token validity. |
