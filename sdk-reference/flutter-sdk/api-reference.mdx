@@ -178,7 +178,7 @@ final avatar = await AvatarManager.shared.load(
 );
 ```
 
-To create an Avatar from a local asset path instead, use `derive`. Errors raised by the native SDK during `load` or `derive` are thrown as Flutter `AvatarError` values; `derive` throws `AvatarError.avatarAssetMissing` on both iOS and Android when the asset is missing.
+To create an Avatar from a local asset path instead, use `derive`. A known SDK error raised during `load` or `derive` is thrown as a Flutter `AvatarError` value; any other failure is thrown as a `PlatformException`. `derive` throws `AvatarError.avatarAssetMissing` on both iOS and Android when the asset is missing.
 
 ```dart
 try {
