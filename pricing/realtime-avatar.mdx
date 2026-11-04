@@ -1,10 +1,10 @@
 ---
 title: "Realtime Avatar Pricing"
 sidebarTitle: "Realtime Avatar"
-description: "Credits per minute, subscription allowances, session limits, and additional usage rates."
+description: "Credit rates, session rounding, silence and reconnect billing, and usage records for invoice reconciliation."
 ---
 
-Realtime avatar usage consumes **10 credits per minute**. For example, 100 minutes uses 1,000 credits.
+Realtime avatar usage consumes **10 credits per minute of connected session time**. Each completed session rounds up to a whole credit, equivalent to **6 seconds per credit**. For example, one session lasting exactly 100 minutes uses 1,000 credits.
 
 All prices are in USD; pricing and limits may change during beta.
 
@@ -29,7 +29,7 @@ Annual subscriptions are paid once per year at the rates below.
 | Growth | $1,429 | 2,160,000 | 216,000 |
 | Scale | $2,869 | 4,800,000 | 480,000 |
 
-Minute equivalents assume the credits are used for realtime avatars. [Video generation](/pricing/video-generation) also consumes credits at its own per-minute rate.
+Minute equivalents assume the credits are used for realtime avatars. Rounding each session separately can reduce the total minutes available. [Video generation](/pricing/video-generation) also consumes credits at its own per-minute rate.
 
 ## Session limits
 
@@ -53,6 +53,118 @@ Paid plans can continue beyond included usage at these realtime per-minute rates
 | Scale | $0.007/minute | $0.0056/minute |
 
 For Enterprise, contact sales for a volume-based contract, unlimited concurrent sessions, and dedicated support.
+
+## How session time is metered
+
+For Motion Server v2, a billable session is one successfully configured WebSocket connection. A LiveKit call can contain several Spatius sessions if your application stops and restarts the avatar during that call.
+
+Metering starts after Motion Server accepts the session configuration and sends the session confirmation. It ends when the server processes the session's disconnection. A connection attempt that fails before completing this handshake does not consume session credits.
+
+The meter counts **elapsed connected time**, including silence, pauses between utterances, and time waiting for the next audio input. Muting audio, interrupting an utterance, ending an audio segment, or hiding the avatar does not stop billing while the Motion Server connection remains open. Separate simultaneous connections each consume credits.
+
+### Rounding and minimum charge
+
+The server measures duration in milliseconds and rounds the session's total usage up to the next whole credit when the session ends:
+
+```text
+session credits = ceil(session duration in milliseconds / 6,000)
+```
+
+This gives a **minimum charge of 1 credit for a session with positive metered duration**. There is no separate session setup fee or one-minute minimum charge. Usage is not first rounded to whole seconds or whole minutes.
+
+| Metered duration of one completed session | Credits consumed |
+| --- | --- |
+| 1 second | 1 |
+| Exactly 6 seconds | 1 |
+| 6.001 seconds | 2 |
+| 30 seconds | 5 |
+| Exactly 60 seconds | 10 |
+| 61 seconds | 11 |
+| 125 seconds | 21 |
+
+Round **each session separately**, then add its credits. Two sessions of 8 seconds each consume 4 credits in total; one continuous 16-second session consumes 3 credits.
+
+During an open session, credit deductions update approximately once per minute, using the cumulative duration. When the session closes, the final deduction includes the remaining time and rounds up the cumulative total. This reporting cadence does not create a one-minute billing increment or a new minimum charge on every update.
+
+<Note>
+  Starting or restarting a session requires a balance of at least **10 credits** on plans with a metered credit balance. This is a minimum balance check, not an upfront deduction: a completed 1-second session still consumes only 1 credit. New sessions must also fit within your plan's concurrency limit.
+</Note>
+
+## Silence, stopping, and restarting
+
+To stop Spatius session charges during a long silence, close the Motion Server session. If your application manages the avatar session separately from the user's LiveKit call, the call can remain open while the avatar is disconnected. Spatius session metering stops once the server processes that disconnection. LiveKit and other providers account for their services separately.
+
+Each restart that completes the Motion Server handshake creates a new billable session, with its own duration and whole-credit rounding. Each positive-duration session therefore has the same 1-credit minimum; there is no additional restart fee. Keeping the same LiveKit room or user call does not combine those sessions for rounding.
+
+For example, consider 20 seconds connected, 3 minutes of silence, then another 20 seconds connected:
+
+| Strategy | Metered time | Credits consumed |
+| --- | --- | --- |
+| Keep the avatar session open throughout | One 220-second session | 37 |
+| Close during silence and restart afterward | Two 20-second sessions | 8: 4 per session |
+
+The example assumes the first session has fully closed during the gap. Any time it remains open while your application decides to stop it still counts.
+
+Restarting adds connection and session setup latency. There is no fixed restart time implied by the billing rate: region, network conditions, authentication, and room setup affect the delay. To establish a typical restart time for your deployment, measure the time from requesting a restart until the new session is ready, and separately measure the time until the first synchronized audio and motion data reach the client. Allow for this delay before routing the next audio to the avatar; frequent restarts can trade responsiveness for small usage savings.
+
+See the [LiveKit Agents Integration setup](/livekit-agents/server) for session startup ordering.
+
+## Dropped connections and reconnects
+
+After a successful handshake, an unexpected disconnect follows the same metering rule as a deliberate close: the server records the elapsed session time and settles the remaining whole-credit charge when it handles the disconnect. A dropped connection does not erase credits already consumed.
+
+If the network disappears without a clean close, the server may detect the failure later through a read error or heartbeat timeout. Metered time can include that detection delay. Stopping audio alone does not immediately signal that the connection has ended.
+
+A reconnect that completes the handshake is a new session with a new connection ID and its own rounding. No session time accrues during a gap after the old session has closed and before the new one is confirmed. If the old connection remains open while a replacement connects, both sessions can accrue usage during the overlap and count toward the concurrency limit. Retry attempts that fail before confirmation do not start a billable session.
+
+<Note>
+  A server crash can prevent normal session finalization. A connection record later marked `server_crash` can include an estimated end time based on when cleanup detected it. That duration is not an exact credit debit record. Use account billing records and the connection ID to investigate a discrepancy rather than calculating a final charge from that row alone.
+</Note>
+
+## Usage records and invoice reconciliation
+
+### In Studio
+
+Open [Studio Usage → Session history](https://app.spatius.ai/stats?tab=connection-logs) to see individual connections. Choose a date range and, optionally, an app. Each record includes the connection ID, app and Avatar IDs, region, connection and disconnection times, and duration. Times are shown in UTC.
+
+[Usage → Credits](https://app.spatius.ai/stats?tab=credits) shows your current credit balance and credit transactions. For invoices, open [Billing](https://app.spatius.ai/pricing) and select **Payments & invoices → Manage payments & invoices**. Invoices record payments for subscriptions and purchases; session history records usage. An invoice is not a list of individual avatar sessions.
+
+Connection records sync periodically, normally about every 5 minutes. A recent session or its final duration may take a few minutes to appear. Treat a session with no disconnection time as unfinished; its displayed duration is not a final billable total. Aggregate charts can refresh less frequently than session history.
+
+### Through the Console API
+
+The Console API exposes the same account's session records and billing information. These endpoints require an authenticated **Console user session**, as used by Studio. An app API Key or Motion Server Session Token does not grant access to these account reports.
+
+The paths below are relative to the Console host, for example `https://console.us-west.spatius.ai`. Append the paths directly to the host, without the `/v1/console` prefix used by the [Session Token API](/api-reference/api-reference).
+
+| Endpoint | What it provides |
+| --- | --- |
+| `GET /api/console/v2/stats/connection-logs` | Individual connection records, with time-range and app filters and pagination. |
+| `GET /api/console/v2/stats/usage` | Aggregate audio and connection durations. Connection duration is the basis for realtime session billing. |
+| `GET /v2/billing/usage` | Account usage summary, including `totalCreditsConsumed`, for the requested period. |
+| `GET /v2/billing/credits` | Current account credit balance. |
+| `GET /v2/billing/credits/transactions` | Account credit transactions, such as grants, purchases, and adjustments. |
+
+For example, request session records for the last 30 days:
+
+```http
+GET /api/console/v2/stats/connection-logs?timeRange=USER_STATS_TIME_RANGE_30D&pagination.pageSize=100
+```
+
+Add `appId` to filter by app. To retrieve the next page, pass the returned `pagination.nextPageToken` as `pagination.pageToken`. The maximum page size is 100. Supported time ranges are `USER_STATS_TIME_RANGE_TODAY`, `USER_STATS_TIME_RANGE_7D`, `USER_STATS_TIME_RANGE_14D`, `USER_STATS_TIME_RANGE_30D`, `USER_STATS_TIME_RANGE_90D`, and `USER_STATS_TIME_RANGE_1Y`.
+
+Each item in `logs` includes `connectionId`, `appId`, `characterId` (the Avatar ID), `region`, `handlerType`, `connectedAt`, `disconnectedAt`, `durationMs`, and `disconnectReason`. `billingCategory`, when available, identifies realtime avatar usage as `avatar_motion`. **Connection logs do not include a per-session credits-consumed field.**
+
+For a billing-period summary, provide UTC RFC 3339 timestamps in the `startTime` and `endTime` query parameters of `GET /v2/billing/usage`. If omitted, the endpoint uses the current subscription period when one is available. Read `summary.totalCreditsConsumed`; do not derive exact deductions by multiplying the rounded `totalMinutesUsed` display value by 10. Older summaries may contain estimates based on aggregate duration.
+
+### Reconciling a period
+
+1. Log each Spatius connection ID alongside your application's call ID. One LiveKit call can map to several connection IDs after restarts or reconnects.
+2. Retrieve every page of connection records for the relevant apps and time range. Use finalized realtime sessions when checking the rounding formula; preserve millisecond precision.
+3. Compare account usage over the same UTC period, allowing time for the final records to sync. Session history filters by connection start time, while usage totals record consumption during the period, so sessions spanning a period boundary need separate attention.
+4. Include other credit-consuming services, such as video generation, and account changes such as credit grants, purchases, refunds, and resets when comparing usage with balances and invoices.
+
+Session history and credit transactions do not provide a one-to-one ledger of every realtime session deduction. If a difference remains, share the connection IDs, app ID, region, UTC time range, and invoice reference with support. Include any `server_crash` records so the estimated duration can be checked against recorded consumption.
 
 ## Next steps
 
