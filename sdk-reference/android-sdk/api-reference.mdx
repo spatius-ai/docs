@@ -48,6 +48,40 @@ val version: String
 ```
 </Accordion>
 
+<Accordion title="renderResolutionEnabled">
+Whether the bounds set by `setRenderResolutionConfig()` are applied.
+
+```kotlin
+var renderResolutionEnabled: Boolean
+    private set
+```
+</Accordion>
+
+<Accordion title="renderResolutionConfig">
+The bounds last passed to `setRenderResolutionConfig()`.
+
+```kotlin
+var renderResolutionConfig: RenderResolutionConfig
+    private set
+```
+</Accordion>
+
+<Accordion title="autoRenderQualityEnabled">
+Whether automatic render quality adjustment is on. See `setAutoRenderQuality()`.
+
+```kotlin
+val autoRenderQualityEnabled: Boolean
+```
+</Accordion>
+
+<Accordion title="onRenderQualityChanged">
+Called on the main thread each time automatic adjustment changes the reported render quality tier. A step within the same tier does not call it, and it is not called for `setRenderQuality()`.
+
+```kotlin
+var onRenderQualityChanged: ((RenderQuality, RenderQualityChangeReason) -> Unit)?
+```
+</Accordion>
+
 ##### Methods
 
 <Accordion title="initialize(context, appId, configuration)">
@@ -76,18 +110,80 @@ suspend fun isDeviceSupported(): Boolean
 </Accordion>
 
 <Accordion title="setRenderQuality(quality)">
-Update the global rendering quality tier.
+Update the global rendering quality tier. The change takes effect on the next rendered frame across all active `AvatarView` instances.
 
 ```kotlin
 fun setRenderQuality(quality: RenderQuality)
 ```
+
+- Call it after `initialize()`. A call made before `initialize()` is ignored and an error is logged; pass the initial tier as `Configuration.renderQuality` instead.
+- Calling `setRenderQuality()` turns automatic adjustment (`setAutoRenderQuality()`) off.
 </Accordion>
 
-<Accordion title="setRenderResolutionCap(enabled, maxHeight)">
-Cap render backing-buffer height while preserving view layout size.
+<Accordion title="setAutoRenderQuality(enabled, options)">
+Let the SDK lower the render quality tier when the GPU cannot keep up. Off by default.
+
+```kotlin
+fun setAutoRenderQuality(
+    enabled: Boolean,
+    options: AutoRenderQualityOptions = AutoRenderQualityOptions()
+)
+```
+
+```kotlin
+AvatarSDK.onRenderQualityChanged = { quality, reason ->
+    Log.i("Avatar", "Render quality: $quality, $reason")
+}
+AvatarSDK.setAutoRenderQuality(true, AutoRenderQualityOptions(maxQuality = RenderQuality.HIGH))
+```
+
+- The SDK judges the load only from frames rendered while the Avatar is idle; speaking frames depend on the network and are not used. It lowers the tier one step at a time when the GPU render time exceeds `loadThreshold` of the 33.3 ms frame budget (the render loop runs at 30 fps).
+- Besides the three tiers, the SDK uses one intermediate step between each pair of tiers. The reported tier is the highest tier not above the current step. `onRenderQualityChanged` is called only when that tier changes, with `RenderQualityChangeReason.AUTO_DOWNGRADE` or `AUTO_UPGRADE`.
+- Quality stays between `minQuality` and `maxQuality`; with `allowUpgrade = true` it is raised again when the load drops. A current tier outside that range is moved into it as soon as automatic adjustment is turned on.
+- Call it after `initialize()`. A call made before `initialize()`, a `loadThreshold` outside 0.6–1.0, or a `minQuality` above `maxQuality` is ignored and an error is logged.
+- `setAutoRenderQuality(false)` and `setRenderQuality()` both turn automatic adjustment off and keep the current tier.
+
+See [AutoRenderQualityOptions](#autorenderqualityoptions) for the options.
+</Accordion>
+
+<Accordion title="setRenderResolutionConfig(enabled, config)">
+Keep the render buffer height of every `AvatarView`, in physical pixels, within `[minHeight, maxHeight]`. Aspect ratio and the view's layout size are unchanged; the system compositor scales the buffer to fit. The quality tier's render scale still applies on top. Off by default.
+
+```kotlin
+fun setRenderResolutionConfig(
+    enabled: Boolean,
+    config: RenderResolutionConfig = RenderResolutionConfig()
+)
+```
+
+```kotlin
+AvatarSDK.setRenderResolutionConfig(
+    enabled = true,
+    config = RenderResolutionConfig(minHeight = 1080, maxHeight = 1440),
+)
+```
+
+- `minHeight`: a view shorter than this renders at `minHeight` and is scaled down. Small views render noticeably sharper, at extra GPU cost.
+- `maxHeight`: a view taller than this renders at `maxHeight` and is scaled up, which saves GPU work on high-density screens.
+- A bound left `null` is not applied.
+- A non-positive bound, or a `minHeight` above `maxHeight`, makes the call ignored: an error is logged and the current setting is kept.
+- Takes effect on every live `AvatarView` immediately. Read the current setting from `renderResolutionEnabled` and `renderResolutionConfig`.
+</Accordion>
+
+<Accordion title="setRenderResolutionCap(enabled, maxHeight) (deprecated)">
+<Warning>
+**Deprecated.** Use `setRenderResolutionConfig(enabled, RenderResolutionConfig(maxHeight = maxHeight))` instead. `setRenderResolutionCap()` keeps working and will be removed in the next GA release.
+</Warning>
+
+Cap the render buffer height while preserving the view's layout size. A non-positive `maxHeight` makes the call ignored: an error is logged and the current setting is kept.
 
 ```kotlin
 fun setRenderResolutionCap(enabled: Boolean, maxHeight: Int = 1440)
+```
+
+```kotlin
+// Replacement
+AvatarSDK.setRenderResolutionConfig(true, RenderResolutionConfig(maxHeight = 1080))
 ```
 </Accordion>
 
@@ -108,6 +204,8 @@ Avatar resource manager, responsible for downloading, caching, and loading avata
 ```kotlin
 object AvatarManager
 ```
+
+The disk cache holds up to 128 MB. When a download or SDK start finds it larger, the least recently used avatars are removed until it fits.
 
 ##### Methods
 
@@ -139,6 +237,21 @@ suspend fun load(
 - `onProgress`: Optional progress callback
 
 **Returns:** The loaded `Avatar` instance.
+
+A cached avatar is used only when its metadata can be read and every cached file is present and matches the size recorded when it was downloaded; otherwise the avatar is downloaded again.
+</Accordion>
+
+<Accordion title="retrieve(id)">
+Retrieves a cached avatar by ID without downloading it.
+
+```kotlin
+fun retrieve(id: String): Avatar?
+```
+
+**Parameters:**
+- `id`: The avatar identifier
+
+**Returns:** The cached `Avatar` if available, otherwise `null`. Also returns `null` when the cached metadata cannot be read, or a cached file is missing or does not match the size recorded when it was downloaded; call `load()` to download the avatar again.
 </Accordion>
 
 <Accordion title="clear(id)">
@@ -227,12 +340,15 @@ var onError: ((AvatarError) -> Unit)?
 | `FailedToDownloadAvatarAssets` | Failed to download avatar assets. |
 | `RenderNotSupported` | Rendering is not supported on this device (Vulkan is unavailable). Deterministic — tell the user rather than retry. |
 | `RenderInitFailed` | The renderer failed to initialize for another reason. |
+| `RenderBlankCanvas` | The view reported its first frame, but one second later nothing visible had been drawn (every sampled pixel fully transparent). Reported at most once per view. An Avatar moved entirely out of the view or scaled to nothing by `avatarTransform` is reported the same way. |
 | `InsufficientBalance` | Insufficient balance. |
 | `SessionTimeout` | The session timed out. |
 | `ConcurrentLimitExceeded` | Concurrent connection limit exceeded. |
 | `InvalidAnimationData` | The animation data is invalid. |
 | `InvalidAudioInput` | The audio does not match `audioFormat.inputAudioFormat`. |
 | `ServerError` | The driving service returned an error. |
+
+`AvatarError` is a sealed class, so an exhaustive `when` over it must cover every case, including `RenderBlankCanvas`.
 </Accordion>
 
 <Accordion title="audioFormat">
@@ -606,6 +722,55 @@ enum class RenderQuality
 | `STANDARD` | Lower rendering cost. |
 | `HIGH` | Balanced quality and rendering cost. |
 | `ULTRA` | Highest quality. Default. |
+
+### AutoRenderQualityOptions
+
+Options for `AvatarSDK.setAutoRenderQuality()`.
+
+```kotlin
+data class AutoRenderQualityOptions(
+    val minQuality: RenderQuality = RenderQuality.STANDARD,
+    val maxQuality: RenderQuality = RenderQuality.ULTRA,
+    val allowUpgrade: Boolean = false,
+    val loadThreshold: Float = 0.8f,
+)
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `minQuality` | `RenderQuality` | Lowest tier the SDK may use. Must not be above `maxQuality`. |
+| `maxQuality` | `RenderQuality` | Highest tier the SDK may use. |
+| `allowUpgrade` | `Boolean` | Raise the tier again, up to `maxQuality`, once the GPU load drops. |
+| `loadThreshold` | `Float` | How busy the GPU must be before the tier is lowered, as a fraction of the 33.3 ms frame budget. Range 0.6 to 1.0. |
+
+### RenderQualityChangeReason
+
+Why `AvatarSDK.onRenderQualityChanged` was called.
+
+```kotlin
+enum class RenderQualityChangeReason
+```
+
+| Case | Description |
+|------|-------------|
+| `AUTO_DOWNGRADE` | Automatic adjustment lowered the tier. |
+| `AUTO_UPGRADE` | Automatic adjustment raised the tier. Only with `allowUpgrade`. |
+
+### RenderResolutionConfig
+
+Height bounds for the render buffer of every `AvatarView`, in physical pixels, used by `AvatarSDK.setRenderResolutionConfig()`. Width follows the view's aspect ratio.
+
+```kotlin
+data class RenderResolutionConfig(
+    val minHeight: Int? = null,
+    val maxHeight: Int? = null,
+)
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `minHeight` | `Int?` | Lower bound. A view shorter than this renders at `minHeight` and is scaled down. `null` applies no lower bound. |
+| `maxHeight` | `Int?` | Upper bound. A view taller than this renders at `maxHeight` and is scaled up. `null` applies no upper bound. |
 
 ### FrameStarvationMode
 

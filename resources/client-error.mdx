@@ -12,6 +12,7 @@ Handle a client error according to **where it occurred in the lifecycle**. Exact
 | Direct Mode authentication | Invalid or expired Session Token | Request a fresh token from your backend before reconnecting. |
 | Direct Mode connection | Handshake, WebSocket, timeout, or unexpected close | Check region and network reachability, then reconnect with backoff. |
 | Audio input | Input does not match the configured codec or sample rate | Convert the source and keep one configured format for the session. |
+| Rendering | The device cannot render, the renderer fails to start, or nothing visible is drawn after the first frame | Treat an unsupported device as final. For a blank view, check that the Avatar transform keeps the Avatar inside the view. |
 | Playback | Audio context or render player is not ready | Restore the required client lifecycle before retrying playback. |
 | Backend Mode feed | Invalid or mismatched audio or motion data | Verify the configured format and ordering by turn ID. |
 | Server response | Motion Server reports an application, billing, or runtime failure | Log the complete error and fix non-transient configuration failures before retrying. |
@@ -19,6 +20,8 @@ Handle a client error according to **where it occurred in the lifecycle**. Exact
 <Warning>
 Spatius API Keys must never be used for client recovery. In Direct Mode, the backend exchanges the API Key for a short-lived Session Token and returns only that token to the client.
 </Warning>
+
+A view that reported its first frame but has drawn nothing visible one second later reports a blank-canvas error through the controller's error callback, at most once per view: `ErrorCode.renderBlankCanvas` on Web, `AvatarError.renderBlankCanvas` on iOS and Flutter, and `AvatarError.RenderBlankCanvas` on Android. An Avatar moved entirely out of the view or scaled to nothing by its transform is reported the same way.
 
 ## Recovery flow
 

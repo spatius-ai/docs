@@ -61,6 +61,71 @@ enum RenderQuality { standard, high, ultra }
 await AvatarSDK.setRenderQuality(RenderQuality.ultra);
 ```
 
+`setRenderQuality` takes effect on the next rendered frame. Call it after `initialize`: a call made before is ignored and an error is logged natively, on both iOS and Android. Pass the initial tier as `Configuration.renderQuality` instead. Calling `setRenderQuality` turns automatic adjustment off.
+
+### Automatic render quality
+
+`setAutoRenderQuality` lets the SDK lower the render quality one step at a time when the GPU cannot keep up. It is off by default.
+
+```dart
+AvatarSDK.onRenderQualityChanged = (quality, reason) {
+  debugPrint('Render quality: $quality, $reason');
+};
+
+await AvatarSDK.setAutoRenderQuality(
+  true,
+  options: const AutoRenderQualityOptions(maxQuality: RenderQuality.high),
+);
+
+final enabled = await AvatarSDK.autoRenderQualityEnabled();
+```
+
+```dart
+const AutoRenderQualityOptions({
+  RenderQuality minQuality = RenderQuality.standard,
+  RenderQuality maxQuality = RenderQuality.ultra,
+  bool allowUpgrade = false,
+  double loadThreshold = 0.8,
+})
+```
+
+| Field | What it does |
+|-------|--------------|
+| `minQuality` | Lowest tier the SDK may use. Must not be above `maxQuality`. |
+| `maxQuality` | Highest tier the SDK may use. |
+| `allowUpgrade` | Raise the tier again, up to `maxQuality`, once the GPU load drops. |
+| `loadThreshold` | How busy the GPU must be before the tier is lowered, as a fraction of one frame's time budget: 40 ms on iOS, 33.3 ms on Android. Range 0.6 to 1.0. |
+
+- The SDK judges the load only from frames rendered while the Avatar is idle.
+- Besides the three tiers, the SDK uses one intermediate step between each pair of tiers. `onRenderQualityChanged` is called only when the reported tier changes, with `RenderQualityChangeReason.autoDowngrade` or `RenderQualityChangeReason.autoUpgrade`. It is not called for `setRenderQuality`.
+- A current tier outside `minQuality`–`maxQuality` is moved into that range as soon as automatic adjustment is turned on.
+- A call made before `initialize`, a `loadThreshold` outside 0.6–1.0, or a `minQuality` above `maxQuality` is ignored and an error is logged natively.
+- `autoRenderQualityEnabled()` returns a `Future<bool>`, unlike the native property of the same name.
+
+### Render resolution
+
+`setRenderResolutionConfig` keeps the render buffer height of every avatar view, in physical pixels, within `[minHeight, maxHeight]`. Aspect ratio and the view's layout size are unchanged; the system scales the buffer to fit, and the quality tier's render scale still applies on top. It is off by default.
+
+```dart
+await AvatarSDK.setRenderResolutionConfig(
+  enabled: true,
+  config: const RenderResolutionConfig(minHeight: 1080, maxHeight: 1440),
+);
+
+final enabled = await AvatarSDK.renderResolutionEnabled();
+final config = await AvatarSDK.renderResolutionConfig();
+```
+
+- `minHeight`: a view shorter than this renders at `minHeight` and is scaled down. Small views render noticeably sharper, at extra GPU cost.
+- `maxHeight`: a view taller than this renders at `maxHeight` and is scaled up, which saves GPU work on high-density screens.
+- A bound left `null` is not applied.
+- A non-positive bound, or a `minHeight` above `maxHeight`, makes the call ignored: an error is logged natively and the current setting is kept.
+- `renderResolutionEnabled()` and `renderResolutionConfig()` are methods that return a `Future`, unlike the native properties of the same names.
+
+<Warning>
+**Deprecated:** `AvatarSDK.setRenderResolutionCap({required bool enabled, int maxHeight = 1440})`. Use `setRenderResolutionConfig(enabled: enabled, config: RenderResolutionConfig(maxHeight: maxHeight))` instead. It keeps working and will be removed in the next GA release. A non-positive `maxHeight` is ignored and an error is logged.
+</Warning>
+
 ### AudioFormat
 
 Each avatar view has its own audio format, so two views in one app can run different sample rates. Pass it to `AvatarWidget(audioFormat:)` when you create the view; it defaults to 16 kHz PCM. The value is used when the native view is created, so changing the widget property afterwards has no effect. Use `AvatarController.setAudioFormat` to change it at runtime.
@@ -113,6 +178,16 @@ final avatar = await AvatarManager.shared.load(
 );
 ```
 
+To create an Avatar from a local asset path instead, use `derive`. Errors raised by the native SDK during `load` or `derive` are thrown as Flutter `AvatarError` values; `derive` throws `AvatarError.avatarAssetMissing` on both iOS and Android when the asset is missing.
+
+```dart
+try {
+  final avatar = await AvatarManager.shared.derive(assetPath);
+} on AvatarError catch (error) {
+  // For example, AvatarError.avatarAssetMissing.
+}
+```
+
 ## Render and control playback
 
 The Flutter view creates an `AvatarController` when the platform view is ready. Keep that controller and use it for lifecycle, state, and audio operations.
@@ -132,6 +207,8 @@ void onAvatarViewCreated(AvatarController controller) {
   };
 }
 ```
+
+`AvatarError` is an enum, so a `switch` over it without a `default` case must list every value. `AvatarError.renderBlankCanvas` is reported through `onError` when the view reported its first frame, but one second later nothing visible had been drawn. It is reported at most once per view; an Avatar moved entirely out of the view or scaled to nothing by its transform is reported the same way.
 
 ### Render over an Avatar Background
 
@@ -185,9 +262,7 @@ final conversationId = await controller.yieldAudioData(audioBytes, end: isLastCh
 controller.yieldAnimations(framesData, conversationID: conversationId);
 ```
 
-<Note>
-The per-call `audioFormat` parameter of `yieldAudioData` is deprecated and ignored. The format comes from the view: `AvatarWidget.audioFormat`, or whatever `setAudioFormat` last applied. Drop the argument if you still pass it; it will be removed in a future release. The iOS and Android SDKs have already removed theirs.
-</Note>
+`yieldAudioData` takes no audio format. The format comes from the view: `AvatarWidget.audioFormat`, or whatever `setAudioFormat` last applied. The per-call `audioFormat` parameter has been removed, as on iOS and Android; code that still passes it no longer compiles, so drop the argument. The behavior is unchanged.
 
 ## Demos
 

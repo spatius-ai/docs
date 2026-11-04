@@ -105,9 +105,16 @@ Install `AvatarKitRTC` with Swift Package Manager or CocoaPods:
 
 In Xcode, open **File > Add Package Dependencies**, enter `https://github.com/spatius-ai/avatarkit-ios-rtc.git`, and select the latest stable release.
 
-```ruby
+With CocoaPods, add the Spatius [spec repository](https://github.com/spatius-ai/avatarkit-specs) and the CocoaPods CDN as sources at the top of your `Podfile`. The AvatarKit pods are published to the Spatius spec repository; Agora and other third-party dependencies still come from the CDN.
+
+```ruby title="Podfile"
+source 'https://github.com/spatius-ai/avatarkit-specs.git'
+source 'https://cdn.cocoapods.org/'
+
 pod 'AvatarKitRTC'
 ```
+
+Then run `pod install --repo-update`.
 
 Initialize AvatarKit in RTC mode, load the Avatar, and connect:
 
