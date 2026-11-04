@@ -168,24 +168,6 @@ AvatarSDK.setAutoRenderQuality(enabled: true, options: AutoRenderQualityOptions(
 See [AutoRenderQualityOptions](#autorenderqualityoptions) for the options.
 </Accordion>
 
-<Accordion title="setAutoRenderQuality(_:options:) (deprecated)">
-<Warning>
-**Deprecated.** Use `setAutoRenderQuality(enabled:options:)` instead. `setAutoRenderQuality(_:options:)` behaves the same, keeps working and will be removed in the next GA release.
-</Warning>
-
-```swift
-static func setAutoRenderQuality(
-    _ enabled: Bool,
-    options: AutoRenderQualityOptions = AutoRenderQualityOptions()
-)
-```
-
-```swift
-// Replacement
-AvatarSDK.setAutoRenderQuality(enabled: true, options: AutoRenderQualityOptions(maxQuality: .high))
-```
-</Accordion>
-
 <Accordion title="setRenderResolutionConfig(enabled:config:)">
 Keep the drawable height of every `AvatarView`, in physical pixels, within `[minHeight, maxHeight]`. Aspect ratio and the view's layout size are unchanged; Core Animation scales the drawable to fit. The quality tier's render scale still applies on top. Off by default.
 
