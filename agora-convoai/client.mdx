@@ -297,7 +297,7 @@ Your app keeps owning the engine: it creates it, sets the client role, joins and
 </Tab>
 </Tabs>
 
-The packaged `AgoraProvider` coordinates audio and motion data. On the default `connect` path, it also owns the RTC lifecycle. Do not also call Backend Mode feed methods.
+The packaged `AgoraProvider` coordinates audio and motion data. On the default `connect` path, it also owns the RTC lifecycle. Do not also feed audio or motion data into AvatarKit yourself.
 
 ## Show when the Avatar is speaking
 

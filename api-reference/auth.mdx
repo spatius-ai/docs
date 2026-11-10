@@ -5,7 +5,7 @@ description: "How Direct Mode clients obtain and use Spatius Session Tokens with
 ---
 
 <Note>
-**This flow only applies to Direct Mode** (`DrivingServiceMode.direct`), where the client opens a Motion Server WebSocket from `AvatarController.start()`. The recommended RTC integrations use `DrivingServiceMode.rtc`; Backend Mode uses `DrivingServiceMode.backend`. None of those paths opens that client-side Motion Server WebSocket or needs a Spatius Session Token.
+**This flow only applies to Direct Mode** (`DrivingServiceMode.direct`), where the client opens a Motion Server WebSocket from `AvatarController.start()`. The recommended RTC integrations use `DrivingServiceMode.rtc`, which does not open that client-side Motion Server WebSocket or need a Spatius Session Token.
 </Note>
 
 ## Before you start

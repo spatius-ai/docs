@@ -11,10 +11,10 @@ description: "Complete API reference for @spatius/avatarkit (Web)."
 | `AvatarSDK` | SDK initialization and global configuration | `initialize()`, `setSessionToken()`, `setRenderQuality()`, `setAutoRenderQuality()`, `setRenderResolutionConfig()`, `deviceScore()` |
 | `AvatarManager` | Avatar asset loading and caching | `load()`, `cancelLoad()`, `retrieve()`, `clear()`, `clearAll()` |
 | `AvatarView` | 3D rendering view | constructor, `dispose()`, `exportBitmap()`, `avatarTransform`, `getBoundingRect()` |
-| `AvatarController` | Runtime communication and playback control | `start()`, `send()`, `yieldAudioData()`, `yieldFramesData()`, `pause()`, `resume()`, `interrupt()`, `setAudioFormat()` |
+| `AvatarController` | Runtime communication and playback control | `start()`, `send()`, `pause()`, `resume()`, `interrupt()`, `setAudioFormat()` |
 
 <Note>
-**App ID** is required on every integration and identifies your Spatius application (it scopes which avatars you can load). **Session Token** is only required for **Direct Mode** (`DrivingServiceMode.direct`), where it authenticates the Motion Server WebSocket; LiveKit Agents, Agora Convo AI, and Backend Mode do not need it.
+**App ID** is required on every integration and identifies your Spatius application (it scopes which avatars you can load). **Session Token** is only required for **Direct Mode** (`DrivingServiceMode.direct`), where it authenticates the Motion Server WebSocket; LiveKit Agents and Agora Convo AI do not need it.
 </Note>
 
 For the minimum end-to-end integration walkthrough, open the Web tab in [Direct Mode Client](/direct-mode/client).
@@ -72,7 +72,7 @@ AvatarSDK.setSessionToken('your-session-token')
 ```
 
 - Required for `DrivingServiceMode.direct` before calling `AvatarController.start()`.
-- **Not required** for `DrivingServiceMode.backend` (Backend Mode) or `DrivingServiceMode.rtc` (the recommended RTC integrations). Those paths receive audio and motion data externally and do not open a Motion Server WebSocket from the client; `AvatarManager.load()` fetches avatar metadata over an App-ID-scoped public endpoint.
+- **Not required** for `DrivingServiceMode.rtc` (the recommended RTC integrations). That path receives audio and motion data externally and does not open a Motion Server WebSocket from the client; `AvatarManager.load()` fetches avatar metadata over an App-ID-scoped public endpoint.
 - The token must be obtained from your backend (see [Session token API](/api-reference/api-reference)).
 - Maximum 24-hour validity.
 - Token must be paired with the App ID used in `initialize()`.
@@ -498,43 +498,9 @@ Close the Motion Server connection.
 controller.close()
 ```
 
-### `DrivingServiceMode.backend` methods
-
-Available when `drivingServiceMode` is `DrivingServiceMode.backend` (the Backend Mode path).
-
-#### yieldAudioData(audioData, end?)
-
-Provide audio data when your backend owns the Motion Server connection.
-
-```typescript
-const conversationId = controller.yieldAudioData(audioData, false)
-```
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `audioData` | `Uint8Array` | Encoded audio payload from your backend transport |
-| `end` | `boolean` | Optional. Whether this is the final audio payload for the current round. |
-
-**Returns:** `string | null` — conversation ID for this audio round, or `null` if audio playback could not start.
-
-#### yieldFramesData(motionDataPayloads, conversationId)
-
-Provide motion data payloads when using `DrivingServiceMode.backend`. The `conversationId` must match the one returned by the corresponding `yieldAudioData()` call.
-
-```typescript
-const ended = controller.yieldFramesData(motionDataPayloads, conversationId)
-```
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `motionDataPayloads` | `(Uint8Array \| ArrayBuffer)[]` | Motion data payloads from your backend transport |
-| `conversationId` | `string` | Conversation ID returned by `yieldAudioData()` |
-
-**Returns:** `boolean` — `true` when the final motion data payload for that conversation has been received, otherwise `false`.
-
 ### Common methods
 
-Available in both `DrivingServiceMode.direct` and `DrivingServiceMode.backend`.
+Available in `DrivingServiceMode.direct`.
 
 ```typescript
 controller.pause()                     // Pause audio + animation
@@ -602,7 +568,6 @@ interface Configuration {
 ```typescript
 enum DrivingServiceMode {
   direct = 'direct',    // Client SDK handles the Motion Server connection (Direct Mode)
-  backend = 'backend',  // Your backend handles the Motion Server connection (Backend Mode)
   rtc = 'rtc',          // Driven through @spatius/avatarkit-rtc (RTC Adapter)
 }
 ```
@@ -765,8 +730,8 @@ interface AudioFormat {
 
 | Field | What it does |
 |-------|--------------|
-| `inputAudioFormat` | The codec of the audio you feed into the SDK via `send()` / `yieldAudioData()`. Do not vary it per call; to switch codecs, call `setAudioFormat()`. Under `'opus'` the configured `sampleRate` does not apply: Opus always decodes at 48 kHz, and the SDK reports that rate for the session. |
-| `opusUplinkEnabled` | Whether the SDK compresses the Direct Mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in Backend Mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing. |
+| `inputAudioFormat` | The codec of the audio you feed into the SDK via `send()`. Do not vary it per call; to switch codecs, call `setAudioFormat()`. Under `'opus'` the configured `sampleRate` does not apply: Opus always decodes at 48 kHz, and the SDK reports that rate for the session. |
+| `opusUplinkEnabled` | Whether the SDK compresses the Direct Mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing. |
 | `opusBitrate` | Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload. |
 
 Under `inputAudioFormat: 'opus'` the SDK accepts either shape TTS providers produce, and detects which from the bytes:
@@ -887,7 +852,7 @@ enum ErrorCode {
 
 `renderBlankCanvas` is delivered through `onError` when the view reported its first frame, but one second later nothing visible had been drawn (every sampled pixel fully transparent). It is reported at most once per view. An Avatar moved entirely out of the view or scaled to nothing by `avatarTransform` is reported the same way.
 
-See [Client Error Handling](/resources/client-error) for recovery guidance and [Server Error Handling](/resources/server-error) for Console API and Motion Server errors.
+See [Client Error Handling](/resources/client-error) for recovery guidance.
 
 ---
 

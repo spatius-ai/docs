@@ -3,7 +3,6 @@ const INTEGRATIONS = [
   { id: 'livekit', label: 'LiveKit Agents', recommended: true },
   { id: 'agora', label: 'Agora ConvoAI', recommended: true },
   { id: 'direct', label: 'Direct Mode' },
-  { id: 'backend', label: 'Backend Mode' },
 ]
 
 const SOURCES = [
@@ -73,78 +72,6 @@ const directFlow = (source) => {
   }
 }
 
-const backendFlow = (source) => {
-  const realtime = source === 'realtime'
-  const ownerY = realtime ? 180 : 80
-  const ownerHeight = 360
-  const businessY = ownerY + 75
-  const sdkY = realtime ? 420 : 320
-  const avatarY = sdkY
-  const motionY = realtime ? 600 : 500
-  const backendCenterX = 290
-  const clientCenterX = 990
-  const businessCenterY = businessY + 42
-  const backendAudioX = verticalDataLane(backendCenterX, 'audio')
-  const backendMotionX = verticalDataLane(backendCenterX, 'motion')
-  const clientAudioX = appVerticalDataLane(clientCenterX, 'audio')
-  const clientMotionX = appVerticalDataLane(clientCenterX, 'motion')
-  const businessAudioY = horizontalDataLane(businessCenterY, 'audio')
-  const businessMotionY = horizontalDataLane(businessCenterY, 'motion')
-
-  return {
-    key: `${source}-backend`,
-    title: `${realtime ? 'Realtime' : 'Preset'} audio · Backend Mode`,
-    showLatency: realtime,
-    description: realtime
-      ? 'A realtime audio source enters the backend business layer. The Server SDK sends it to Motion Server, while the backend and app business layers deliver response audio and returned motion data to AvatarKit.'
-      : 'The backend business layer passes preset avatar speech audio to the Server SDK. The backend and app business layers then deliver response audio and returned motion data to AvatarKit.',
-    height: realtime ? 740 : 630,
-    nodes: [
-      ...(realtime ? [box('audio-provider', 180, 50, 236, 84, 'Realtime audio source')] : []),
-      owner('backend', 140, ownerY, 300, ownerHeight, 'Your backend'),
-      box('backend-business', 185, businessY, 210, 84, 'Your Business Layer', 'business'),
-      box('server-sdk', 185, sdkY, 210, 84, 'Server SDK', 'sdk'),
-      box('motion-server', 180, motionY, 236, 84, 'Motion Server', 'service'),
-      owner('client', 840, ownerY, 300, ownerHeight, 'Your app'),
-      box('client-business', 885, businessY, 210, 84, 'Your Business Layer', 'business'),
-      box('sdk', 885, avatarY, 210, 84, 'AvatarKit SDK', 'sdk'),
-    ],
-    wires: [
-      ...(realtime ? [wire('produce', [[backendCenterX, 134], [backendCenterX, businessY]], {
-        stage: 1, stageAt: [backendCenterX, 158], target: 'backend-business',
-      })] : []),
-      wire('wire-audio', [[395, businessAudioY], [885, businessAudioY]], {
-        crossing: true, target: 'client-business',
-      }),
-      wire('wire-motion', [[395, businessMotionY], [885, businessMotionY]], {
-        crossing: true, stage: realtime ? 4 : 3, target: 'client-business', dataType: 'motion',
-      }),
-      wire('cli-audio', [[clientAudioX, businessY + 84], [clientAudioX, avatarY]], {
-        target: 'sdk',
-      }),
-      wire('cli-motion', [[clientMotionX, businessY + 84], [clientMotionX, avatarY]], {
-        target: 'sdk', dataType: 'motion',
-      }),
-      wire('biz-audio', [[backendAudioX, businessY + 84], [backendAudioX, sdkY]], {
-        target: 'server-sdk',
-      }),
-      wire('biz-motion', [[backendMotionX, sdkY], [backendMotionX, businessY + 84]], {
-        target: 'backend-business', dataType: 'motion',
-      }),
-      wire('audio', [[backendAudioX, sdkY + 84], [backendAudioX, motionY]], {
-        stage: realtime ? 2 : 1, stageAt: [backendAudioX, realtime ? 570 : 470], target: 'motion-server',
-      }),
-      wire('motion', [[backendMotionX, motionY], [backendMotionX, sdkY + 84]], {
-        stage: realtime ? 3 : 2, stageAt: [backendMotionX, realtime ? 570 : 470], target: 'server-sdk', dataType: 'motion',
-      }),
-    ],
-    journey: realtime
-      ? [['produce'], ['biz-audio'], ['audio'], ['motion'], ['biz-motion'], ['wire-motion'], ['cli-motion']]
-      : [['biz-audio'], ['audio'], ['motion'], ['biz-motion'], ['wire-motion'], ['cli-motion']],
-    branch: { triggerStep: 0, journey: [['wire-audio'], ['cli-audio']] },
-  }
-}
-
 const rtcFlow = (integration) => {
   const livekit = integration === 'livekit'
   const serverCenterX = 296
@@ -204,7 +131,6 @@ const rtcFlow = (integration) => {
 
 const getFlow = (source, integration) => {
   if (integration === 'livekit' || integration === 'agora') return rtcFlow(integration)
-  if (integration === 'backend') return backendFlow(source)
   return directFlow(source)
 }
 
@@ -307,12 +233,11 @@ const renderNode = (item, lit) => {
   )
 }
 
-const renderDiagram = (flow, packet, branchPacket) => {
+const renderDiagram = (flow, packet) => {
   const footerHeight = 58
   const diagramHeight = flow.height + footerHeight
   const runners = [
     { id: 'main', packet, journey: flow.journey },
-    ...(branchPacket && flow.branch ? [{ id: 'client-audio', packet: branchPacket, journey: flow.branch.journey }] : []),
   ]
   const activeByRunner = runners.map(runner => {
     const ids = runner.journey[runner.packet.step] ?? []
@@ -441,7 +366,6 @@ const renderDiagram = (flow, packet, branchPacket) => {
   const [source, setSource] = useState('realtime')
   const [integration, setIntegration] = useState('direct')
   const [packet, setPacket] = useState({ step: 0, elapsed: 0 })
-  const [branchPacket, setBranchPacket] = useState(null)
   const flow = getFlow(source, integration)
   const stageCount = Math.max(...flow.wires.map(item => item.stage ?? 0))
   const latencyStages = flow.showLatency ? Array.from({ length: stageCount }, (_, index) => {
@@ -464,16 +388,12 @@ const renderDiagram = (flow, packet, branchPacket) => {
     if (typeof window === 'undefined') return undefined
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setPacket({ step: 0, elapsed: 0 })
-      setBranchPacket(null)
       return undefined
     }
 
     let frame
     let step = 0
     let startedAt = performance.now() + 420
-    let branchStep = -1
-    let branchStartedAt = 0
-    setBranchPacket(null)
 
     const stateAt = (journey, currentStep, origin, now) => {
       const ids = journey[currentStep] ?? []
@@ -486,24 +406,7 @@ const renderDiagram = (flow, packet, branchPacket) => {
       const main = stateAt(flow.journey, step, startedAt, now)
       setPacket({ step, elapsed: main.elapsed })
 
-      if (branchStep >= 0 && flow.branch) {
-        const branch = stateAt(flow.branch.journey, branchStep, branchStartedAt, now)
-        setBranchPacket({ step: branchStep, elapsed: branch.elapsed })
-        if (branch.complete) {
-          branchStep += 1
-          if (branchStep >= flow.branch.journey.length) {
-            branchStep = -1
-            setBranchPacket(null)
-          }
-          else branchStartedAt = now
-        }
-      }
-
       if (main.complete) {
-        if (flow.branch?.triggerStep === step) {
-          branchStep = 0
-          branchStartedAt = now
-        }
         step = (step + 1) % flow.journey.length
         startedAt = now + (step === 0 ? 700 : 0)
       }
@@ -566,12 +469,11 @@ const renderDiagram = (flow, packet, branchPacket) => {
         <p>LiveKit Agents Integration: synchronized audio and motion data pass through the LiveKit room to the RTC SDK; the RTC SDK plays audio and sends motion data to AvatarKit SDK.</p>
         <p>Agora Convo AI Integration: synchronized audio and motion data pass through the Agora channel to the RTC SDK; the RTC SDK plays audio and sends motion data to AvatarKit SDK.</p>
         <p>Direct Mode Integration: AvatarKit sends client-side avatar speech audio to Motion Server and receives motion data.</p>
-        <p>Backend Mode Integration: the backend business layer uses the Server SDK with Motion Server, then passes audio and motion data to the app business layer and AvatarKit.</p>
       </div>
 
       <div className="spatius-flow-diagram-shell">
         <div className="spatius-flow-diagram">
-          {renderDiagram(flow, packet, branchPacket)}
+          {renderDiagram(flow, packet)}
         </div>
       </div>
     </section>

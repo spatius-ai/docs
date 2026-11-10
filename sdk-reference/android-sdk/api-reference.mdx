@@ -427,37 +427,6 @@ suspend fun send(audioData: ByteArray, end: Boolean = false): String
 **Returns:** A conversation ID string.
 </Accordion>
 
-<Accordion title="yieldAudioData(audioData, end)">
-Provides response audio received from your backend in Backend Mode.
-
-```kotlin
-suspend fun yieldAudioData(
-    audioData: ByteArray,
-    end: Boolean = false
-): String
-```
-
-**Parameters:**
-- `audioData`: The audio data
-- `end`: Whether this is the end of the audio stream
-
-**Returns:** A conversation ID string.
-</Accordion>
-
-<Accordion title="yieldFramesData(animations, conversationId)">
-Provides motion data payloads received from your backend in Backend Mode.
-
-```kotlin
-fun yieldFramesData(animations: List<ByteArray>, conversationId: String): Boolean
-```
-
-**Parameters:**
-- `animations`: List of encoded motion data payloads
-- `conversationId`: The identifier returned by the matching `yieldAudioData()` call
-
-**Returns:** Whether the payload completed the current conversation.
-</Accordion>
-
 <Accordion title="setAudioFormat(sampleRate, opusBitrate, inputAudioFormat, opusUplinkEnabled)">
 Changes the audio format of this view without reinitializing the SDK. Only the parameters you pass change; `null` keeps the current value.
 
@@ -677,8 +646,8 @@ class AudioFormat(
 
 **Parameters:**
 - `sampleRate`: The audio sample rate in Hz. Supported sample rates are: 8000, 16000, 22050, 24000, 32000, 44100, 48000. Not used when `inputAudioFormat` is `AudioCodec.OPUS`: Opus always decodes at 48 kHz, so the view runs at 48000.
-- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send` or `yieldAudioData`. `AudioCodec.PCM` (default) for raw PCM16, `AudioCodec.OPUS` for Opus. Applies to all audio fed to the view until you change it with `controller.setAudioFormat()`; audio that does not match is reported as `AvatarError.InvalidAudioInput`.
-- `opusUplinkEnabled`: Whether the SDK compresses the direct mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in `BACKEND` mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing to initialize.
+- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send`. `AudioCodec.PCM` (default) for raw PCM16, `AudioCodec.OPUS` for Opus. Applies to all audio fed to the view until you change it with `controller.setAudioFormat()`; audio that does not match is reported as `AvatarError.InvalidAudioInput`.
+- `opusUplinkEnabled`: Whether the SDK compresses the direct mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing to initialize.
 - `opusBitrate`: Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload.
 </Accordion>
 
@@ -693,7 +662,6 @@ enum class DrivingServiceMode
 | Case | Description |
 |------|-------------|
 | `DIRECT` | The SDK handles the Motion Server connection directly. |
-| `BACKEND` | The host application provides response audio and motion data. |
 | `RTC` | The avatar is driven through the companion RTC SDK, `ai.spatius:avatarkit-rtc`. It does not connect to a channel by itself; see [Agora Convo AI Client](/agora-convoai/client). |
 
 ### AudioCodec

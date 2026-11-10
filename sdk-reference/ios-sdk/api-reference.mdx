@@ -454,34 +454,6 @@ func send(_ data: Data, end: Bool) -> String
 **Returns:** A conversation ID string.
 </Accordion>
 
-<Accordion title="yieldAudioData(_:end:)">
-Provides response audio received from your backend in Backend Mode.
-
-```swift
-func yieldAudioData(_ data: Data, end: Bool) -> String
-```
-
-**Parameters:**
-- `data`: The audio data
-- `end`: Whether this is the end of the audio stream
-
-**Returns:** A conversation ID string.
-</Accordion>
-
-<Accordion title="yieldFramesData(_:conversationID:)">
-Provides motion data payloads received from your backend in Backend Mode.
-
-```swift
-func yieldFramesData(_ frames: [Data], conversationID: String) -> Bool
-```
-
-**Parameters:**
-- `frames`: Array of encoded motion data payloads
-- `conversationID`: The identifier returned by the matching `yieldAudioData()` call
-
-**Returns:** Whether the payload completed the current conversation.
-</Accordion>
-
 <Accordion title="audioFormat">
 The audio format currently in effect for this view. Set by `AvatarView(avatar:audioFormat:)` and changed with `setAudioFormat(sampleRate:inputAudioFormat:opusBitrate:opusUplinkEnabled:)`.
 
@@ -736,9 +708,9 @@ init(
 
 **Parameters:**
 - `sampleRate`: The audio sample rate in Hz. Defaults to 16000. Supported: 8000, 16000, 22050, 24000, 32000, 44100, 48000. Not used when `inputAudioFormat` is `.opus`: Opus always decodes at 48 kHz, so the session runs at 48000.
-- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send` or `yieldAudioData`. `.pcm` (default) for raw PCM16, `.opus` for Opus. Applies until changed with `controller.setAudioFormat(sampleRate:inputAudioFormat:opusBitrate:opusUplinkEnabled:)`; audio that does not match is reported as `AvatarError.invalidAudioInput`.
+- `inputAudioFormat`: The codec of the audio you feed into the SDK via `send`. `.pcm` (default) for raw PCM16, `.opus` for Opus. Applies until changed with `controller.setAudioFormat(sampleRate:inputAudioFormat:opusBitrate:opusUplinkEnabled:)`; audio that does not match is reported as `AvatarError.invalidAudioInput`.
 - `opusBitrate`: Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload.
-- `opusUplinkEnabled`: Whether the SDK compresses the direct mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in `.backend` mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing.
+- `opusUplinkEnabled`: Whether the SDK compresses the direct mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing.
 </Accordion>
 
 | Instance Property | Type | Description |
@@ -760,7 +732,6 @@ enum DrivingServiceMode
 | Case | Description |
 |------|-------------|
 | `direct` | The SDK handles the Motion Server connection directly. |
-| `backend` | The host application provides response audio and motion data. |
 | `rtc` | The avatar is driven through the companion RTC SDK, `AvatarKitRTC`. It does not connect to a channel by itself; see [Agora Convo AI Client](/agora-convoai/client). |
 
 ### AudioCodec

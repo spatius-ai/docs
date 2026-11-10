@@ -38,20 +38,22 @@ Top-level structure (Guides tab):
 
 1. **Start Here** — `getting-started`, `concepts/how-it-works`
 2. **Quickstarts** — complete scenario first-runs from `spatius-scenario-demo` for Web, iOS, and Android only (`quickstarts/{web-sdk,ios-sdk,android-sdk}`). There is no Quickstarts Overview page. The current native scenario clients use Agora, but this must be described as a demo implementation choice, never as the complete iOS or Android platform capability. Flutter remains in SDK Reference and integration guides, not Quickstarts.
-3. **Integrations** — starts with `integrations/overview`, followed by `LiveKit Agents` (tagged `Recommended`), `Agora ConvoAI` (tagged `Recommended`), `Direct Mode`, then `Backend Mode`. Direct Mode contains only `Client`; Backend Mode contains `Backend Setup` and `Client`. These concise labels may also be used in the comparison table; integration page titles use the full public names.
+3. **Integrations** — starts with `integrations/overview`, followed by `LiveKit Agents` (tagged `Recommended`), `Agora ConvoAI` (tagged `Recommended`), then `Direct Mode`. Direct Mode contains only `Client`. These concise labels may also be used in the comparison table; integration page titles use the full public names.
 4. **Concepts** — `concepts/{avatar,avatar-background,audio,lifecycle,state-events}` (mental model + cross-cutting warnings; `how-it-works` lives in Start Here as orientation).
 5. **Examples & Support** — `resources/demo-projects` (matrix) and `faq`.
 
 Other tabs:
 
-- **SDK Reference** → all SDK/reference material: client SDKs, server SDKs, Server API pages, shared Regions & Endpoints, and Error Handling. This tab is the single place to look up exact classes, methods, enums, request fields, endpoint regions, and error codes.
+- **SDK Reference** → all SDK/reference material: client SDKs, Session Token API pages, shared Regions & Endpoints, and Client Error Handling. This tab is the single place to look up exact classes, methods, enums, request fields, endpoint regions, and error codes.
 - **API Reference** → the public REST Spatius API for programmatic avatar creation and asynchronous video generation. Hand-written pages live in `api-reference/` (overview, authentication, errors); endpoint pages are auto-generated from `openapi/avatar-open-api.json` and `openapi/video-open-api.json` via group-level `openapi` keys in `docs.json`. The Video API guide is `api-reference/video-generation.mdx`; video access and rate counters are independent of Avatar access, and Console has no active-video-job quota.
 
-**Public integration boundary:** Guides expose exactly four integrations under one `Integrations` group: LiveKit Agents Integration, Agora Convo AI Integration (including TEN Framework), Direct Mode Integration, and Backend Mode Integration. The first two carry the `Recommended` navigation tag. Do not recreate separate "Backend Mode with LiveKit," "Backend Mode with Agora," or "your own transport" entries. Server SDK LiveKit/Agora egress remains a low-level SDK capability, not an additional integration path. Backend Mode means the application owns client delivery. The phrases "Realtime Platform Integrations," "Build with Spatius SDKs," and "Server-Side Integrations" are not user-facing navigation categories.
+**Public integration boundary:** Guides expose exactly three integrations under one `Integrations` group: LiveKit Agents Integration, Agora Convo AI Integration (including TEN Framework), and Direct Mode Integration. The first two carry the `Recommended` navigation tag. Do not add a fourth integration path or "your own transport" entries. The phrases "Realtime Platform Integrations," "Build with Spatius SDKs," and "Server-Side Integrations" are not user-facing navigation categories.
 
-**Integration content hierarchy:** `integrations/overview.mdx` owns cross-path comparison and selection. LiveKit Agents and Agora Convo AI Overviews contain only architecture, one short runtime-boundary explanation, and 2–3 next-step cards. Other installation, credentials, configuration, and runnable code belong in Agent setup, Backend Setup, or Client pages. Package matrices, platform differences, and exact APIs belong in SDK Reference. Do not create separate Direct Mode or Backend Mode Overview pages.
+**Withdrawn integration (do not reintroduce):** Backend Mode is withdrawn from all public documentation. Do not present, compare, recommend, or link it, including incidental mentions, mode tables, diagrams, demo links, and FAQ answers. Do not document the host-mode feed APIs (`yieldAudioData`, `yieldFramesData`, `yieldAnimations`) or the `DrivingServiceMode.backend` / `BACKEND` / `backend` enum value, and do not reintroduce the Python, Go, or JavaScript Server SDK reference pages, the Server Error Handling page, or a Server SDK capability section. The removed URLs are kept only as `docs.json` redirects.
 
-When you rename or move a page, also add an entry to `docs.json > redirects` so existing inbound links keep resolving (`{ "source": "/old/path", "destination": "/new/path" }`). Pure deletions don't need a redirect — only renames do.
+**Integration content hierarchy:** `integrations/overview.mdx` owns cross-path comparison and selection. LiveKit Agents and Agora Convo AI Overviews contain only architecture, one short runtime-boundary explanation, and 2–3 next-step cards. Other installation, credentials, configuration, and runnable code belong in Agent setup or Client pages. Package matrices, platform differences, and exact APIs belong in SDK Reference. Do not create a separate Direct Mode Overview page.
+
+When you rename, move, or delete a page, also add entries to `docs.json > redirects` for both the page path and its `.md` variant so existing inbound links keep resolving (`{ "source": "/old/path", "destination": "/new/path", "permanent": true }`). Point every redirect directly at a live page; never chain one redirect to another.
 
 ## IA convention: Concepts vs Reference (hybrid)
 
@@ -84,7 +86,6 @@ Use these names verbatim everywhere — including running prose, headings, code 
 | **LiveKit Agents Integration** | The public name for the recommended integration that uses `livekit-plugins-spatius`. The concise navigation label is "LiveKit Agents"; do not call the integration "LiveKit Integration" or "LiveKit Plugin". Its navigation follows the same `Overview` → `Agent setup` → `Client` structure as Agora. |
 | **Agora Convo AI Integration** | The public name for the recommended integration that uses Agora Convo AI or TEN Framework. The concise navigation label is "Agora ConvoAI". |
 | **Direct Mode Integration** | The public name for the path that maps to `DrivingServiceMode.direct` in SDK code. |
-| **Backend Mode Integration** | The public name for the path that maps to `DrivingServiceMode.backend` in SDK code. |
 | **`ConnectionState`** / **`ConversationState`** | The two state enum types. Always in code style with this exact casing. |
 
 Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "Spatius Server", "renderer SDK", "RTC plugin"). If you find an existing page using a different term, either fix it in the same change or flag it explicitly — silent drift is the failure mode this section exists to prevent.
@@ -95,8 +96,7 @@ Do not invent synonyms (e.g. "drive data", "animation stream", "mocap stream", "
 - Do not describe `@spatius/avatarkit-rtc` itself as a diagnostic, smoke test, debug helper, or standalone integration. It is a client package used by LiveKit Agents and Agora Convo AI.
 - **LiveKit Agents Integration** and **Agora Convo AI Integration** are the two recommended integrations. The **RTC Adapter** (`@spatius/avatarkit-rtc`) is the Web SDK adapter that renders the avatar stream from their supported RTC rooms.
 - Agora Convo AI client integrations support Web, iOS, and Android. Web uses `@spatius/avatarkit-rtc`; iOS uses `AvatarKitRTC`; Android uses `ai.spatius:avatarkit-rtc`.
-- The iOS and Android RTC SDKs expose a public `RTCProvider` abstraction and currently bundle `AgoraProvider`; they do not yet bundle a native `LiveKitProvider`. Describe this as a packaged-provider boundary, never as iOS or Android supporting only Agora—the core platform SDKs also support Direct Mode and Backend Mode.
-- Server SDK LiveKit/Agora egress is a low-level SDK capability, not an additional integration path. Backend Mode uses the core AvatarKit client feed and does not branch into RTC provider variants.
+- The iOS and Android RTC SDKs expose a public `RTCProvider` abstraction and currently bundle `AgoraProvider`; they do not yet bundle a native `LiveKitProvider`. Describe this as a packaged-provider boundary, never as iOS or Android supporting only Agora—the core platform SDKs also support Direct Mode.
 
 ## Brand-asset reference
 
