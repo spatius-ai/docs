@@ -124,7 +124,7 @@ Use Reference pages for exact API details:
 
 - Do not say Spatius generates video. It returns motion data and AvatarKit renders locally.
 - Do not use undocumented internal data names for motion data.
-- Do not recommend, describe, or link Backend Mode, the host-mode feed APIs (`yieldAudioData`, `yieldFramesData`, `yieldAnimations`), the `DrivingServiceMode.backend` / `BACKEND` / `backend` enum value, or Python, Go, or JavaScript Server SDK reference pages. They are not part of the public Spatius documentation; use LiveKit Agents, Agora Convo AI, or Direct Mode instead.
+- Do not recommend, describe, or link Backend Mode, client SDK APIs or driving-mode values that only serve it, or Python, Go, or JavaScript Server SDK reference pages. They are not part of the public Spatius documentation; use LiveKit Agents, Agora Convo AI, or Direct Mode instead.
 - Do not describe `@spatius/avatarkit-rtc` as a standalone platform SDK. It is the Web SDK RTC transport adapter.
 - Do not recommend setting `SPATIUS_CONSOLE_ENDPOINT` or `SPATIUS_INGRESS_ENDPOINT` in normal quickstarts.
 - Do not use old `DrivingServiceMode` enum names. Use `DrivingServiceMode.direct` and `DrivingServiceMode.rtc` for their documented paths.
