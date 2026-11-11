@@ -1,7 +1,7 @@
 ---
 title: "AvatarKit Flutter SDK Reference"
 sidebarTitle: "Flutter"
-description: "AvatarKit Flutter SDK reference for Direct Mode, Backend Mode client feed, state callbacks, and demos."
+description: "AvatarKit Flutter SDK reference for Direct Mode, state callbacks, and demos."
 ---
 
 ## Installation
@@ -36,7 +36,7 @@ await AvatarSDK.initialize(
 await AvatarSDK.setSessionToken(sessionToken);
 ```
 
-Use `DrivingServiceMode.direct` for [Direct Mode](/direct-mode/client). Use `DrivingServiceMode.backend` when your Flutter app receives response audio and motion data from [Backend Mode Client](/backend-mode/client-sdk).
+Use `DrivingServiceMode.direct` for [Direct Mode](/direct-mode/client).
 
 `initialize` fails fast when `appID` is missing, rather than returning silently. Get an App ID from [app.spatius.ai](https://app.spatius.ai/).
 
@@ -45,7 +45,7 @@ Use `DrivingServiceMode.direct` for [Direct Mode](/direct-mode/client). Use `Dri
 | Field | What it does |
 |-------|--------------|
 | `region` | Defaults to `'auto'`: the SDK selects the closest serving region at initialization and reuses the cached choice on later launches. Pass `'us-west'`, `'ap-northeast'`, or `'cn-beijing'` to force that region. If automatic selection cannot be reached, the SDK falls back to a default region and continues initializing. |
-| `drivingServiceMode` | `direct` or `backend`, as described above. |
+| `drivingServiceMode` | Use `DrivingServiceMode.direct` for Direct Mode, as described above. |
 | `logLevel` | SDK log verbosity. |
 | `renderQuality` | Rendering quality tier. Defaults to `RenderQuality.ultra`. |
 
@@ -142,8 +142,8 @@ const AudioFormat({
 | Field | What it does |
 |-------|--------------|
 | `sampleRate` | Sample rate in Hz. Supported: 8000, 16000, 22050, 24000, 32000, 44100, 48000. Not used when `inputAudioFormat` is `AudioCodec.opus`: Opus always decodes at 48 kHz, so the session runs at 48000. |
-| `inputAudioFormat` | The codec of the audio you feed into the SDK via `send` / `yieldAudioData`. `AudioCodec.pcm` (default) for raw PCM16, `AudioCodec.opus` for Opus. Change it on a live view with `setAudioFormat`. |
-| `opusUplinkEnabled` | Whether the SDK compresses the Direct Mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used in Backend Mode, which has no uplink, or with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing. |
+| `inputAudioFormat` | The codec of the audio you feed into the SDK via `send`. `AudioCodec.pcm` (default) for raw PCM16, `AudioCodec.opus` for Opus. Change it on a live view with `setAudioFormat`. |
+| `opusUplinkEnabled` | Whether the SDK compresses the Direct Mode uplink to Opus. On by default, which reduces the upload to roughly an eighth at the cost of encoding on the client. Set `false` to keep a raw PCM uplink. Not used with Opus input, which is already compressed. With PCM input, `sampleRate` must be 8000, 16000, 24000, or 48000; on any other rate the SDK logs a warning and sends raw PCM instead of failing. |
 | `opusBitrate` | Target bitrate in bits/sec for the uplink the SDK encodes. Defaults to 48000. Higher means better quality and a larger upload. |
 
 Audio that does not match the declared `inputAudioFormat` is reported through `AvatarController.onError` as `AvatarError.invalidAudioInput`.
@@ -255,18 +255,8 @@ controller.send(audioBytes, end: isLastChunk);
 
 For audio source and timing guidance, see [Audio](/concepts/audio).
 
-For Backend Mode input, feed the response audio and motion data received from your backend:
-
-```dart
-final conversationId = await controller.yieldAudioData(audioBytes, end: isLastChunk);
-controller.yieldAnimations(framesData, conversationID: conversationId);
-```
-
-`yieldAudioData` takes no audio format. The format comes from the view: `AvatarWidget.audioFormat`, or whatever `setAudioFormat` last applied. The per-call `audioFormat` parameter has been removed, as on iOS and Android; code that still passes it no longer compiles, so drop the argument. The behavior is unchanged.
-
 ## Demos
 
-<CardGroup cols={2}>
+<CardGroup cols={1}>
   <Card title="Flutter Direct Mode demo" icon="github" href="https://github.com/spatius-ai/spatius-integration-demo/tree/main/direct-mode/clients/flutter" />
-  <Card title="Flutter Backend Mode demo" icon="github" href="https://github.com/spatius-ai/spatius-integration-demo/tree/main/backend-mode/clients/flutter" />
 </CardGroup>

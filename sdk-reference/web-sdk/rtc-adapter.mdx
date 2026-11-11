@@ -20,7 +20,6 @@ The RTC Adapter is part of the Web SDK family. Native Agora clients use `AvatarK
 | LiveKit Agents Integration | Yes, with `LiveKitProvider`. |
 | Agora Convo AI Integration | Yes, with `AgoraProvider`. |
 | Direct Mode Integration | No. Use `@spatius/avatarkit`. |
-| Backend Mode Integration | No. Feed the backend output into the core AvatarKit SDK. |
 
 ## Install
 
@@ -71,7 +70,7 @@ const player = new AvatarPlayer(new LiveKitProvider(), avatarView)
 await player.connect(connection)
 ```
 
-The adapter owns the RTC-to-renderer data flow. Do not manually call `yieldAudioData()` or `yieldFramesData()` while it is active.
+The adapter owns the RTC-to-renderer data flow. Do not feed audio or motion data into AvatarKit yourself while it is active.
 
 ## Providers
 

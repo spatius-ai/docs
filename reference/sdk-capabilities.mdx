@@ -1,7 +1,7 @@
 ---
 title: "SDK Capability Matrix"
 sidebarTitle: "SDK Capabilities"
-description: "Documented Spatius SDK capabilities across Web, iOS, Android, Flutter, and the Python, Go, and JavaScript Server SDKs."
+description: "Documented Spatius client SDK capabilities across Web, iOS, Android, and Flutter."
 ---
 
 This matrix shows capabilities that are documented in the public reference pages. It is a lookup aid, not a replacement for the platform reference pages.
@@ -13,7 +13,6 @@ If a cell says **Not documented**, the current docs do not expose a public refer
 | Capability | Web | iOS | Android | Flutter |
 | --- | --- | --- | --- | --- |
 | Direct Mode Integration | Documented | Documented | Documented | Documented |
-| Backend Mode client feed | `yieldAudioData()` / `yieldFramesData()` | `yieldAudioData(_:end:)` / `yieldFramesData(_:conversationID:)` | `yieldAudioData(audioData, end)` / `yieldFramesData(animations, conversationId)` | `yieldAudioData()` / `yieldAnimations()` |
 | RTC client/provider support | `@spatius/avatarkit-rtc` | `AvatarKitRTC` with a public `RTCProvider` abstraction; Agora provider included | `ai.spatius:avatarkit-rtc` with a public `RTCProvider` abstraction; Agora provider included | Not documented |
 | Region config | `region` in `AvatarSDK.initialize()` | `region` in `Configuration` | `region` in `Configuration` | `region` in `Configuration` |
 | Region default | Automatic selection when unset | Automatic selection when unset | Automatic selection when unset | Automatic selection when unset |
@@ -21,7 +20,7 @@ If a cell says **Not documented**, the current docs do not expose a public refer
 | Change audio format on a live view | `controller.setAudioFormat(patch)` | `controller.setAudioFormat(sampleRate:inputAudioFormat:opusBitrate:opusUplinkEnabled:)` | `controller.setAudioFormat(sampleRate, opusBitrate, inputAudioFormat, opusUplinkEnabled)` | `controller.setAudioFormat(...)` |
 | Opus audio input | `inputAudioFormat: 'opus'` | `inputAudioFormat: .opus` | `inputAudioFormat = AudioCodec.OPUS` | `inputAudioFormat: AudioCodec.opus` |
 | Direct Mode Opus uplink | On by default (`opusUplinkEnabled`) | On by default (`opusUplinkEnabled`) | On by default (`opusUplinkEnabled`) | On by default (`opusUplinkEnabled`) |
-| Driving mode enum | `DrivingServiceMode.direct` / `.backend` / `.rtc` | `.direct` / `.backend` / `.rtc` | `DIRECT` / `BACKEND` / `RTC` | `direct` / `backend` |
+| Driving mode enum | `DrivingServiceMode.direct` / `.rtc` | `.direct` / `.rtc` | `DIRECT` / `RTC` | `direct` |
 | Render quality | `RenderQuality` and `setRenderQuality()` | `RenderQuality` and `setRenderQuality(_:)` | `RenderQuality` and `setRenderQuality()` | `RenderQuality` and `setRenderQuality()` |
 | Automatic render quality | `setAutoRenderQuality()` and `onRenderQualityChanged` | `setAutoRenderQuality(enabled:options:)` and `onRenderQualityChanged` | `setAutoRenderQuality(enabled, options)` and `onRenderQualityChanged` | `setAutoRenderQuality()` and `onRenderQualityChanged` |
 | Render resolution bounds | `setRenderResolutionConfig()` | `setRenderResolutionConfig(enabled:config:)` | `setRenderResolutionConfig(enabled, config)` | `setRenderResolutionConfig()` |
@@ -41,32 +40,8 @@ If a cell says **Not documented**, the current docs do not expose a public refer
 
 | Package | What it does | Reference |
 | --- | --- | --- |
-| `@spatius/avatarkit` | Core Web AvatarKit SDK for loading, rendering, Direct Mode, and Backend Mode client feed. | [Web SDK Reference](/sdk-reference/web-sdk/reference) |
+| `@spatius/avatarkit` | Core Web AvatarKit SDK for loading, rendering, and Direct Mode. | [Web SDK Reference](/sdk-reference/web-sdk/reference) |
 | `@spatius/avatarkit-rtc` | Web RTC transport adapter for LiveKit and Agora providers. | [RTC Adapter](/sdk-reference/web-sdk/rtc-adapter) |
-
-## Server SDK capabilities
-
-| Capability | Python Server SDK | Go Server SDK | JavaScript Server SDK |
-| --- | --- | --- | --- |
-| Backend Mode session | `new_avatar_session()` | `NewAvatarSession()` | `newAvatarSession()` on Node.js |
-| Region config | `region` option | `WithRegion(region)` | `region` option |
-| Region default | `auto` | `auto` | `auto` |
-| Console endpoint override | `console_endpoint_url` | `WithConsoleEndpointURL()` | `consoleEndpointUrl` |
-| Ingress endpoint override | `ingress_endpoint_url` | `WithIngressEndpointURL()` | `ingressEndpointUrl` |
-| Audio input | PCM / Ogg Opus | PCM / Ogg Opus | PCM / Ogg Opus |
-| Internal PCM to Opus encoder | Optional `spatius[opus]` and `libopus` | Native codec libraries | Bundled WebAssembly encoder |
-| Motion data callback | `transport_frames` | `WithTransportFrames()` | `transportFrames` |
-| Encoded audio callback | `on_encoded_audio` | `WithOnEncodedAudio()` | `onEncodedAudio` |
-| LiveKit egress | `livekit_egress` | `WithLiveKitEgress()` | `livekitEgress` |
-| Agora egress | `agora_egress` | `WithAgoraEgress()` | `agoraEgress` |
-| Interrupt for egress | `interrupt()` | `Interrupt()` | `interrupt()` |
-| Worker warm-up | `prewarm()` with optional TLS warm-up and token prefetch | `Prewarm()` with optional TLS warm-up and token prefetch | `prewarm()` with optional token prefetch |
-| Handshake extensions | `extra_params` | `WithExtraParams()` | `extraParams` |
-| Structured SDK errors | `AvatarSDKError` / `SessionTokenError` | `*AvatarSDKError` for supported failures | `AvatarSDKError` / `SessionTokenError` |
-
-See the [Python](/sdk-reference/python-sdk/python-sdk), [Go](/sdk-reference/go-sdk/go-sdk), and [JavaScript / TypeScript](/sdk-reference/javascript-sdk/javascript-sdk) references for requirements and exact signatures. Error fields and code coverage differ by language.
-
-LiveKit and Agora egress are low-level Server SDK capabilities. They are not additional integration paths.
 
 ## Integration support
 
@@ -75,7 +50,6 @@ LiveKit and Agora egress are low-level Server SDK capabilities. They are not add
 | Direct Mode Integration | Yes | Yes | Yes | Yes | Session Token endpoint |
 | LiveKit Agents Integration | Bundled `LiveKitProvider` | `RTCProvider` extension point; native LiveKit provider not bundled | `RTCProvider` extension point; native LiveKit provider not bundled | Not documented | `livekit-plugins-spatius` |
 | Agora Convo AI Integration | Web RTC client | AvatarKit RTC client | AvatarKit RTC client | Not documented | Agora avatar provider or TEN extension |
-| Backend Mode Integration | Client feed | Client feed | Client feed | Client feed | Python, Go, or JavaScript Server SDK |
 
 ## Region support
 

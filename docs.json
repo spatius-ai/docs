@@ -67,13 +67,6 @@
                 "pages": [
                   "direct-mode/client"
                 ]
-              },
-              {
-                "group": "Backend Mode",
-                "pages": [
-                  "backend-mode/server-sdk",
-                  "backend-mode/client-sdk"
-                ]
               }
             ]
           },
@@ -136,15 +129,6 @@
             ]
           },
           {
-            "group": "Server SDKs",
-            "icon": "server",
-            "pages": [
-              "sdk-reference/python-sdk/python-sdk",
-              "sdk-reference/go-sdk/go-sdk",
-              "sdk-reference/javascript-sdk/javascript-sdk"
-            ]
-          },
-          {
             "group": "Session Token API",
             "icon": "key",
             "pages": [
@@ -163,8 +147,7 @@
             "group": "Error Handling",
             "icon": "triangle-exclamation",
             "pages": [
-              "resources/client-error",
-              "resources/server-error"
+              "resources/client-error"
             ]
           }
         ]
@@ -229,28 +212,94 @@
   },
   "redirects": [
     {
-      "source": "/backend-mode/own-transport",
-      "destination": "/backend-mode/server-sdk"
+      "source": "/backend-mode/server-sdk",
+      "destination": "/integrations/overview",
+      "permanent": true
     },
     {
-      "source": "/backend-mode/own-transport.md",
-      "destination": "/backend-mode/server-sdk"
+      "source": "/backend-mode/server-sdk.md",
+      "destination": "/integrations/overview",
+      "permanent": true
     },
     {
-      "source": "/backend-mode/with-livekit",
-      "destination": "/integrations/overview"
+      "source": "/backend-mode/client-sdk",
+      "destination": "/integrations/overview",
+      "permanent": true
     },
     {
-      "source": "/backend-mode/with-livekit.md",
-      "destination": "/integrations/overview"
+      "source": "/backend-mode/client-sdk.md",
+      "destination": "/integrations/overview",
+      "permanent": true
     },
     {
       "source": "/backend-mode/overview",
-      "destination": "/backend-mode/server-sdk"
+      "destination": "/integrations/overview",
+      "permanent": true
     },
     {
       "source": "/backend-mode/overview.md",
-      "destination": "/backend-mode/server-sdk"
+      "destination": "/integrations/overview",
+      "permanent": true
+    },
+    {
+      "source": "/backend-mode/own-transport",
+      "destination": "/integrations/overview",
+      "permanent": true
+    },
+    {
+      "source": "/backend-mode/own-transport.md",
+      "destination": "/integrations/overview",
+      "permanent": true
+    },
+    {
+      "source": "/backend-mode/with-livekit",
+      "destination": "/integrations/overview",
+      "permanent": true
+    },
+    {
+      "source": "/backend-mode/with-livekit.md",
+      "destination": "/integrations/overview",
+      "permanent": true
+    },
+    {
+      "source": "/sdk-reference/python-sdk/python-sdk",
+      "destination": "/reference/overview",
+      "permanent": true
+    },
+    {
+      "source": "/sdk-reference/python-sdk/python-sdk.md",
+      "destination": "/reference/overview",
+      "permanent": true
+    },
+    {
+      "source": "/sdk-reference/go-sdk/go-sdk",
+      "destination": "/reference/overview",
+      "permanent": true
+    },
+    {
+      "source": "/sdk-reference/go-sdk/go-sdk.md",
+      "destination": "/reference/overview",
+      "permanent": true
+    },
+    {
+      "source": "/sdk-reference/javascript-sdk/javascript-sdk",
+      "destination": "/reference/overview",
+      "permanent": true
+    },
+    {
+      "source": "/sdk-reference/javascript-sdk/javascript-sdk.md",
+      "destination": "/reference/overview",
+      "permanent": true
+    },
+    {
+      "source": "/resources/server-error",
+      "destination": "/resources/client-error",
+      "permanent": true
+    },
+    {
+      "source": "/resources/server-error.md",
+      "destination": "/resources/client-error",
+      "permanent": true
     },
     {
       "source": "/direct-mode/overview",
