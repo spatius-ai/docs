@@ -31,6 +31,9 @@ jobs:
       - name: Install check tools
         run: pnpm install --frozen-lockfile
 
+      - name: Test analytics consent
+        run: pnpm test
+
       - name: Check spelling
         run: pnpm run check:spell
 

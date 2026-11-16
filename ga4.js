@@ -36,12 +36,13 @@
 
   const landingAttribution = readLandingAttribution(window.location.href, document.referrer)
   let loaded = false
+  let consentReady = false
   let previousPageLocation = ''
 
   // Nothing is collected until the shared runtime resolves effective permission.
   loadConsentComponent()
   window.addEventListener('mintlify:navigate', () => {
-    window.SpatiusConsent?.mount({ settingsLink: true })
+    if (consentReady) window.SpatiusConsent?.mount({ settingsLink: true })
     syncAnalytics()
   })
   window.addEventListener('focus', syncAnalytics)
@@ -53,22 +54,33 @@
     const script = document.createElement('script')
     script.src = 'https://www.spatius.ai/consent/v1/consent.js'
     script.async = true
+    let settled = false
+    const timeout = setTimeout(fail, 10000)
+    function fail() {
+      if (settled) return
+      settled = true
+      clearTimeout(timeout)
+      script.remove()
+      // Leave analytics disabled, but let the visitor retry settings.
+      const retry = document.createElement('button')
+      retry.textContent = 'Retry Cookie Settings'
+      retry.style.cssText = 'position:fixed;bottom:8px;right:12px;z-index:9999;background:white;color:#333;padding:8px;border:1px solid #ddd'
+      retry.onclick = () => { retry.remove(); loadConsentComponent() }
+      document.body.appendChild(retry)
+    }
     script.onload = () => {
+      if (settled) return
       const consent = window.SpatiusConsent
-      if (consent?.version !== 1) return
+      if (consent?.version !== 1) { fail(); return }
+      settled = true
+      consentReady = true
+      clearTimeout(timeout)
       consent.subscribeAnalyticsConsent(syncAnalytics)
       consent.mount({ settingsLink: true })
       void consent.loadConsentRegion().then(syncAnalytics)
       syncAnalytics()
     }
-    script.onerror = () => {
-      // Leave analytics disabled, but let the visitor retry settings.
-      const retry = document.createElement('button')
-      retry.textContent = 'Retry Cookie Settings'
-      retry.style.cssText = 'position:fixed;bottom:8px;right:12px;z-index:9999;background:white;color:#333;padding:8px;border:1px solid #ddd'
-      retry.onclick = () => { retry.remove(); script.remove(); loadConsentComponent() }
-      document.body.appendChild(retry)
-    }
+    script.onerror = fail
     document.head.appendChild(script)
   }
 
@@ -190,7 +202,7 @@
   }
 
   function readConsent() {
-    return window.SpatiusConsent?.readAnalyticsConsent() ?? 'undecided'
+    return consentReady ? window.SpatiusConsent?.readAnalyticsConsent() ?? 'undecided' : 'undecided'
   }
 
   function safeValue(value) {
