@@ -2,6 +2,7 @@
   "name": "spatius-docs",
   "private": true,
   "scripts": {
+    "test": "node --test tests/*.test.mjs",
     "check": "pnpm run check:spell && pnpm run check:grammar && pnpm run check:links",
     "check:spell": "cspell --config ./cspell.config.yaml --no-progress --show-suggestions \"**/*.{md,mdx}\"",
     "check:grammar": "vale sync && vale --glob='*.{md,mdx}' .",

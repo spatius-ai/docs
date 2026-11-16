@@ -3,11 +3,9 @@
  * site and Studio so a visit that starts here is credited to its source when it
  * leads to a Studio signup.
  *
- * The docs have no cookie banner. GA4 loads only after the visitor accepted
- * analytics cookies on www.spatius.ai or in Studio, which share the
- * `spatius_analytics_consent` cookie on `.spatius.ai`. While consent is
- * undecided, links to Studio carry the visit's source in `sw_landing_*`
- * parameters; Studio reports it if consent is granted there.
+ * Cookie UI, regional defaults, GPC and persistence come from the shared
+ * versioned component maintained in spatius-site. This file only adapts its
+ * effective permission to GA4 and preserves attribution while undecided.
  *
  * Mintlify includes this file on every page and runs it once per visit.
  */
@@ -15,7 +13,6 @@
   const MEASUREMENT_ID = 'G-5YREV5DMW3'
   const DOCS_HOST = 'docs.spatius.ai'
   const STUDIO_ORIGIN = 'https://app.spatius.ai'
-  const CONSENT_COOKIE = 'spatius_analytics_consent'
   const OWNED_ROOT_DOMAINS = ['spatius.ai', 'spatialwalk.cn']
   const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']
   const SAFE_VALUE_PATTERN = /^[\w.-][\w .:/-]{0,99}$/
@@ -34,25 +31,64 @@
   ]
 
   // Local previews and Mintlify preview deployments never report.
-  if (window.location.hostname !== DOCS_HOST) return
+  if (window.location.hostname !== DOCS_HOST || window.__spatiusDocsAnalyticsStarted) return
+  window.__spatiusDocsAnalyticsStarted = true
 
   const landingAttribution = readLandingAttribution(window.location.href, document.referrer)
   let loaded = false
   let previousPageLocation = ''
 
-  if (readConsent() === 'accepted') {
+  // Nothing is collected until the shared runtime resolves effective permission.
+  loadConsentComponent()
+  window.addEventListener('mintlify:navigate', () => {
+    window.SpatiusConsent?.mount({ settingsLink: true })
+    syncAnalytics()
+  })
+  window.addEventListener('focus', syncAnalytics)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) syncAnalytics()
+  })
+
+  function loadConsentComponent() {
+    const script = document.createElement('script')
+    script.src = 'https://www.spatius.ai/consent/v1/consent.js'
+    script.async = true
+    script.onload = () => {
+      const consent = window.SpatiusConsent
+      if (consent?.version !== 1) return
+      consent.subscribeAnalyticsConsent(syncAnalytics)
+      consent.mount({ settingsLink: true })
+      void consent.loadConsentRegion().then(syncAnalytics)
+      syncAnalytics()
+    }
+    script.onerror = () => {
+      // Leave analytics disabled, but let the visitor retry settings.
+      const retry = document.createElement('button')
+      retry.textContent = 'Retry Cookie Settings'
+      retry.style.cssText = 'position:fixed;bottom:8px;right:12px;z-index:9999;background:white;color:#333;padding:8px;border:1px solid #ddd'
+      retry.onclick = () => { retry.remove(); script.remove(); loadConsentComponent() }
+      document.body.appendChild(retry)
+    }
+    document.head.appendChild(script)
+  }
+
+  function syncAnalytics() {
+    const allowed = readConsent() === 'accepted'
+    window[`ga-disable-${MEASUREMENT_ID}`] = !allowed
+    if (loaded) window.gtag('consent', 'update', { analytics_storage: allowed ? 'granted' : 'denied' })
+    if (!allowed) {
+      previousPageLocation = ''
+      for (const item of document.cookie.split(';')) {
+        const name = item.trim().split('=')[0]
+        if (!/^_ga(?:_|$)/.test(name)) continue
+        document.cookie = `${name}=; Max-Age=0; Path=/; SameSite=Lax; Secure`
+        document.cookie = `${name}=; Max-Age=0; Path=/; Domain=.spatius.ai; SameSite=Lax; Secure`
+      }
+      return
+    }
     loadGa4()
     trackPageView()
   }
-  window.addEventListener('mintlify:navigate', () => {
-    if (readConsent() !== 'accepted') {
-      window[`ga-disable-${MEASUREMENT_ID}`] = true
-      return
-    }
-    window[`ga-disable-${MEASUREMENT_ID}`] = false
-    loadGa4()
-    trackPageView()
-  })
   document.addEventListener('click', handleStudioLinkClick, true)
   document.addEventListener('auxclick', handleStudioLinkClick, true)
 
@@ -96,6 +132,7 @@
       if (value && SAFE_VALUE_PATTERN.test(value)) query.set(key, value)
     }
     const pageLocation = `${url.origin}${url.pathname}${query.toString() ? `?${query}` : ''}`
+    if (pageLocation === previousPageLocation) return
     // Client-side navigation keeps the landing page's document.referrer, so
     // later views name the previous page instead of the external referrer.
     const pageReferrer = previousPageLocation || referrerOrigin(document.referrer)
@@ -153,18 +190,7 @@
   }
 
   function readConsent() {
-    const values = document.cookie
-      .split(';')
-      .map(part => part.trim())
-      .filter(part => part.startsWith(`${CONSENT_COOKIE}=`))
-      .map(part => part.slice(CONSENT_COOKIE.length + 1))
-    if (values.length === 0) return 'undecided'
-    const states = new Set(values.map((value) => {
-      if (value === 'granted' || value === 'accepted' || value === 'true') return 'accepted'
-      if (value === 'denied' || value === 'declined' || value === 'false') return 'declined'
-      return 'undecided'
-    }))
-    return states.size === 1 ? states.values().next().value : 'undecided'
+    return window.SpatiusConsent?.readAnalyticsConsent() ?? 'undecided'
   }
 
   function safeValue(value) {
