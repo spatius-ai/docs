@@ -209,8 +209,22 @@ AvatarSDK.setRenderResolutionConfig(enabled: true, config: RenderResolutionConfi
 ```
 </Accordion>
 
+<Accordion title="checkDeviceSupport()">
+Check rendering support before loading an avatar. Call this while the app is in the foreground; SDK initialization is not required.
+
+```swift
+static func checkDeviceSupport() async -> DeviceSupport
+```
+
+The result is `.supported`, `.renderNotSupported`, or `.insufficientPerformance`. The last result means rendering is available but performance is below the recommended level; consider enabling automatic render quality. Rendering failures and detection timeouts return `.renderNotSupported`.
+
+Initialization also starts this check automatically. If rendering is unavailable, initialization does not complete successfully and the SDK logs an error; it does not add a controller error callback. Concurrent checks share the same work, and valid cached results are reused.
+</Accordion>
+
 <Accordion title="isDeviceSupported()">
-Check whether the current device can run AvatarKit.
+<Warning>
+Deprecated. Use `checkDeviceSupport()` to distinguish unsupported rendering from insufficient performance. This method remains available and returns `true` only for `.supported`.
+</Warning>
 
 ```swift
 static func isDeviceSupported() async -> Bool
@@ -299,10 +313,10 @@ func retrieve(id: String) -> Avatar?
 </Accordion>
 
 <Accordion title="derive(assetPath:)">
-Derives an avatar from a local asset path.
+Derives an avatar from a local asset path. Await completion before creating the avatar view. If the required shared template is not cached, the SDK downloads it automatically; network failures are thrown to the caller.
 
 ```swift
-func derive(assetPath: String) throws -> Avatar
+func derive(assetPath: String) async throws -> Avatar
 ```
 
 **Parameters:**
