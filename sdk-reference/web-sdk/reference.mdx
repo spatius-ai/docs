@@ -8,7 +8,7 @@ description: "Complete API reference for @spatius/avatarkit (Web)."
 
 | Class | Purpose | Key methods |
 |-------|---------|-------------|
-| `AvatarSDK` | SDK initialization and global configuration | `initialize()`, `setSessionToken()`, `setRenderQuality()`, `setAutoRenderQuality()`, `setRenderResolutionConfig()`, `deviceScore()` |
+| `AvatarSDK` | SDK initialization and global configuration | `initialize()`, `setSessionToken()`, `setRenderQuality()`, `setAutoRenderQuality()`, `setRenderResolutionConfig()`, `checkDeviceSupport()`, `deviceScore()` |
 | `AvatarManager` | Avatar asset loading and caching | `load()`, `cancelLoad()`, `retrieve()`, `clear()`, `clearAll()` |
 | `AvatarView` | 3D rendering view | constructor, `dispose()`, `exportBitmap()`, `avatarTransform`, `getBoundingRect()` |
 | `AvatarController` | Runtime communication and playback control | `start()`, `send()`, `pause()`, `resume()`, `interrupt()`, `setAudioFormat()` |
@@ -20,6 +20,10 @@ description: "Complete API reference for @spatius/avatarkit (Web)."
 For the minimum end-to-end integration walkthrough, open the Web tab in [Direct Mode Client](/direct-mode/client).
 
 ---
+
+## License
+
+AvatarKit is proprietary software licensed by SPATIALWALK PTE. LTD. Use is subject to the [Spatius Terms of Service](https://www.spatius.ai/terms-of-service/). Third-party components retain their own license terms; see the notices included with the SDK.
 
 ## AvatarSDK
 
@@ -166,9 +170,30 @@ Run a short CPU/GPU benchmark and return device scores.
 const { cpuScore, gpuScore } = await AvatarSDK.deviceScore()
 ```
 
+#### checkDeviceSupport()
+
+Check whether this browser can render before loading an avatar. SDK initialization is not required.
+
+```typescript
+import { AvatarSDK, DeviceSupport } from '@spatius/avatarkit'
+
+const support = await AvatarSDK.checkDeviceSupport()
+if (support === DeviceSupport.renderNotSupported) {
+  // Show an alternative UI instead of creating an avatar view.
+}
+```
+
+Returns `Promise<DeviceSupport>`. The shared enum contains `supported`, `renderNotSupported`, and `insufficientPerformance`; Web currently returns only the first two and does not infer performance from browser hardware information.
+
+When worker isolation is available, the SDK renders a small built-in sample and reads back pixels. Failed or timed-out checks return `renderNotSupported` when no backend passes. Valid results are cached for up to 24 hours and invalidated by SDK or browser changes. Without worker isolation, the SDK checks graphics API availability instead; this fallback does not verify pixels and is not persisted.
+
+`initialize()` automatically starts the same check and waits for it before succeeding. If no backend passes, its Promise rejects with an `AvatarError` carrying `ErrorCode.renderNotSupported`, and the SDK logs an error recommending this method. This initialization failure is not delivered through a controller `onError` callback.
+
 #### isDeviceSupported()
 
-Check whether the current device can run AvatarKit. This runs the same benchmark path used by `deviceScore()`.
+<Warning>
+Deprecated. Use `checkDeviceSupport()`. This method remains available and returns `true` only for `DeviceSupport.supported`.
+</Warning>
 
 ```typescript
 const supported = await AvatarSDK.isDeviceSupported()
@@ -592,13 +617,15 @@ Graphics API used to draw the Avatar, set with `Configuration.renderBackend`.
 
 ```typescript
 enum RenderBackend {
-  auto = 'auto',      // Default: WebGPU when the browser provides it, otherwise WebGL2
+  auto = 'auto',      // Default: prefer verified WebGPU, otherwise WebGL2
   webgpu = 'webgpu',  // Try WebGPU first
   webgl = 'webgl',    // Try WebGL2 first
 }
 ```
 
-If the preferred API is unavailable or fails to start, the SDK uses the other one, so the setting never stops an Avatar from rendering on a device that supports either. The setting applies to views created after `initialize()`. Rendering fails with `ErrorCode.renderNotSupported` only when neither WebGPU nor WebGL2 is available.
+Before creating the visible renderer, the SDK waits for rendering verification and excludes backends that failed. If WebGPU fails verification and WebGL2 passes, it selects WebGL2 automatically, even when WebGPU was preferred. An available backend can also fall back to the other verified backend if renderer startup fails. The setting applies to views created after `initialize()`.
+
+When neither backend passes, initialization rejects with `ErrorCode.renderNotSupported`. Without worker isolation, verification is limited to API availability, so the result cannot guarantee visible rendering on every browser/driver combination.
 
 ### AutoRenderQualityOptions
 
@@ -909,7 +936,7 @@ If the WebSocket connection fails within 15 seconds, the SDK automatically enter
 | iOS Safari | 14+ | WebGL |
 | Android Chrome | 90+ | WebGL |
 
-By default the SDK uses WebGPU when the browser provides it and WebGL2 otherwise. Set `Configuration.renderBackend` to prefer one; see [RenderBackend](#renderbackend).
+The SDK prefers WebGPU when it passes verification and uses WebGL2 when WebGPU fails and WebGL2 passes. API availability alone does not guarantee rendering on every browser/driver combination. Set `Configuration.renderBackend` to prefer one; see [RenderBackend](#renderbackend).
 
 ---
 
@@ -919,6 +946,7 @@ By default the SDK uses WebGPU when the browser provides it and WebGL2 otherwise
 |-------|-------|----------|
 | Audio not working | `initializeAudioContext()` not in a user gesture | Call it inside a `click` or `touchstart` handler. |
 | Avatar not rendering | Container has zero dimensions | Set explicit `width` and `height` on the container. |
+| WebGPU is available but the avatar stays blank | A browser or graphics driver may expose WebGPU without rendering correctly | Initialization normally selects WebGL2 when verification detects this. If the issue remains, try `renderBackend: RenderBackend.webgl` before creating a new view, and include browser/OS/graphics details when reporting it. |
 | `renderBlankCanvas` error | The Avatar is outside the view or scaled to nothing | Check that `avatarTransform` keeps the Avatar inside the view and that `scale` is above 0. |
 | WASM MIME type error | Build tool misconfigured | Use the Vite plugin or Next.js wrapper. See [Toolchain Setup](/sdk-reference/web-sdk/toolchain). |
 | Session Token invalid | Token expired or not set | Refresh token from backend; call `setSessionToken()` before `start()`. |

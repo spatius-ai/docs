@@ -35,6 +35,10 @@ Download the latest [AvatarKit.xcframework](https://github.com/spatius-ai/avatar
 </Tab>
 </Tabs>
 
+## License
+
+AvatarKit is proprietary software licensed by SPATIALWALK PTE. LTD. Use is subject to the [Spatius Terms of Service](https://www.spatius.ai/terms-of-service/). Third-party components retain their own license terms; see the notices included with the SDK.
+
 ### AvatarSDK
 
 Main initialization and configuration interface for AvatarKit.
@@ -218,7 +222,7 @@ static func checkDeviceSupport() async -> DeviceSupport
 
 The result is `.supported`, `.renderNotSupported`, or `.insufficientPerformance`. The last result means rendering is available but performance is below the recommended level; consider enabling automatic render quality. Rendering failures and detection timeouts return `.renderNotSupported`.
 
-Initialization also starts this check automatically. If rendering is unavailable, initialization does not complete successfully and the SDK logs an error; it does not add a controller error callback. Concurrent checks share the same work, and valid cached results are reused.
+`initialize` also starts this check automatically and returns before it finishes. If rendering verification fails, initialization does not complete successfully and the SDK logs an error recommending this method. There is no separate initialization `onError` callback. Await `checkDeviceSupport()` when your application needs a support result for its UI. Insufficient performance does not block initialization. Concurrent checks share the same work, and valid cached results are reused.
 </Accordion>
 
 <Accordion title="isDeviceSupported()">
@@ -318,6 +322,15 @@ Derives an avatar from a local asset path. Await completion before creating the 
 ```swift
 func derive(assetPath: String) async throws -> Avatar
 ```
+
+```swift
+let avatar = try await AvatarManager.shared.derive(assetPath: path)
+// Create the avatar view after preparation completes.
+```
+
+<Warning>
+`derive` is now asynchronous. Replace synchronous `try` calls with `try await` in an asynchronous context. Local avatar files alone do not guarantee offline loading: a missing shared template requires a network download.
+</Warning>
 
 **Parameters:**
 - `assetPath`: The path to the avatar asset
