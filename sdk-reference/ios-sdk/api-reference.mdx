@@ -317,7 +317,7 @@ func retrieve(id: String) -> Avatar?
 </Accordion>
 
 <Accordion title="derive(assetPath:)">
-Derives an avatar from a local asset path. Await completion before creating the avatar view. If the required shared template is not cached, the SDK downloads it automatically; network failures are thrown to the caller.
+For specialized local-asset use. Use `load` with an avatar ID for normal integration. Derives an avatar from a local asset path. Await completion before creating the avatar view. If the required shared template is not cached, the SDK downloads it automatically; network failures are thrown to the caller.
 
 ```swift
 func derive(assetPath: String) async throws -> Avatar

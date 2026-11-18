@@ -265,27 +265,6 @@ suspend fun load(
 A cached avatar is used only when its metadata can be read and every cached file is present and matches the size recorded when it was downloaded; otherwise the avatar is downloaded again.
 </Accordion>
 
-<Accordion title="derive(assetPath)">
-Creates an avatar from bundled local assets and prepares the required shared template before returning.
-
-```kotlin
-suspend fun derive(assetPath: String): Avatar
-```
-
-Call from a coroutine. If the shared template is not cached, the SDK downloads it automatically; local avatar files alone do not guarantee offline loading. Wait for completion before creating an avatar view. Download failures propagate to the caller.
-
-```kotlin
-lifecycleScope.launch {
-    val avatar = AvatarManager.derive("avatars/local-avatar")
-    // Create the avatar view after preparation completes.
-}
-```
-
-<Warning>
-`derive` is now a suspending function. Move earlier synchronous calls into a coroutine.
-</Warning>
-</Accordion>
-
 <Accordion title="retrieve(id)">
 Retrieves a cached avatar by ID without downloading it.
 
