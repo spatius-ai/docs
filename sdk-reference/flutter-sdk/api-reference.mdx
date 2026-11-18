@@ -210,7 +210,7 @@ final avatar = await AvatarManager.shared.load(
 );
 ```
 
-Use `load` with an avatar ID for normal integration. For specialized local-asset use, await `derive` before constructing `AvatarWidget`. The native SDK prepares the required shared template before the Future completes and downloads it if needed; local avatar files alone do not guarantee offline loading. The Dart call remains asynchronous with the same signature, `Future<Avatar> derive(String assetPath)`. Paths with or without trailing slashes are accepted. A known SDK error raised during `load` or `derive` is thrown as a Flutter `AvatarError` value; any other failure is thrown as a `PlatformException`. `derive` throws `AvatarError.avatarAssetMissing` on both iOS and Android when the asset is missing.
+To create an Avatar from a local asset path instead, use `derive`. Await completion before constructing `AvatarWidget`; the native SDK prepares the required shared template and downloads it if needed. A known SDK error raised during `load` or `derive` is thrown as a Flutter `AvatarError` value; any other failure is thrown as a `PlatformException`. `derive` throws `AvatarError.avatarAssetMissing` on both iOS and Android when the asset is missing.
 
 ```dart
 try {

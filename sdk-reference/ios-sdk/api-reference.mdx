@@ -317,19 +317,14 @@ func retrieve(id: String) -> Avatar?
 </Accordion>
 
 <Accordion title="derive(assetPath:)">
-For specialized local-asset use. Use `load` with an avatar ID for normal integration. Derives an avatar from a local asset path. Await completion before creating the avatar view. If the required shared template is not cached, the SDK downloads it automatically; network failures are thrown to the caller.
+Derives an avatar from a local asset path. Await completion before creating the avatar view. If the required shared template is not cached, the SDK downloads it automatically; network failures are thrown to the caller.
 
 ```swift
 func derive(assetPath: String) async throws -> Avatar
 ```
 
-```swift
-let avatar = try await AvatarManager.shared.derive(assetPath: path)
-// Create the avatar view after preparation completes.
-```
-
 <Warning>
-`derive` is now asynchronous. Replace synchronous `try` calls with `try await` in an asynchronous context. Local avatar files alone do not guarantee offline loading: a missing shared template requires a network download.
+`derive` is now asynchronous. Replace synchronous `try` calls with `try await` in an asynchronous context.
 </Warning>
 
 **Parameters:**

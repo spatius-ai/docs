@@ -36,7 +36,3 @@ The Avatar asset package downloaded by the client SDK.
 - **Size**: About 5-10 MB.
 - **Limit**: The Avatar can only be rendered after the download completes.
 - **Cache**: On iOS and Android, AvatarKit keeps downloaded avatar assets in an on-device cache and reuses them on later loads. A cached copy that is incomplete or unreadable is not used; AvatarKit downloads the avatar assets again. The Web SDK keeps no on-device avatar cache of its own. Native cached assets are refreshed when selected resource URLs change, even if the avatar update timestamp stays the same.
-
-### Shared resources
-
-AvatarKit can select optimized avatar assets that use smaller shared template resources. Selection is automatic; if optimized assets cannot be loaded or validated, it retries with the original resources. Applications do not need to select a format themselves.
