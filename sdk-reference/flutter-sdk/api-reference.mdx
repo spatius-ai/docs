@@ -14,6 +14,10 @@ flutter pub add spatius_avatarkit
 
 The package supports iOS and Android Flutter apps.
 
+## License
+
+AvatarKit is proprietary software licensed by SPATIALWALK PTE. LTD. Use is subject to the [Spatius Terms of Service](https://www.spatius.ai/terms-of-service/). Third-party components retain their own license terms; see the notices included with the SDK.
+
 ## Import
 
 ```dart
@@ -39,6 +43,34 @@ await AvatarSDK.setSessionToken(sessionToken);
 Use `DrivingServiceMode.direct` for [Direct Mode](/direct-mode/client).
 
 `initialize` fails fast when `appID` is missing, rather than returning silently. Get an App ID from [app.spatius.ai](https://app.spatius.ai/).
+
+### Device support
+
+Call this before initialization when your app needs to decide whether to show an avatar:
+
+```dart
+final support = await AvatarSDK.checkDeviceSupport();
+
+switch (support) {
+  case DeviceSupport.supported:
+    // Continue initialization and avatar loading.
+    break;
+  case DeviceSupport.renderNotSupported:
+    // Show an alternative UI.
+    break;
+  case DeviceSupport.insufficientPerformance:
+    // Rendering works; consider lower quality after initialization.
+    break;
+}
+```
+
+The method returns `Future<DeviceSupport>` and uses the native rendering and performance checks. Run it while the app is in the foreground. Rendering verification failures or timeouts produce `renderNotSupported`; valid native cached results are reused.
+
+Initialization also starts the native check automatically. Completion of Flutter's `initialize` Future means the native initialization request was accepted, not that the asynchronous rendering check finished. If rendering verification fails, native initialization does not complete successfully and logs an error. Use `checkDeviceSupport()` for an explicit UI decision; there is no separate initialization `onError` callback.
+
+<Warning>
+`isDeviceSupported()` is deprecated but remains available. It returns `true` only when the detailed result is `DeviceSupport.supported`.
+</Warning>
 
 ### Configuration
 
@@ -178,7 +210,7 @@ final avatar = await AvatarManager.shared.load(
 );
 ```
 
-To create an Avatar from a local asset path instead, use `derive`. A known SDK error raised during `load` or `derive` is thrown as a Flutter `AvatarError` value; any other failure is thrown as a `PlatformException`. `derive` throws `AvatarError.avatarAssetMissing` on both iOS and Android when the asset is missing.
+To create an Avatar from a local asset path instead, use `derive`. Await completion before constructing `AvatarWidget`; the native SDK prepares the required shared template and downloads it if needed. A known SDK error raised during `load` or `derive` is thrown as a Flutter `AvatarError` value; any other failure is thrown as a `PlatformException`. `derive` throws `AvatarError.avatarAssetMissing` on both iOS and Android when the asset is missing.
 
 ```dart
 try {

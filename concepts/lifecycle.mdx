@@ -38,6 +38,10 @@ graph LR
 
 Initialize AvatarKit once when the application starts. This establishes shared configuration before any Avatar is loaded.
 
+Initialization automatically checks rendering support. Applications can also run the device-support check first to choose an alternative UI on unsupported devices. The check distinguishes rendering support from recommended performance on native platforms; see the platform reference for results and timing. Native initialization starts the check asynchronously, while Web initialization waits for it.
+
+On Web, rendering verification can select WebGL2 automatically when WebGPU is available but fails to render. A support check does not replace waiting for the avatar view's first-render callback.
+
 ## Load
 
 Load the selected `avatar-id` before creating its view. AvatarKit downloads and caches the avatar assets; loading the same Avatar again can reuse that cache.
