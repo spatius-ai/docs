@@ -189,6 +189,18 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Solutions",
+        "groups": [
+          {
+            "group": "Solutions",
+            "icon": "lightbulb",
+            "pages": [
+              "solutions/language-learning"
+            ]
+          }
+        ]
       }
     ]
   },
